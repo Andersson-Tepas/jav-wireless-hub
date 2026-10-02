@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CarritoRouteImport } from './routes/carrito'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactoRouteImport } from './routes/contacto'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as FinanciamientoRouteImport } from './routes/financiamiento'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as ProductosRouteImport } from './routes/productos'
@@ -52,11 +51,6 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const ContactoRoute = ContactoRouteImport.update({
   id: '/contacto',
   path: '/contacto',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanciamientoRoute = FinanciamientoRouteImport.update({
@@ -106,7 +100,6 @@ export interface FileRoutesByFullPath {
   '/carrito': typeof CarritoRoute
   '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
-  '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
@@ -122,7 +115,6 @@ export interface FileRoutesByTo {
   '/carrito': typeof CarritoRoute
   '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
-  '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
@@ -140,7 +132,6 @@ export interface FileRoutesById {
   '/carrito': typeof CarritoRoute
   '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
-  '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
@@ -158,7 +149,6 @@ export interface FileRouteTypes {
     | '/carrito'
     | '/checkout'
     | '/contacto'
-    | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
@@ -174,7 +164,6 @@ export interface FileRouteTypes {
     | '/carrito'
     | '/checkout'
     | '/contacto'
-    | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
@@ -191,7 +180,6 @@ export interface FileRouteTypes {
     | '/carrito'
     | '/checkout'
     | '/contacto'
-    | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
@@ -209,7 +197,6 @@ export interface RootRouteChildren {
   CarritoRoute: typeof CarritoRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactoRoute: typeof ContactoRoute
-  DashboardRoute: typeof DashboardRoute
   FinanciamientoRoute: typeof FinanciamientoRoute
   NosotrosRoute: typeof NosotrosRoute
   ProductosRoute: typeof ProductosRoute
@@ -260,13 +247,6 @@ declare module '@tanstack/react-router' {
       path: '/contacto'
       fullPath: '/contacto'
       preLoaderRoute: typeof ContactoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/financiamiento': {
@@ -358,7 +338,6 @@ const rootRouteChildren: RootRouteChildren = {
   CarritoRoute: CarritoRoute,
   CheckoutRoute: CheckoutRoute,
   ContactoRoute: ContactoRoute,
-  DashboardRoute: DashboardRoute,
   FinanciamientoRoute: FinanciamientoRoute,
   NosotrosRoute: NosotrosRoute,
   ProductosRoute: ProductosRoute,
