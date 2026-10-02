@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BadgeDollarSign, BatteryCharging, CheckCircle2, ClipboardCheck, CreditCard, Headphones, MapPin, MessageSquareText, PackageCheck, Radio, ShieldCheck, Smartphone, Sparkles, Truck, Users, Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { PageIntro, SectionHeading } from "@/components/site-shell";
 import { ProductCatalog } from "@/components/product-catalog";
 import { socialLinks } from "@/lib/site-data";
@@ -23,7 +23,7 @@ export function HomePage() {
             <p className="eyebrow">Conecta · Estrena · Avanza</p>
             <h1 className="mt-5 max-w-3xl font-display text-5xl font-black leading-[0.98] tracking-normal text-foreground sm:text-7xl">Tecnología que te mantiene <span className="text-primary">conectado.</span></h1>
             <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">Equipos, accesorios, financiamiento y soporte técnico, con atención directa y soluciones sin complicaciones.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Button asChild><Link to="/productos">Ver productos <ArrowRight className="size-4" /></Link></Button><Button asChild variant="outline"><Link to="/servicios">Explorar servicios</Link></Button></div>
+            <div className="mt-8 flex flex-wrap gap-3"><Link to="/productos" className={buttonVariants()}>Ver productos <ArrowRight className="size-4" /></Link><Link to="/servicios" className={buttonVariants({ variant: "outline" })}>Explorar servicios</Link></div>
             <div className="mt-12 grid max-w-xl grid-cols-3 gap-3 border-t border-border pt-6">
               <Metric value="+1,500" label="Clientes" /><Metric value="48 h" label="Respuesta técnica" /><Metric value="4.9/5" label="Satisfacción" />
             </div>
@@ -35,7 +35,7 @@ export function HomePage() {
         </div>
       </section>
       <section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><SectionHeading eyebrow="Todo en un solo lugar" title="Soluciones para tu mundo móvil" description="Elige el servicio que necesitas y recibe atención personalizada." /><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{services.map((service) => <ServiceCard key={service.title} {...service} />)}</div></div></section>
-      <section className="section-pad border-y border-border bg-surface-deep"><div className="mx-auto max-w-7xl px-4 lg:px-6"><div className="mb-8 grid gap-5 md:grid-cols-[1fr_auto] md:items-end"><SectionHeading eyebrow="Selección JAV" title="Equipos destacados" description="Toca cualquier producto para conocer todos sus detalles." /><Button asChild variant="cyan"><Link to="/productos">Ver catálogo <ArrowRight className="size-4" /></Link></Button></div><ProductCatalog limit={4} /></div></section>
+      <section className="section-pad border-y border-border bg-surface-deep"><div className="mx-auto max-w-7xl px-4 lg:px-6"><div className="mb-8 grid gap-5 md:grid-cols-[1fr_auto] md:items-end"><SectionHeading eyebrow="Selección JAV" title="Equipos destacados" description="Toca cualquier producto para conocer todos sus detalles." /><Link to="/productos" className={buttonVariants({ variant: "cyan" })}>Ver catálogo <ArrowRight className="size-4" /></Link></div><ProductCatalog limit={4} /></div></section>
       <section className="section-pad"><div className="mx-auto grid max-w-7xl gap-5 px-4 md:grid-cols-3 lg:px-6"><ColorPanel tone="offer" title="Ofertas que se mueven rápido" text="Precios especiales en unidades seleccionadas mientras haya stock." icon={Sparkles} /><ColorPanel tone="finance" title="Paga a tu ritmo" text="Opciones flexibles para estrenar sin detener tus planes." icon={CreditCard} /><ColorPanel tone="shipping" title="Envíos con seguimiento" text="Información clara del estado de tu orden en cada paso." icon={Truck} /></div></section>
     </>
   );
@@ -50,7 +50,7 @@ export function ProductsPage() { return <><PageIntro tone="product" eyebrow="Pro
 
 export function FinancingPage() {
   const steps = ["Elige tu equipo", "Completa tu solicitud", "Recibe una opción", "Estrena tu equipo"];
-  return <><PageIntro tone="finance" eyebrow="Financiamiento" title="Más opciones para llegar a tu próximo teléfono." description="Planes flexibles en productos seleccionados, con un proceso claro y atención personalizada." /><section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><SectionHeading eyebrow="Proceso simple" title="Cuatro pasos para comenzar" /><div className="grid gap-4 md:grid-cols-4">{steps.map((step, index) => <article key={step} className="process-step"><span>{String(index + 1).padStart(2, "0")}</span><h3>{step}</h3></article>)}</div><div className="mt-12 border-l-2 border-finance pl-6"><h3 className="text-xl font-bold text-foreground">Requisitos pueden variar</h3><p className="mt-2 max-w-2xl leading-7 text-muted-foreground">La aprobación, el pago inicial y las cuotas dependen del equipo y la evaluación correspondiente. Consulta para recibir información precisa.</p><Button asChild className="mt-5"><a href={socialLinks.whatsapp} target="_blank" rel="noreferrer">Consultar opciones</a></Button></div></div></section></>;
+  return <><PageIntro tone="finance" eyebrow="Financiamiento" title="Más opciones para llegar a tu próximo teléfono." description="Planes flexibles en productos seleccionados, con un proceso claro y atención personalizada." /><section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><SectionHeading eyebrow="Proceso simple" title="Cuatro pasos para comenzar" /><div className="grid gap-4 md:grid-cols-4">{steps.map((step, index) => <article key={step} className="process-step"><span>{String(index + 1).padStart(2, "0")}</span><h3>{step}</h3></article>)}</div><div className="mt-12 border-l-2 border-finance pl-6"><h3 className="text-xl font-bold text-foreground">Requisitos pueden variar</h3><p className="mt-2 max-w-2xl leading-7 text-muted-foreground">La aprobación, el pago inicial y las cuotas dependen del equipo y la evaluación correspondiente. Consulta para recibir información precisa.</p><a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className={`${buttonVariants()} mt-5`}>Consultar opciones</a></div></div></section></>;
 }
 
 export function RepairsPage() {

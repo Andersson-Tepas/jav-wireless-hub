@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, LayoutDashboard, Menu, MessageCircle, Radio, X } from "lucide-react";
 import { useState } from "react";
 import { navItems, socialLinks } from "@/lib/site-data";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 function Brand() {
   return (
@@ -27,7 +27,7 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Button asChild size="sm" variant="outline"><Link to="/dashboard"><LayoutDashboard className="size-4" /> Panel</Link></Button>
+          <Link to="/dashboard" className={buttonVariants({ size: "sm", variant: "outline" })}><LayoutDashboard className="size-4" /> Panel</Link>
         </nav>
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen((value) => !value)} aria-label={open ? "Cerrar menú" : "Abrir menú"}>
           {open ? <X /> : <Menu />}
