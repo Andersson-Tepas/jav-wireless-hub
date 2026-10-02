@@ -20,8 +20,8 @@ export const getProduct = handle(async ({ params }: Ctx) => {
   if (!p) throw new ApiError(404, "Producto no encontrado");
   return ok(p);
 });
-export const listCategories = handle(async () => ok(must(await publicClient().from("categories").select("id,name,sort").eq("active", true).order("sort"))));
-export const listServices = handle(async () => ok(must(await publicClient().from("services").select("*").eq("active", true).order("sort"))));
+export const listCategories = handle(async (_c: Ctx) => ok(must(await publicClient().from("categories").select("id,name,sort").eq("active", true).order("sort"))));
+export const listServices = handle(async (_c: Ctx) => ok(must(await publicClient().from("services").select("*").eq("active", true).order("sort"))));
 export const postOrder = handle(async ({ request }: Ctx) => ok(await createOrderCore(orderSchema.parse(await readJson(request))), 201));
 export const trackOrder = handle(async ({ request, params }: Ctx) => {
   const contact = new URL(request.url).searchParams.get("contact") ?? "";

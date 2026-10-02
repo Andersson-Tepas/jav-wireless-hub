@@ -104,7 +104,7 @@ function ServiceEditor({ s, nextSort, onClose, onSaved }: { s?: ServiceRow | und
             <div className="space-y-2">{fields.map((f, i) => (
               <div key={i} className="flex gap-2">
                 <input className="field h-9 flex-1" placeholder="Etiqueta" value={f.label} onChange={(e) => setFields(fields.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} />
-                <select className="field h-9 w-32" value={f.type ?? "text"} onChange={(e) => setFields(fields.map((x, j) => j === i ? { ...x, type: e.target.value as Fld["type"] } : x))}><option value="text">Texto</option><option value="number">Número</option><option value="textarea">Párrafo</option><option value="date">Fecha</option></select>
+                <select className="field h-9 w-32" value={f.type ?? "text"} onChange={(e) => setFields(fields.map((x, j) => j === i ? { ...x, type: e.target.value as "text" } as Fld : x))}><option value="text">Texto</option><option value="number">Número</option><option value="textarea">Párrafo</option><option value="date">Fecha</option></select>
                 <Button type="button" size="icon" variant="ghost" aria-label="Quitar campo" onClick={() => setFields(fields.filter((_, j) => j !== i))}><Trash2 /></Button>
               </div>))}</div>
             <Button type="button" size="sm" variant="outline" className="mt-2" onClick={() => setFields([...fields, { name: "", label: "" }])}><Plus /> Agregar campo</Button>
