@@ -3,6 +3,7 @@ import { Facebook, Instagram, Menu, MessageCircle, ShoppingCart, X } from "lucid
 import { useRef, useState } from "react";
 import { navItems, socialLinks } from "@/lib/site-data";
 import { useCart } from "@/lib/cart";
+import { AccountMenu } from "@/components/account-menu";
 
 function Brand({ light }: { light?: boolean }) {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-2">
           <CartLink />
+          <AccountMenu />
           <button type="button" className="grid size-10 place-items-center rounded-md hover:bg-muted xl:hidden" onClick={() => setOpen((v) => !v)} aria-label={open ? "Cerrar menú" : "Abrir menú"}>{open ? <X /> : <Menu />}</button>
         </div>
       </div>
