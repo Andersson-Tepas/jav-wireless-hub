@@ -38,4 +38,15 @@ export function useLowStock() {
     return data ?? [];
   } });
 }
+// Same source as Panel → Clientes: customer_profiles excluding admins.
+export function useAdminCustomers() {
+  return useQuery({ queryKey: ["admin-customers"], queryFn: async () => {
+    const [{ data: p }, { data: admins }] = await Promise.all([
+      supabase.from("customer_profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id").eq("role", "admin"),
+    ]);
+    const adminIds = new Set((admins ?? []).map((a) => a.user_id));
+    return (p ?? []).filter((x) => !adminIds.has(x.user_id));
+  } });
+}
 export const lowStockFrom = (rows: { key: string; value: string }[] | undefined) => Number(rows?.find((r) => r.key === "low_stock_threshold")?.value ?? 5) || 5;
