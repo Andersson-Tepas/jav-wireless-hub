@@ -21,3 +21,4 @@
 - REST API: public endpoints under src/routes/api/public/*, admin under src/routes/api/admin/*; handlers live in src/lib/api-handlers.server.ts and every admin handler calls requireAdmin (token + has_role) so security never depends on the UI.
 - Panel is a sidebar layout (_authenticated/panel.tsx) with sections in panel.$seccion.tsx mapped to src/components/admin/*; panel writes go through the browser client and are enforced by admin-only RLS.
 - Product images upload to a private bucket via an admin-checked server function that returns a long-lived signed URL (public buckets are blocked).
+- Customer profiles (customer_profiles) are created by the auth.users signup trigger alongside the role row; admins never also get the user role, and Panel → Clientes lists profiles of non-admin accounts, matching orders/requests by email.
