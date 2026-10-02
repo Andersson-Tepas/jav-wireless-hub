@@ -16,3 +16,8 @@
 - Service definitions (fields, requirements, costs) and status flows are centralized in src/lib/site-data.ts to keep the forms, tracking and panel in sync.
 - The cart lives in localStorage via CartProvider in the root layout so it persists across pages without an account.
 - The admin panel sits under the _authenticated layout and checks the admin role via has_role; the first account created becomes admin.
+- Services, promotions, settings (Zelle, WhatsApp, low-stock threshold) live in the database; site-data.ts `services` is seed reference only, so admins can edit without code changes.
+- Inventory movements are logged by a DB trigger on products.stock, so every stock change (sale or panel adjustment) is recorded identically.
+- REST API: public endpoints under src/routes/api/public/*, admin under src/routes/api/admin/*; handlers live in src/lib/api-handlers.server.ts and every admin handler calls requireAdmin (token + has_role) so security never depends on the UI.
+- Panel is a sidebar layout (_authenticated/panel.tsx) with sections in panel.$seccion.tsx mapped to src/components/admin/*; panel writes go through the browser client and are enforced by admin-only RLS.
+- Product images upload to a private bucket via an admin-checked server function that returns a long-lived signed URL (public buckets are blocked).
