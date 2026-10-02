@@ -124,17 +124,61 @@ export function Payments() {
 }
 
 export function Customers() {
-  const { data = [] } = useAdminOrders();
+  const { data: orders = [] } = useAdminOrders();
   const { data: reqs = [] } = useAdminRequests();
-  const customers = useMemo(() => {
-    const m = new Map<string, { name: string; email: string; phone: string; orders: number; requests: number; total: number; last: string }>();
-    const get = (email: string, name: string, phone: string, at: string) => { const k = email.toLowerCase(); const c = m.get(k) ?? { name, email, phone, orders: 0, requests: 0, total: 0, last: at }; if (at > c.last) c.last = at; m.set(k, c); return c; };
-    data.forEach((o) => { const c = get(o.email, o.customer_name, o.phone, o.created_at); c.orders++; if (o.status !== "cancelled") c.total += Number(o.total); });
-    reqs.forEach((r) => { get(r.email, r.customer_name, r.phone, r.created_at).requests++; });
-    return [...m.values()].sort((a, b) => b.last.localeCompare(a.last));
-  }, [data, reqs]);
-  if (!customers.length) return <p className="text-muted-foreground">Sin clientes todavía.</p>;
-  return <div className="overflow-x-auto rounded-xl border border-border"><table className="w-full min-w-[640px] text-sm"><thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Cliente</th><th>Teléfono</th><th>Pedidos</th><th>Solicitudes</th><th>Total comprado</th><th>Última actividad</th></tr></thead><tbody className="divide-y divide-border">{customers.map((c) => <tr key={c.email}><td className="p-3 font-semibold">{c.name}<div className="text-xs font-normal text-muted-foreground">{c.email}</div></td><td>{c.phone}</td><td>{c.orders}</td><td>{c.requests}</td><td className="font-semibold">{money(c.total)}</td><td className="text-muted-foreground">{fmt(c.last)}</td></tr>)}</tbody></table></div>;
+  const { data: profiles = [], isLoading } = useQuery({ queryKey: ["admin-customers"], queryFn: async () => {
+    const [{ data: p }, { data: admins }] = await Promise.all([
+      supabase.from("customer_profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id").eq("role", "admin"),
+    ]);
+    const adminIds = new Set((admins ?? []).map((a) => a.user_id));
+    return (p ?? []).filter((x) => !adminIds.has(x.user_id));
+  } });
+  const [open, setOpen] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const list = profiles.filter((p) => `${p.full_name} ${p.email} ${p.phone ?? ""}`.toLowerCase().includes(q.toLowerCase()));
+  if (isLoading) return <p className="text-muted-foreground">Cargando…</p>;
+  if (!profiles.length) return <p className="text-muted-foreground">Sin clientes todavía.</p>;
+  return (
+    <div className="space-y-4">
+      <input className="field max-w-sm" placeholder="Buscar por nombre, correo o teléfono" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="divide-y divide-border rounded-xl border border-border">
+        {list.map((p) => {
+          const email = p.email.toLowerCase();
+          const os = orders.filter((o) => o.email.toLowerCase() === email);
+          const rs = reqs.filter((r) => r.email.toLowerCase() === email);
+          const name = p.full_name || p.email.split("@")[0] || "Cliente";
+          const isOpen = open === p.user_id;
+          return (
+            <div key={p.user_id}>
+              <button type="button" onClick={() => setOpen(isOpen ? null : p.user_id)} className="flex w-full flex-wrap items-center gap-3 p-3 text-left text-sm hover:bg-surface">
+                {p.avatar_url ? <img src={p.avatar_url} alt="" referrerPolicy="no-referrer" className="h-10 w-10 rounded-full object-cover" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-primary font-bold text-primary-foreground">{name[0]?.toUpperCase()}</span>}
+                <span className="min-w-[180px] flex-1"><span className="font-semibold">{name}</span><span className="block text-xs text-muted-foreground">{p.email}</span></span>
+                <span className="w-32 text-muted-foreground">{p.phone || "—"}</span>
+                <span className="w-24 text-xs text-muted-foreground">{p.provider === "google" ? "Google" : "Correo"}</span>
+                <span className="w-36 text-muted-foreground">Registro: {new Date(p.created_at).toLocaleDateString("es")}</span>
+                <span className="text-xs">{os.length} pedidos · {rs.length} solicitudes</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isOpen && (
+                <div className="grid gap-6 bg-surface p-4 text-sm md:grid-cols-2">
+                  <div>
+                    <h3 className="mb-2 font-bold text-primary">Pedidos ({os.length})</h3>
+                    {os.length ? <ul className="space-y-2">{os.map((o) => <li key={o.id} className="card-soft flex flex-wrap justify-between gap-2 p-3"><span><strong>#{o.order_number}</strong> · {fmt(o.created_at)}</span><span>{statusLabels[o.status] ?? o.status} · <strong>{money(Number(o.total))}</strong></span></li>)}</ul> : <p className="text-muted-foreground">Sin pedidos.</p>}
+                  </div>
+                  <div>
+                    <h3 className="mb-2 font-bold text-primary">Solicitudes ({rs.length})</h3>
+                    {rs.length ? <ul className="space-y-2">{rs.map((r) => <li key={r.id} className="card-soft flex flex-wrap justify-between gap-2 p-3"><span><strong>{r.reference}</strong> · {r.service_name}</span><span className="text-muted-foreground">{fmt(r.created_at)}</span></li>)}</ul> : <p className="text-muted-foreground">Sin solicitudes.</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {!list.length && <p className="p-3 text-muted-foreground">Sin resultados.</p>}
+      </div>
+    </div>
+  );
 }
 
 export function Tracking() {
