@@ -1,62 +1,147 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { Check, PackageCheck, ShoppingBag, X } from "lucide-react";
-import { useState } from "react";
-import { products, socialLinks, type Product } from "@/lib/site-data";
-import { buttonVariants } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { Check, Search, ShoppingCart, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { categoriesQuery, productsQuery, specsOf, type Product } from "@/lib/catalog";
+import { money, useCart } from "@/lib/cart";
+import { productImage, socialLinks } from "@/lib/site-data";
 
-function ProductCard({ product }: { product: Product }) {
-  const [open, setOpen] = useState(false);
+function useAddToCart() {
+  const { add } = useCart();
+  return (p: Product) => add({ id: p.id, name: p.name, price: Number(p.price), image: p.image, stock: p.stock });
+}
+
+function Availability({ stock }: { stock: number }) {
+  if (stock <= 0) return <span className="text-xs font-semibold text-destructive">Agotado</span>;
+  if (stock <= 5) return <span className="text-xs font-semibold text-accent">Últimas {stock} unidades</span>;
+  return <span className="text-xs font-semibold text-success">Disponible</span>;
+}
+
+export function ProductCard({ product, onOpen }: { product: Product; onOpen: () => void }) {
+  const addToCart = useAddToCart();
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger className="group overflow-hidden rounded-lg border border-border bg-card text-left transition duration-300 hover:-translate-y-1 hover:border-product/60 hover:shadow-cyan" aria-label={`Ver detalles de ${product.name}`}>
-          <div className="relative aspect-square overflow-hidden bg-surface-deep">
-            <img src={product.image} alt={product.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-            {product.badge && <span className={product.badge === "Oferta" ? "badge-offer" : "badge-product"}>{product.badge}</span>}
-          </div>
-          <div className="p-5">
-            <p className="text-xs font-bold uppercase text-product">{product.brand}</p>
-            <h3 className="mt-2 text-xl font-bold text-foreground">{product.name}</h3>
-            <div className="mt-4 flex items-end justify-between gap-3"><p className="text-2xl font-black text-foreground">${product.price}</p><span className="text-xs text-muted-foreground">{product.capacity}</span></div>
-          </div>
-      </Dialog.Trigger>
-      <ProductDialog product={product} onClose={() => setOpen(false)} />
+    <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition hover:shadow-lift">
+      <button type="button" onClick={onOpen} className="relative aspect-square overflow-hidden bg-surface" aria-label={`Ver detalles de ${product.name}`}>
+        <img src={productImage(product.image)} alt={product.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+        <div className="absolute left-3 top-3 flex flex-col gap-1">
+          {product.is_offer && <span className="rounded bg-accent px-2 py-1 text-[11px] font-bold uppercase text-accent-foreground">Oferta</span>}
+          {product.is_new && <span className="rounded bg-primary px-2 py-1 text-[11px] font-bold uppercase text-primary-foreground">Nuevo</span>}
+        </div>
+      </button>
+      <div className="flex flex-1 flex-col p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{product.brand}</p>
+        <h3 className="mt-1 line-clamp-1 font-bold text-foreground">{product.name}</h3>
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className="text-xl font-extrabold text-primary">{money(Number(product.price))}</span>
+          {product.old_price && <span className="text-sm text-muted-foreground line-through">{money(Number(product.old_price))}</span>}
+        </div>
+        <div className="mt-1"><Availability stock={product.stock} /></div>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button variant="outline" size="sm" onClick={onOpen}>Ver detalles</Button>
+          <Button size="sm" disabled={product.stock <= 0} onClick={() => addToCart(product)}><ShoppingCart /> Agregar</Button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ProductDialog({ product, onClose }: { product: Product | null; onClose: () => void }) {
+  const addToCart = useAddToCart();
+  return (
+    <Dialog.Root open={!!product} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Portal>
+        <Dialog.Overlay onClick={onClose} className="fixed inset-0 z-50 bg-overlay data-[state=open]:animate-in data-[state=open]:fade-in" />
+        {product && (
+          <Dialog.Content aria-describedby={undefined} className="fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-1.5rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-background shadow-lift md:grid-cols-2">
+            <div className="bg-surface"><img src={productImage(product.image)} alt={product.name} width={1024} height={1024} className="h-full w-full object-cover" /></div>
+            <div className="p-6 md:p-8">
+              <Dialog.Close className="absolute right-4 top-4 grid size-9 place-items-center rounded-full bg-background/90 text-foreground shadow-soft hover:text-accent" aria-label="Cerrar"><X className="size-5" /></Dialog.Close>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{product.brand} · {product.model}</p>
+              <Dialog.Title className="mt-2 font-display text-3xl font-bold text-foreground">{product.name}</Dialog.Title>
+              <div className="mt-3 flex items-baseline gap-3">
+                <span className="text-3xl font-extrabold text-primary">{money(Number(product.price))}</span>
+                {product.old_price && <span className="text-muted-foreground line-through">{money(Number(product.old_price))}</span>}
+              </div>
+              <div className="mt-1"><Availability stock={product.stock} /></div>
+              <p className="mt-4 leading-7 text-muted-foreground">{product.description}</p>
+              <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg bg-surface p-3"><dt className="text-muted-foreground">Colores</dt><dd className="font-semibold">{product.colors.join(", ") || "—"}</dd></div>
+                <div className="rounded-lg bg-surface p-3"><dt className="text-muted-foreground">Capacidad / Tamaño</dt><dd className="font-semibold">{product.capacity || "—"}</dd></div>
+                <div className="rounded-lg bg-surface p-3"><dt className="text-muted-foreground">Stock</dt><dd className="font-semibold">{product.stock} unidades</dd></div>
+                <div className="rounded-lg bg-surface p-3"><dt className="text-muted-foreground">Modelo</dt><dd className="font-semibold">{product.model || "—"}</dd></div>
+              </dl>
+              {product.features.length > 0 && <><h4 className="mt-6 font-bold">Características</h4><ul className="mt-2 space-y-1.5">{product.features.map((f) => <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="size-4 text-success" />{f}</li>)}</ul></>}
+              {specsOf(product).length > 0 && <><h4 className="mt-6 font-bold">Especificaciones</h4><dl className="mt-2 divide-y divide-border text-sm">{specsOf(product).map((s) => <div key={s.label} className="flex justify-between py-2"><dt className="text-muted-foreground">{s.label}</dt><dd className="font-semibold">{s.value}</dd></div>)}</dl></>}
+              {product.financing && <p className="mt-5 rounded-lg border border-border bg-surface p-3 text-sm"><strong className="text-primary">Financiamiento:</strong> {product.financing}</p>}
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                <Button disabled={product.stock <= 0} onClick={() => { addToCart(product); onClose(); }}><ShoppingCart /> Agregar al carrito</Button>
+                <a className="inline-flex h-11 items-center justify-center rounded-md border border-input px-5 text-sm font-semibold hover:border-primary hover:text-primary" href={`${socialLinks.whatsapp}?text=${encodeURIComponent(`Hola JAV Wireless, me interesa ${product.name}`)}`} target="_blank" rel="noreferrer">Consultar</a>
+              </div>
+            </div>
+          </Dialog.Content>
+        )}
+      </Dialog.Portal>
     </Dialog.Root>
   );
 }
 
-function ProductDialog({ product, onClose }: { product: Product; onClose: () => void }) {
-  const inquiry = `${socialLinks.whatsapp}?text=${encodeURIComponent(`Hola JAV Wireless, me interesa ${product.name}`)}`;
+export function ProductGrid({ products, columns = "lg:grid-cols-4" }: { products: Product[]; columns?: string }) {
+  const [selected, setSelected] = useState<Product | null>(null);
+  if (!products.length) return <p className="rounded-xl border border-dashed border-border p-10 text-center text-muted-foreground">No hay productos que coincidan.</p>;
   return (
-    <Dialog.Portal>
-      <Dialog.Overlay onClick={onClose} className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in" />
-      <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-1.5rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-background shadow-modal md:grid-cols-[0.9fr_1.1fr]" aria-describedby={`description-${product.id}`}>
-        <div className="min-h-72 bg-surface-deep"><img src={product.image} alt={product.name} width={1024} height={1024} className="h-full w-full object-cover" /></div>
-        <div className="relative p-6 sm:p-8">
-          <Dialog.Close className={`${buttonVariants({ variant: "ghost", size: "icon" })} absolute right-3 top-3`} aria-label="Cerrar detalles"><X /></Dialog.Close>
-          <p className="pr-12 text-xs font-bold uppercase text-product">{product.brand} · {product.model}</p>
-          <Dialog.Title className="mt-2 font-display text-3xl font-black text-foreground">{product.name}</Dialog.Title>
-          <Dialog.Description id={`description-${product.id}`} className="mt-3 leading-7 text-muted-foreground">{product.description}</Dialog.Description>
-          <div className="mt-5 flex flex-wrap items-center gap-3"><span className="text-3xl font-black text-foreground">${product.price}</span>{product.oldPrice && <span className="text-sm text-muted-foreground line-through">${product.oldPrice}</span>}<span className="stock-pill"><PackageCheck className="size-4" /> {product.stock} disponibles</span></div>
-          <dl className="mt-6 grid grid-cols-2 gap-3">
-            <div className="detail-box"><dt>Color</dt><dd>{product.color}</dd></div>
-            <div className="detail-box"><dt>Capacidad</dt><dd>{product.capacity}</dd></div>
-          </dl>
-          <h3 className="mt-6 text-sm font-bold text-foreground">Características</h3>
-          <ul className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">{product.features.map((feature) => <li key={feature} className="flex items-center gap-2"><Check className="size-4 text-product" />{feature}</li>)}</ul>
-          <div className="mt-6 divide-y divide-border border-y border-border">{product.specs.map((spec) => <div key={spec.label} className="grid grid-cols-2 py-3 text-sm"><span className="text-muted-foreground">{spec.label}</span><span className="text-right font-semibold text-foreground">{spec.value}</span></div>)}</div>
-          {product.financing && <div className="mt-5 rounded-md border border-finance/30 bg-finance/10 p-4 text-sm text-finance">Financiamiento disponible · {product.financing}</div>}
-          <div className="mt-6 grid gap-2 sm:grid-cols-3">
-            <a href={inquiry} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "outline" })}>Consultar</a>
-            <a href={inquiry} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "cyan" })}><ShoppingBag className="size-4" /> Comprar</a>
-            <a href={inquiry} target="_blank" rel="noreferrer" className={buttonVariants({ variant: "danger" })}>Reservar</a>
-          </div>
-        </div>
-      </Dialog.Content>
-    </Dialog.Portal>
+    <>
+      <div className={`grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 ${columns}`}>{products.map((p) => <ProductCard key={p.id} product={p} onOpen={() => setSelected(p)} />)}</div>
+      <ProductDialog product={selected} onClose={() => setSelected(null)} />
+    </>
   );
 }
 
-export function ProductCatalog({ limit }: { limit?: number }) {
-  const shown = limit ? products.slice(0, limit) : products;
-  return <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{shown.map((product) => <ProductCard key={product.id} product={product} />)}</div>;
+export function useProducts() {
+  return useQuery(productsQuery);
+}
+
+export function ProductBrowser({ initialCategory = "" }: { initialCategory?: string }) {
+  const { data: products = [], isLoading } = useProducts();
+  const { data: categories = [] } = useQuery(categoriesQuery);
+  const [category, setCategory] = useState(initialCategory);
+  const [q, setQ] = useState("");
+  const [brand, setBrand] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [sort, setSort] = useState("featured");
+
+  const brands = useMemo(() => [...new Set(products.filter((p) => !category || p.category_id === category).map((p) => p.brand))].sort(), [products, category]);
+  const list = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    const r = products.filter((p) => (!category || p.category_id === category)
+      && (!term || `${p.name} ${p.brand} ${p.model}`.toLowerCase().includes(term))
+      && (!brand || p.brand === brand)
+      && (!maxPrice || Number(p.price) <= Number(maxPrice))
+      && (!onlyAvailable || p.stock > 0));
+    const s = [...r];
+    if (sort === "price-asc") s.sort((a, b) => Number(a.price) - Number(b.price));
+    if (sort === "price-desc") s.sort((a, b) => Number(b.price) - Number(a.price));
+    if (sort === "new") s.sort((a, b) => Number(b.is_new) - Number(a.is_new) || b.created_at.localeCompare(a.created_at));
+    if (sort === "featured") s.sort((a, b) => Number(b.is_featured) - Number(a.is_featured));
+    return s;
+  }, [products, category, q, brand, maxPrice, onlyAvailable, sort]);
+
+  return (
+    <div>
+      <div className="flex gap-2 overflow-x-auto pb-2">
+        <button type="button" className="chip shrink-0" data-active={!category} onClick={() => { setCategory(""); setBrand(""); }}>Todos</button>
+        {categories.map((c) => <button type="button" key={c.id} className="chip shrink-0" data-active={category === c.id} onClick={() => { setCategory(c.id); setBrand(""); }}>{c.name}</button>)}
+      </div>
+      <div className="mt-4 grid gap-3 rounded-xl border border-border bg-surface p-4 md:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+        <label className="relative"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><input className="field pl-9" placeholder="Buscar productos..." value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar" /></label>
+        <select className="field" value={brand} onChange={(e) => setBrand(e.target.value)} aria-label="Marca"><option value="">Todas las marcas</option>{brands.map((b) => <option key={b}>{b}</option>)}</select>
+        <select className="field" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} aria-label="Precio"><option value="">Cualquier precio</option><option value="50">Hasta $50</option><option value="200">Hasta $200</option><option value="500">Hasta $500</option><option value="1000">Hasta $1,000</option></select>
+        <select className="field" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Ordenar"><option value="featured">Destacados</option><option value="new">Novedades</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option></select>
+        <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={onlyAvailable} onChange={(e) => setOnlyAvailable(e.target.checked)} className="size-4 accent-primary" /> Disponibles</label>
+      </div>
+      <p className="my-5 text-sm text-muted-foreground">{isLoading ? "Cargando productos..." : `${list.length} producto${list.length === 1 ? "" : "s"}`}</p>
+      {!isLoading && <ProductGrid products={list} />}
+    </div>
+  );
 }

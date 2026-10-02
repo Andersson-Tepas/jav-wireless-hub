@@ -1,72 +1,109 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, BadgeDollarSign, BatteryCharging, CheckCircle2, ClipboardCheck, CreditCard, Headphones, MapPin, MessageSquareText, PackageCheck, Radio, ShieldCheck, Smartphone, Sparkles, Truck, Users, Wrench } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowRight, CheckCircle2, MapPin, MessageCircle, ShieldCheck, Sparkles, Truck, Users } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { PageIntro, SectionHeading } from "@/components/site-shell";
-import { ProductCatalog } from "@/components/product-catalog";
-import { socialLinks } from "@/lib/site-data";
-
-const services = [
-  { icon: Smartphone, title: "Equipos móviles", text: "Smartphones nuevos y seleccionados para cada presupuesto." },
-  { icon: Radio, title: "Activaciones", text: "Conecta tu línea, conserva tu número y sal listo para comunicarte." },
-  { icon: Wrench, title: "Reparaciones", text: "Diagnóstico técnico y soluciones para las fallas más comunes." },
-  { icon: Headphones, title: "Accesorios", text: "Audio, protección y carga para completar tu experiencia móvil." },
-  { icon: BadgeDollarSign, title: "Financiamiento", text: "Opciones de pago flexibles en equipos seleccionados." },
-  { icon: Truck, title: "Envíos", text: "Seguimiento claro desde nuestra tienda hasta tu puerta." },
-];
+import { ProductGrid, useProducts } from "@/components/product-catalog";
+import { categoriesQuery } from "@/lib/catalog";
+import { productImage, services, socialLinks } from "@/lib/site-data";
+import heroPhone from "@/assets/phone-titanium.jpg";
 
 export function HomePage() {
+  const { data: products = [], isLoading } = useProducts();
+  const { data: categories = [] } = useQuery(categoriesQuery);
+  const featured = products.filter((p) => p.is_featured).slice(0, 4);
+  const best = products.filter((p) => p.is_bestseller).slice(0, 4);
+  const fresh = products.filter((p) => p.is_new).slice(0, 4);
+  const offers = products.filter((p) => p.is_offer).slice(0, 4);
+  const recommended = [...products].sort((a, b) => b.stock - a.stock).slice(0, 4);
+  const catImage = (id: string) => products.find((p) => p.category_id === id)?.image;
+
   return (
     <>
-      <section className="hero-grid-bg overflow-hidden">
-        <div className="mx-auto grid min-h-[680px] max-w-7xl items-center gap-10 px-4 py-14 lg:min-h-[760px] lg:grid-cols-[1.05fr_0.95fr] lg:px-6">
-          <div className="relative z-10">
-            <p className="eyebrow">Conecta · Estrena · Avanza</p>
-            <h1 className="mt-5 max-w-3xl font-display text-5xl font-black leading-[0.98] tracking-normal text-foreground sm:text-7xl">Tecnología que te mantiene <span className="text-primary">conectado.</span></h1>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-muted-foreground">Equipos, accesorios, financiamiento y soporte técnico, con atención directa y soluciones sin complicaciones.</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Link to="/productos" className={buttonVariants()}>Ver productos <ArrowRight className="size-4" /></Link><Link to="/servicios" className={buttonVariants({ variant: "outline" })}>Explorar servicios</Link></div>
-            <div className="mt-12 grid max-w-xl grid-cols-3 gap-3 border-t border-border pt-6">
-              <Metric value="+1,500" label="Clientes" /><Metric value="48 h" label="Respuesta técnica" /><Metric value="4.9/5" label="Satisfacción" />
+      <section className="bg-primary text-primary-foreground">
+        <div className="container-page grid items-center gap-10 py-14 lg:grid-cols-2 lg:py-20">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-foreground/70">JAV Wireless</p>
+            <h1 className="mt-4 font-display text-4xl font-bold leading-tight sm:text-6xl">Todo lo que buscas, en un solo lugar.</h1>
+            <p className="mt-5 max-w-lg text-lg text-primary-foreground/80">Teléfonos, accesorios, perfumes, joyería y más. Compra en línea y recoge en tienda o recíbelo en casa.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/productos" className={buttonVariants({ variant: "accent", size: "lg" })}>Ver todos los productos <ArrowRight /></Link>
+              <Link to="/seguimiento" className="inline-flex h-12 items-center rounded-md border border-primary-foreground/30 px-6 font-semibold hover:bg-primary-foreground/10">Rastrear pedido</Link>
             </div>
           </div>
-          <div className="relative grid min-h-[420px] place-items-center lg:min-h-[620px]">
-            <div className="signal-ring signal-ring-one" /><div className="signal-ring signal-ring-two" /><div className="signal-core"><Radio className="size-14 text-primary" /><span className="mt-4 text-xs font-black uppercase text-primary">Señal activa</span></div>
-            <div className="hero-chip left-0 top-16"><ShieldCheck /> Garantía y respaldo</div><div className="hero-chip bottom-20 right-0"><BatteryCharging /> Equipos listos</div>
-          </div>
+          <div className="overflow-hidden rounded-2xl bg-background shadow-lift"><img src={heroPhone} alt="Teléfono destacado en JAV Wireless" width={1024} height={1024} className="aspect-[4/3] w-full object-cover" /></div>
         </div>
       </section>
-      <section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><SectionHeading eyebrow="Todo en un solo lugar" title="Soluciones para tu mundo móvil" description="Elige el servicio que necesitas y recibe atención personalizada." /><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{services.map((service) => <ServiceCard key={service.title} {...service} />)}</div></div></section>
-      <section className="section-pad border-y border-border bg-surface-deep"><div className="mx-auto max-w-7xl px-4 lg:px-6"><div className="mb-8 grid gap-5 md:grid-cols-[1fr_auto] md:items-end"><SectionHeading eyebrow="Selección JAV" title="Equipos destacados" description="Toca cualquier producto para conocer todos sus detalles." /><Link to="/productos" className={buttonVariants({ variant: "cyan" })}>Ver catálogo <ArrowRight className="size-4" /></Link></div><ProductCatalog limit={4} /></div></section>
-      <section className="section-pad"><div className="mx-auto grid max-w-7xl gap-5 px-4 md:grid-cols-3 lg:px-6"><ColorPanel tone="offer" title="Ofertas que se mueven rápido" text="Precios especiales en unidades seleccionadas mientras haya stock." icon={Sparkles} /><ColorPanel tone="finance" title="Paga a tu ritmo" text="Opciones flexibles para estrenar sin detener tus planes." icon={CreditCard} /><ColorPanel tone="shipping" title="Envíos con seguimiento" text="Información clara del estado de tu orden en cada paso." icon={Truck} /></div></section>
+
+      <section className="border-b border-border bg-surface"><div className="container-page grid grid-cols-2 gap-4 py-5 text-sm font-semibold text-primary md:grid-cols-4">
+        <span className="flex items-center gap-2"><Truck className="size-5 text-accent" /> Envío con seguimiento</span>
+        <span className="flex items-center gap-2"><MapPin className="size-5 text-accent" /> Recogida en tienda</span>
+        <span className="flex items-center gap-2"><ShieldCheck className="size-5 text-accent" /> Compra segura</span>
+        <span className="flex items-center gap-2"><Sparkles className="size-5 text-accent" /> Financiamiento</span>
+      </div></section>
+
+      <section className="section-pad"><div className="container-page">
+        <SectionHeading eyebrow="Categorías" title="Compra por categoría" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {categories.map((c) => (
+            <Link key={c.id} to="/productos" search={{ categoria: c.id }} className="group relative overflow-hidden rounded-xl border border-border bg-surface">
+              {catImage(c.id) ? <img src={productImage(catImage(c.id)!)} alt="" loading="lazy" width={1024} height={1024} className="aspect-[4/3] w-full object-cover opacity-90 transition group-hover:scale-105" /> : <div className="aspect-[4/3]" />}
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-navy-deep/85 to-transparent p-3 font-bold text-primary-foreground">{c.name}</span>
+            </Link>
+          ))}
+        </div>
+      </div></section>
+
+      {isLoading ? <p className="container-page pb-10 text-muted-foreground">Cargando productos...</p> : <>
+        <HomeRow eyebrow="Selección" title="Productos destacados" items={featured} />
+        <section className="bg-surface"><HomeRow eyebrow="Ofertas" title="Ofertas y promociones" items={offers} /></section>
+        <HomeRow eyebrow="Populares" title="Más vendidos" items={best} />
+        <section className="bg-surface"><HomeRow eyebrow="Recién llegados" title="Nuevos productos" items={fresh} /></section>
+        <HomeRow eyebrow="Para ti" title="Te recomendamos" items={recommended} />
+      </>}
+      <div className="container-page pb-16 text-center"><Link to="/productos" className={buttonVariants({ size: "lg" })}>Ver todos los productos <ArrowRight /></Link></div>
     </>
   );
 }
 
-function Metric({ value, label }: { value: string; label: string }) { return <div><strong className="block text-xl font-black text-foreground sm:text-2xl">{value}</strong><span className="text-xs text-muted-foreground">{label}</span></div>; }
-function ServiceCard({ icon: Icon, title, text }: (typeof services)[number]) { return <article className="service-card group"><Icon className="size-7 text-primary transition group-hover:scale-110" /><h3 className="mt-6 text-xl font-bold text-foreground">{title}</h3><p className="mt-2 leading-7 text-muted-foreground">{text}</p><ArrowRight className="mt-6 size-5 text-primary transition group-hover:translate-x-1" /></article>; }
-function ColorPanel({ tone, title, text, icon: Icon }: { tone: string; title: string; text: string; icon: React.ComponentType<{ className?: string }> }) { return <article className={`color-panel tone-${tone}`}><Icon className="size-7" /><h3 className="mt-8 text-xl font-bold text-foreground">{title}</h3><p className="mt-2 leading-7 text-muted-foreground">{text}</p></article>; }
+function HomeRow({ eyebrow, title, items }: { eyebrow: string; title: string; items: ReturnType<typeof useProducts>["data"] & object }) {
+  if (!items.length) return null;
+  return <div className="section-pad"><div className="container-page"><SectionHeading eyebrow={eyebrow} title={title} action={<Link to="/productos" className="text-sm font-semibold text-primary hover:text-accent">Ver todo →</Link>} /><ProductGrid products={items} /></div></div>;
+}
 
-export function ServicesPage() { return <><PageIntro eyebrow="Servicios" title="Conectividad y soporte, de principio a fin." description="Desde tu próximo teléfono hasta su configuración y cuidado: nuestro equipo te acompaña en cada paso." /><section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{services.map((service) => <ServiceCard key={service.title} {...service} />)}</div></div></section></>; }
-export function ProductsPage() { return <><PageIntro tone="product" eyebrow="Productos" title="Tu próximo equipo está aquí." description="Explora nuestra selección. Abre cualquier producto para consultar disponibilidad, especificaciones y opciones de compra." /><section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><ProductCatalog /></div></section></>; }
+export function ServicesPage() {
+  return (
+    <>
+      <PageIntro eyebrow="Servicios" title="Servicios JAV Wireless" description="Elige un servicio, completa el formulario, selecciona cómo pagar y recibe tu número de referencia." />
+      <section className="section-pad"><div className="container-page grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {services.map((s) => (
+          <Link key={s.slug} to="/servicios/$slug" params={{ slug: s.slug }} className="card-soft group flex flex-col p-6 transition hover:border-primary hover:shadow-lift">
+            {s.slug === "envios-de-dinero" && <span className="mb-3 w-fit rounded bg-accent/10 px-2 py-1 text-xs font-bold text-accent">Transferencia de dinero</span>}
+            <h2 className="text-xl font-bold text-primary">{s.name}</h2>
+            <p className="mt-2 flex-1 text-sm text-muted-foreground">{s.short}</p>
+            <p className="mt-4 text-sm font-semibold text-foreground">{s.cost}</p>
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:text-accent">Solicitar <ArrowRight className="size-4" /></span>
+          </Link>
+        ))}
+      </div></section>
+    </>
+  );
+}
 
 export function FinancingPage() {
-  const steps = ["Elige tu equipo", "Completa tu solicitud", "Recibe una opción", "Estrena tu equipo"];
-  return <><PageIntro tone="finance" eyebrow="Financiamiento" title="Más opciones para llegar a tu próximo teléfono." description="Planes flexibles en productos seleccionados, con un proceso claro y atención personalizada." /><section className="section-pad"><div className="mx-auto max-w-7xl px-4 lg:px-6"><SectionHeading eyebrow="Proceso simple" title="Cuatro pasos para comenzar" /><div className="grid gap-4 md:grid-cols-4">{steps.map((step, index) => <article key={step} className="process-step"><span>{String(index + 1).padStart(2, "0")}</span><h3>{step}</h3></article>)}</div><div className="mt-12 border-l-2 border-finance pl-6"><h3 className="text-xl font-bold text-foreground">Requisitos pueden variar</h3><p className="mt-2 max-w-2xl leading-7 text-muted-foreground">La aprobación, el pago inicial y las cuotas dependen del equipo y la evaluación correspondiente. Consulta para recibir información precisa.</p><a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className={`${buttonVariants()} mt-5`}>Consultar opciones</a></div></div></section></>;
+  const steps = ["Elige tu producto", "Completa la solicitud", "Recibe tu aprobación", "Estrena y paga a tu ritmo"];
+  return <><PageIntro eyebrow="Financiamiento" title="Estrena hoy, paga a tu ritmo." description="Planes flexibles en teléfonos, joyería y productos seleccionados." /><section className="section-pad"><div className="container-page"><div className="grid gap-4 md:grid-cols-4">{steps.map((s, i) => <div key={s} className="card-soft p-6"><span className="font-display text-3xl font-bold text-accent">{i + 1}</span><h3 className="mt-3 font-bold text-primary">{s}</h3></div>)}</div><p className="mt-8 max-w-2xl text-muted-foreground">La aprobación, el pago inicial y las cuotas dependen del producto y la evaluación correspondiente.</p><Link to="/servicios/$slug" params={{ slug: "financiamiento" }} className={`${buttonVariants({ variant: "accent" })} mt-6`}>Solicitar financiamiento</Link></div></section></>;
 }
 
 export function RepairsPage() {
-  const repairs = ["Pantalla y cristal", "Batería y carga", "Cámara y audio", "Diagnóstico general"];
-  return <><PageIntro tone="repair" eyebrow="Reparaciones" title="Diagnóstico claro. Soluciones que duran." description="Revisamos tu equipo, explicamos el problema y confirmamos el trabajo antes de comenzar." /><section className="section-pad"><div className="mx-auto grid max-w-7xl gap-10 px-4 lg:grid-cols-2 lg:px-6"><div><SectionHeading eyebrow="Taller técnico" title="Cuidamos tu equipo" />{repairs.map((repair) => <div key={repair} className="repair-row"><CheckCircle2 className="size-5 text-repair" /><span>{repair}</span></div>)}</div><form className="form-panel" onSubmit={(event) => event.preventDefault()}><h2 className="text-2xl font-black text-foreground">Solicita una evaluación</h2><Field label="Nombre" placeholder="Tu nombre" /><Field label="Equipo" placeholder="Marca y modelo" /><Field label="¿Qué sucede?" placeholder="Describe la falla" textarea /><Button type="submit">Enviar solicitud</Button></form></div></section></>;
+  const repairs = ["Pantalla y cristal", "Batería y puerto de carga", "Cámara, audio y micrófono", "Diagnóstico general"];
+  return <><PageIntro eyebrow="Reparaciones" title="Reparación de celulares con garantía." description="Revisamos tu equipo, te explicamos el problema y confirmamos el costo antes de comenzar." /><section className="section-pad"><div className="container-page grid gap-10 lg:grid-cols-2"><div className="space-y-3">{repairs.map((r) => <div key={r} className="flex items-center gap-3 rounded-lg border border-border p-4"><CheckCircle2 className="size-5 text-success" /><span className="font-semibold">{r}</span></div>)}</div><div className="card-soft p-8"><h2 className="font-display text-2xl font-bold text-primary">Solicita tu reparación</h2><p className="mt-2 text-muted-foreground">Completa el formulario en línea y recibe un número de referencia para darle seguimiento.</p><Link to="/servicios/$slug" params={{ slug: "reparaciones" }} className={`${buttonVariants()} mt-6`}>Iniciar solicitud</Link></div></div></section></>;
 }
 
-export function AboutPage() { return <><PageIntro eyebrow="Nosotros" title="Tecnología cercana, atención de verdad." description="JAV Wireless nace para simplificar la compra, conexión y cuidado de tus dispositivos móviles." /><section className="section-pad"><div className="mx-auto grid max-w-7xl gap-12 px-4 md:grid-cols-2 lg:px-6"><div><SectionHeading eyebrow="Nuestra forma de trabajar" title="Claridad en cada recomendación" /><p className="leading-8 text-muted-foreground">Escuchamos lo que necesitas, comparamos opciones y te ayudamos a elegir sin presión. Queremos que cada compra y cada reparación se sienta segura.</p></div><div className="grid gap-4 sm:grid-cols-2"><Value icon={ShieldCheck} title="Confianza" text="Información directa y respaldo." /><Value icon={Users} title="Cercanía" text="Atención humana y ágil." /><Value icon={Sparkles} title="Calidad" text="Equipos y servicios seleccionados." /><Value icon={Radio} title="Conexión" text="Soluciones para seguir adelante." /></div></div></section></>; }
-function Value({ icon: Icon, title, text }: { icon: React.ComponentType<{ className?: string }>; title: string; text: string }) { return <article className="service-card"><Icon className="size-6 text-primary" /><h3 className="mt-5 font-bold text-foreground">{title}</h3><p className="mt-2 text-sm text-muted-foreground">{text}</p></article>; }
-
-export function ContactPage() { return <><PageIntro eyebrow="Contacto" title="Hablemos de lo que necesitas." description="Consulta productos, reparaciones, financiamiento o el estado de un envío." /><section className="section-pad"><div className="mx-auto grid max-w-7xl gap-10 px-4 lg:grid-cols-[0.8fr_1.2fr] lg:px-6"><div className="space-y-4"><ContactLine icon={MessageSquareText} title="WhatsApp" text="Respuesta directa" /><ContactLine icon={MapPin} title="Visítanos" text="Ubicación disponible al consultar" /><ContactLine icon={Radio} title="Redes sociales" text="Facebook · Instagram · TikTok" /></div><form className="form-panel" onSubmit={(event) => event.preventDefault()}><div className="grid gap-4 sm:grid-cols-2"><Field label="Nombre" placeholder="Tu nombre" /><Field label="Teléfono" placeholder="Tu número" /></div><Field label="Asunto" placeholder="¿Cómo podemos ayudarte?" /><Field label="Mensaje" placeholder="Cuéntanos más" textarea /><Button type="submit">Enviar mensaje</Button></form></div></section></>; }
-function ContactLine({ icon: Icon, title, text }: { icon: React.ComponentType<{ className?: string }>; title: string; text: string }) { return <div className="flex items-center gap-4 border-b border-border py-5"><span className="grid size-11 shrink-0 place-items-center rounded-md bg-primary/10 text-primary"><Icon className="size-5" /></span><div><h3 className="font-bold text-foreground">{title}</h3><p className="text-sm text-muted-foreground">{text}</p></div></div>; }
-function Field({ label, placeholder, textarea }: { label: string; placeholder: string; textarea?: boolean }) { return <label className="grid gap-2 text-sm font-semibold text-foreground"><span>{label}</span>{textarea ? <textarea className="field min-h-28 resize-y" placeholder={placeholder} /> : <input className="field" placeholder={placeholder} />}</label>; }
-
-export function DashboardPage() {
-  const quick = [{ icon: ClipboardCheck, label: "Formularios", value: "12 nuevos", tone: "primary" }, { icon: Users, label: "Clientes", value: "1,584", tone: "product" }, { icon: Truck, label: "Envíos", value: "26 activos", tone: "shipping" }, { icon: CreditCard, label: "Pagos", value: "$8,420", tone: "finance" }, { icon: PackageCheck, label: "Inventario", value: "93 unidades", tone: "offer" }];
-  return <><PageIntro eyebrow="Panel de control" title="Tu operación, a primera vista." description="Accesos rápidos y estado general de formularios, clientes, envíos, pagos y reportes." /><section className="section-pad pt-0"><div className="mx-auto max-w-7xl px-4 lg:px-6"><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{quick.map(({ icon: Icon, label, value, tone }) => <button key={label} className={`dashboard-tile tone-${tone}`}><Icon className="size-6" /><span className="mt-8 text-sm text-muted-foreground">{label}</span><strong className="mt-1 text-xl text-foreground">{value}</strong></button>)}</div><div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]"><div className="dashboard-panel"><div className="flex items-center justify-between"><div><p className="eyebrow">Actividad</p><h2 className="mt-2 text-2xl font-black text-foreground">Resumen semanal</h2></div><span className="status-live">En vivo</span></div><div className="chart-bars" aria-label="Gráfico demostrativo semanal">{[42,68,51,82,66,92,75].map((height, index) => <div key={index} className="chart-column"><div style={{ height: `${height}%` }} /><span>{["L","M","X","J","V","S","D"][index]}</span></div>)}</div></div><div className="dashboard-panel"><p className="eyebrow">Reportes</p><h2 className="mt-2 text-2xl font-black text-foreground">Indicadores</h2><div className="mt-6 space-y-5"><Progress label="Ventas" value="78%" width="78%" /><Progress label="Entregas" value="92%" width="92%" /><Progress label="Reparaciones" value="64%" width="64%" /></div><Button variant="outline" className="mt-8 w-full">Ver reportes</Button></div></div></div></section></>;
+export function AboutPage() {
+  return <><PageIntro eyebrow="Nosotros" title="Atención cercana, productos confiables." description="JAV Wireless reúne tecnología, regalos y servicios esenciales para tu comunidad." /><section className="section-pad"><div className="container-page grid gap-6 md:grid-cols-3">{[{ icon: ShieldCheck, t: "Confianza", d: "Información clara y respaldo en cada compra." }, { icon: Users, t: "Cercanía", d: "Atención humana, en tienda y en línea." }, { icon: Sparkles, t: "Calidad", d: "Productos y servicios seleccionados." }].map((v) => <div key={v.t} className="card-soft p-6"><v.icon className="size-7 text-accent" /><h3 className="mt-4 text-lg font-bold text-primary">{v.t}</h3><p className="mt-2 text-muted-foreground">{v.d}</p></div>)}</div></section></>;
 }
-function Progress({ label, value, width }: { label: string; value: string; width: string }) { return <div><div className="mb-2 flex justify-between text-sm"><span className="text-muted-foreground">{label}</span><strong className="text-foreground">{value}</strong></div><div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width }} /></div></div>; }
+
+export function ContactPage() {
+  return <><PageIntro eyebrow="Contacto" title="Estamos para ayudarte." description="Escríbenos para consultar productos, servicios o el estado de tu pedido." /><section className="section-pad"><div className="container-page grid gap-6 md:grid-cols-3"><a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="card-soft p-6 hover:border-primary"><MessageCircle className="size-7 text-success" /><h3 className="mt-4 font-bold text-primary">WhatsApp</h3><p className="mt-1 text-sm text-muted-foreground">Respuesta directa</p></a><div className="card-soft p-6"><MapPin className="size-7 text-accent" /><h3 className="mt-4 font-bold text-primary">Visítanos</h3><p className="mt-1 text-sm text-muted-foreground">Dirección disponible al consultar</p></div><Link to="/seguimiento" className="card-soft p-6 hover:border-primary"><Truck className="size-7 text-primary" /><h3 className="mt-4 font-bold text-primary">Mi pedido</h3><p className="mt-1 text-sm text-muted-foreground">Consulta el estado de tu compra</p></Link></div></section></>;
+}

@@ -10,17 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CarritoRouteImport } from './routes/carrito'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as FinanciamientoRouteImport } from './routes/financiamiento'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as ReparacionesRouteImport } from './routes/reparaciones'
+import { Route as SeguimientoRouteImport } from './routes/seguimiento'
 import { Route as ServiciosRouteImport } from './routes/servicios'
+import { Route as ServiciosSlugRouteImport } from './routes/servicios.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarritoRoute = CarritoRouteImport.update({
+  id: '/carrito',
+  path: '/carrito',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactoRoute = ContactoRouteImport.update({
@@ -53,85 +67,122 @@ const ReparacionesRoute = ReparacionesRouteImport.update({
   path: '/reparaciones',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeguimientoRoute = SeguimientoRouteImport.update({
+  id: '/seguimiento',
+  path: '/seguimiento',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServiciosRoute = ServiciosRouteImport.update({
   id: '/servicios',
   path: '/servicios',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServiciosSlugRoute = ServiciosSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ServiciosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/carrito': typeof CarritoRoute
+  '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
   '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
-  '/servicios': typeof ServiciosRoute
+  '/seguimiento': typeof SeguimientoRoute
+  '/servicios': typeof ServiciosRouteWithChildren
+  '/servicios/$slug': typeof ServiciosSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/carrito': typeof CarritoRoute
+  '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
   '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
-  '/servicios': typeof ServiciosRoute
+  '/seguimiento': typeof SeguimientoRoute
+  '/servicios': typeof ServiciosRouteWithChildren
+  '/servicios/$slug': typeof ServiciosSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/carrito': typeof CarritoRoute
+  '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
   '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
-  '/servicios': typeof ServiciosRoute
+  '/seguimiento': typeof SeguimientoRoute
+  '/servicios': typeof ServiciosRouteWithChildren
+  '/servicios/$slug': typeof ServiciosSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/carrito'
+    | '/checkout'
     | '/contacto'
     | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/seguimiento'
     | '/servicios'
+    | '/servicios/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/carrito'
+    | '/checkout'
     | '/contacto'
     | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/seguimiento'
     | '/servicios'
+    | '/servicios/$slug'
   id:
     | '__root__'
     | '/'
+    | '/carrito'
+    | '/checkout'
     | '/contacto'
     | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/seguimiento'
     | '/servicios'
+    | '/servicios/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CarritoRoute: typeof CarritoRoute
+  CheckoutRoute: typeof CheckoutRoute
   ContactoRoute: typeof ContactoRoute
   DashboardRoute: typeof DashboardRoute
   FinanciamientoRoute: typeof FinanciamientoRoute
   NosotrosRoute: typeof NosotrosRoute
   ProductosRoute: typeof ProductosRoute
   ReparacionesRoute: typeof ReparacionesRoute
-  ServiciosRoute: typeof ServiciosRoute
+  SeguimientoRoute: typeof SeguimientoRoute
+  ServiciosRoute: typeof ServiciosRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +192,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/carrito': {
+      id: '/carrito'
+      path: '/carrito'
+      fullPath: '/carrito'
+      preLoaderRoute: typeof CarritoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contacto': {
@@ -185,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReparacionesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seguimiento': {
+      id: '/seguimiento'
+      path: '/seguimiento'
+      fullPath: '/seguimiento'
+      preLoaderRoute: typeof SeguimientoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/servicios': {
       id: '/servicios'
       path: '/servicios'
@@ -192,18 +264,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServiciosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/servicios/$slug': {
+      id: '/servicios/$slug'
+      path: '/$slug'
+      fullPath: '/servicios/$slug'
+      preLoaderRoute: typeof ServiciosSlugRouteImport
+      parentRoute: typeof ServiciosRoute
+    }
   }
 }
 
+interface ServiciosRouteChildren {
+  ServiciosSlugRoute: typeof ServiciosSlugRoute
+}
+
+const ServiciosRouteChildren: ServiciosRouteChildren = {
+  ServiciosSlugRoute: ServiciosSlugRoute,
+}
+
+const ServiciosRouteWithChildren = ServiciosRoute._addFileChildren(
+  ServiciosRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CarritoRoute: CarritoRoute,
+  CheckoutRoute: CheckoutRoute,
   ContactoRoute: ContactoRoute,
   DashboardRoute: DashboardRoute,
   FinanciamientoRoute: FinanciamientoRoute,
   NosotrosRoute: NosotrosRoute,
   ProductosRoute: ProductosRoute,
   ReparacionesRoute: ReparacionesRoute,
-  ServiciosRoute: ServiciosRoute,
+  SeguimientoRoute: SeguimientoRoute,
+  ServiciosRoute: ServiciosRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
