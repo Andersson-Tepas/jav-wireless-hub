@@ -20,6 +20,8 @@ import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as ReparacionesRouteImport } from './routes/reparaciones'
 import { Route as SeguimientoRouteImport } from './routes/seguimiento'
+import { Route as AuthenticatedCuentaRouteImport } from './routes/_authenticated/cuenta'
+import { Route as AuthenticatedMisPedidosRouteImport } from './routes/_authenticated/mis-pedidos'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
 import { Route as ServiciosIndexRouteImport } from './routes/servicios.index'
 import { Route as ServiciosSlugRouteImport } from './routes/servicios.$slug'
@@ -95,6 +97,16 @@ const SeguimientoRoute = SeguimientoRouteImport.update({
   id: '/seguimiento',
   path: '/seguimiento',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCuentaRoute = AuthenticatedCuentaRouteImport.update({
+  id: '/cuenta',
+  path: '/cuenta',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMisPedidosRoute = AuthenticatedMisPedidosRouteImport.update({
+  id: '/mis-pedidos',
+  path: '/mis-pedidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPanelRoute = AuthenticatedPanelRouteImport.update({
   id: '/panel',
@@ -216,6 +228,8 @@ export interface FileRoutesByFullPath {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
+  '/cuenta': typeof AuthenticatedCuentaRoute
+  '/mis-pedidos': typeof AuthenticatedMisPedidosRoute
   '/panel': typeof AuthenticatedPanelRouteWithChildren
   '/servicios/$slug': typeof ServiciosSlugRoute
   '/servicios/': typeof ServiciosIndexRoute
@@ -249,6 +263,8 @@ export interface FileRoutesByTo {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
+  '/cuenta': typeof AuthenticatedCuentaRoute
+  '/mis-pedidos': typeof AuthenticatedMisPedidosRoute
   '/servicios/$slug': typeof ServiciosSlugRoute
   '/servicios': typeof ServiciosIndexRoute
   '/panel/$seccion': typeof AuthenticatedPanelSeccionRoute
@@ -283,6 +299,8 @@ export interface FileRoutesById {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
+  '/_authenticated/cuenta': typeof AuthenticatedCuentaRoute
+  '/_authenticated/mis-pedidos': typeof AuthenticatedMisPedidosRoute
   '/_authenticated/panel': typeof AuthenticatedPanelRouteWithChildren
   '/servicios/$slug': typeof ServiciosSlugRoute
   '/servicios/': typeof ServiciosIndexRoute
@@ -318,6 +336,8 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
+    | '/cuenta'
+    | '/mis-pedidos'
     | '/panel'
     | '/servicios/$slug'
     | '/servicios/'
@@ -351,6 +371,8 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
+    | '/cuenta'
+    | '/mis-pedidos'
     | '/servicios/$slug'
     | '/servicios'
     | '/panel/$seccion'
@@ -384,6 +406,8 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
+    | '/_authenticated/cuenta'
+    | '/_authenticated/mis-pedidos'
     | '/_authenticated/panel'
     | '/servicios/$slug'
     | '/servicios/'
@@ -511,6 +535,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/seguimiento'
       preLoaderRoute: typeof SeguimientoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/cuenta': {
+      id: '/_authenticated/cuenta'
+      path: '/cuenta'
+      fullPath: '/cuenta'
+      preLoaderRoute: typeof AuthenticatedCuentaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mis-pedidos': {
+      id: '/_authenticated/mis-pedidos'
+      path: '/mis-pedidos'
+      fullPath: '/mis-pedidos'
+      preLoaderRoute: typeof AuthenticatedMisPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/panel': {
       id: '/_authenticated/panel'
@@ -676,10 +714,14 @@ const AuthenticatedPanelRouteWithChildren =
   AuthenticatedPanelRoute._addFileChildren(AuthenticatedPanelRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCuentaRoute: typeof AuthenticatedCuentaRoute
+  AuthenticatedMisPedidosRoute: typeof AuthenticatedMisPedidosRoute
   AuthenticatedPanelRoute: typeof AuthenticatedPanelRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCuentaRoute: AuthenticatedCuentaRoute,
+  AuthenticatedMisPedidosRoute: AuthenticatedMisPedidosRoute,
   AuthenticatedPanelRoute: AuthenticatedPanelRouteWithChildren,
 }
 
