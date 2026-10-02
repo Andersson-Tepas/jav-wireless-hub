@@ -30,7 +30,7 @@ export function Dashboard() {
         <Kpi label="Total customers" value={customerProfiles.length} />
       </div>
       <div className="card-soft p-5">
-        <div className="flex items-center justify-between"><h2 className="font-bold text-primary">Recent orders</h2><Link to="/panel/$seccion" params={{ seccion: "pedidos" }} className="text-sm font-semibold text-primary hover:text-accent">Ver todos →</Link></div>
+        <div className="flex items-center justify-between"><h2 className="font-bold text-primary">Recent orders</h2><Link to="/panel/$seccion" params={{ seccion: "pedidos" }} className="text-sm font-semibold text-primary hover:text-accent">View all →</Link></div>
         <ul className="mt-3 divide-y divide-border text-sm">
           {orders.slice(0, 8).map((o) => <li key={o.id} className="flex flex-wrap justify-between gap-2 py-2"><span><strong>#{o.order_number}</strong> · {o.customer_name}</span><span className="text-muted-foreground">{statusLabels[o.status] ?? o.status} · {money(Number(o.total))} · {fmt(o.created_at)}</span></li>)}
           {!orders.length && <li className="py-2 text-muted-foreground">No orders yet.</li>}

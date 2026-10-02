@@ -48,23 +48,23 @@ export function Products() {
   const list = data.filter((p) => !filter || `${p.name} ${p.brand} ${p.model}`.toLowerCase().includes(filter.toLowerCase()));
 
   async function remove(p: Product) {
-    if (!confirm(`¿Delete "${p.name}"? Si tiene pedidos se desactivará en lugar de borrarse.`)) return;
+    if (!confirm(`Delete "${p.name}"? If it has orders, it will be deactivated instead of deleted.`)) return;
     const { data: used } = await supabase.from("order_items").select("id").eq("product_id", p.id).limit(1);
     const { error } = used?.length ? await supabase.from("products").update({ active: false }).eq("id", p.id) : await supabase.from("products").delete().eq("id", p.id);
-    if (error) { toast.error("No se pudo eliminar"); return; }
-    toast.success(used?.length ? "Producto desactivado (tiene pedidos)" : "Producto eliminado"); refresh();
+    if (error) { toast.error("Could not delete"); return; }
+    toast.success(used?.length ? "Product deactivated because it has orders" : "Product deleted"); refresh();
   }
   async function toggle(p: Product, k: "is_featured" | "is_offer" | "active", v: boolean) {
     const { error } = await supabase.from("products").update({ [k]: v } as never).eq("id", p.id);
-    if (error) toast.error("No se pudo guardar"); else refresh();
+    if (error) toast.error("Could not save"); else refresh();
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2"><input className="field max-w-sm" placeholder="Search producto..." value={filter} onChange={(e) => setFilter(e.target.value)} /><Button onClick={() => setEditing("new")}><Plus /> New producto</Button></div>
+      <div className="flex flex-wrap gap-2"><input className="field max-w-sm" placeholder="Search products..." value={filter} onChange={(e) => setFilter(e.target.value)} /><Button onClick={() => setEditing("new")}><Plus /> New product</Button></div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[820px] text-sm">
-          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Producto</th><th>Categoría</th><th>Price</th><th>Stock</th><th className="text-center">Destacado</th><th className="text-center">Sale</th><th className="text-center">Activo</th><th /></tr></thead>
+          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Product</th><th>Category</th><th>Price</th><th>Stock</th><th className="text-center">Featured</th><th className="text-center">Sale</th><th className="text-center">Active</th><th /></tr></thead>
           <tbody className="divide-y divide-border">{list.map((p) => (
             <tr key={p.id} className={p.active ? "" : "opacity-60"}>
               <td className="flex items-center gap-3 p-3"><img src={productImage(p.image)} alt="" className="size-10 rounded object-cover" /><div><p className="font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">{p.brand} {p.model}</p></div></td>
@@ -89,14 +89,14 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
 
   async function onFile(f: File | undefined) {
     if (!f) return;
-    if (f.size > 5_000_000) { toast.error("La imagen debe pesar menos de 5 MB"); return; }
+    if (f.size > 5_000_000) { toast.error("The image must be smaller than 5 MB"); return; }
     setBusy(true);
     try {
       const buf = new Uint8Array(await f.arrayBuffer());
       let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
       const r = await upload({ data: { filename: f.name, contentType: f.type as "image/jpeg", base64: btoa(bin) } });
-      set("image", r.url); toast.success("Imagen subida");
-    } catch { toast.error("Could not upload the image (JPG, PNG o WEBP)"); }
+      set("image", r.url); toast.success("Image uploaded");
+    } catch { toast.error("Could not upload the image (JPG, PNG, or WebP)"); }
     finally { setBusy(false); }
   }
 
@@ -105,39 +105,39 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
     const body = fromDraft(d);
     const { error } = product ? await supabase.from("products").update(body).eq("id", product.id) : await supabase.from("products").insert(body);
     setBusy(false);
-    if (error) { toast.error("No se pudo guardar el producto"); return; }
-    toast.success(product ? "Producto actualizado" : "Producto creado"); onSaved();
+    if (error) { toast.error("Could not save the product"); return; }
+    toast.success(product ? "Product updated" : "Product created"); onSaved();
   }
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader><DialogTitle>{product ? "Edit producto" : "New producto"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{product ? "Edit product" : "New product"}</DialogTitle></DialogHeader>
         <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
           <Field label="Name" className="sm:col-span-2"><input required className="field" value={d.name} onChange={(e) => set("name", e.target.value)} /></Field>
           <Field label="Brand"><input className="field" value={d.brand} onChange={(e) => set("brand", e.target.value)} /></Field>
           <Field label="Model"><input className="field" value={d.model} onChange={(e) => set("model", e.target.value)} /></Field>
-          <Field label="Categoría"><select className="field" value={d.category_id} onChange={(e) => set("category_id", e.target.value)}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
-          <Field label="Capacidad / talla"><input className="field" value={d.capacity} onChange={(e) => set("capacity", e.target.value)} /></Field>
+          <Field label="Category"><select className="field" value={d.category_id} onChange={(e) => set("category_id", e.target.value)}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+          <Field label="Capacity / size"><input className="field" value={d.capacity} onChange={(e) => set("capacity", e.target.value)} /></Field>
           <Field label="Price (USD)"><input required type="number" min={0} step="0.01" className="field" value={d.price} onChange={(e) => set("price", e.target.value)} /></Field>
-          <Field label="Price anterior (para ofertas)"><input type="number" min={0} step="0.01" className="field" value={d.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
+          <Field label="Previous price (for sales)"><input type="number" min={0} step="0.01" className="field" value={d.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
           <Field label="Stock"><input required type="number" min={0} className="field" value={d.stock} onChange={(e) => set("stock", e.target.value)} /></Field>
-          <Field label="Colors (separados por coma)"><input className="field" value={d.colors} onChange={(e) => set("colors", e.target.value)} /></Field>
-          <Field label="Descripción" className="sm:col-span-2"><textarea className="field h-24 py-2" value={d.description} onChange={(e) => set("description", e.target.value)} /></Field>
-          <Field label="Features (una por línea)"><textarea className="field h-28 py-2" value={d.features} onChange={(e) => set("features", e.target.value)} /></Field>
-          <Field label="Specifications (Etiqueta: valor)"><textarea className="field h-28 py-2" value={d.specs} onChange={(e) => set("specs", e.target.value)} /></Field>
-          <Field label="Financing (opcional)" className="sm:col-span-2"><input className="field" value={d.financing} onChange={(e) => set("financing", e.target.value)} /></Field>
+          <Field label="Colors (comma-separated)"><input className="field" value={d.colors} onChange={(e) => set("colors", e.target.value)} /></Field>
+          <Field label="Description" className="sm:col-span-2"><textarea className="field h-24 py-2" value={d.description} onChange={(e) => set("description", e.target.value)} /></Field>
+          <Field label="Features (one per line)"><textarea className="field h-28 py-2" value={d.features} onChange={(e) => set("features", e.target.value)} /></Field>
+          <Field label="Specifications (Label: value)"><textarea className="field h-28 py-2" value={d.specs} onChange={(e) => set("specs", e.target.value)} /></Field>
+          <Field label="Financing (optional)" className="sm:col-span-2"><input className="field" value={d.financing} onChange={(e) => set("financing", e.target.value)} /></Field>
           <div className="grid gap-2 sm:col-span-2 sm:grid-cols-[96px_1fr]">
             <img src={productImage(d.image)} alt="" className="size-24 rounded-lg border border-border object-cover" />
             <div className="grid gap-2">
-              <Field label="Imagen"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => onFile(e.target.files?.[0])} className="text-sm" /></Field>
-              <input className="field" placeholder="o pega un enlace https://..." value={d.image} onChange={(e) => set("image", e.target.value)} />
+              <Field label="Image"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => onFile(e.target.files?.[0])} className="text-sm" /></Field>
+              <input className="field" placeholder="or paste an https:// link..." value={d.image} onChange={(e) => set("image", e.target.value)} />
             </div>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-semibold sm:col-span-2">
-            {([["is_featured", "Destacado"], ["is_bestseller", "Más vendido"], ["is_new", "New"], ["is_offer", "Sale"], ["active", "Activo (visible)"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-primary" checked={d[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>)}
+            {([["is_featured", "Featured"], ["is_bestseller", "Best seller"], ["is_new", "New"], ["is_offer", "Sale"], ["active", "Active (visible)"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-primary" checked={d[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>)}
           </div>
-          <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button type="submit" disabled={busy}>{busy ? "Guardando..." : "Guardar"}</Button></div>
+          <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? "Saving..." : "Save"}</Button></div>
         </form>
       </DialogContent>
     </Dialog>
@@ -156,28 +156,28 @@ export function Inventory() {
   async function adjust(p: Product, delta: number) {
     if (!delta) return;
     const next = p.stock + delta;
-    if (next < 0) { toast.error("El stock no puede ser negativo"); return; }
+    if (next < 0) { toast.error("Stock cannot be negative"); return; }
     const { error } = await supabase.from("products").update({ stock: next }).eq("id", p.id);
-    if (error) { toast.error("No se pudo actualizar"); return; }
-    toast.success(delta > 0 ? "Entrada registrada" : "Salida registrada"); invalidate("admin-products", "admin-inventory", "products");
+    if (error) { toast.error("Could not update"); return; }
+    toast.success(delta > 0 ? "Stock received" : "Stock removed"); invalidate("admin-products", "admin-inventory", "products");
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        {([["all", `All (${products.length})`], ["low", `Stock bajo ≤ ${low} (${products.filter((p) => p.stock > 0 && p.stock <= low).length})`], ["out", `Out of stock (${products.filter((p) => p.stock === 0).length})`]] as const).map(([k, l]) => <button key={k} type="button" className="chip" data-active={view === k} onClick={() => setView(k)}>{l}</button>)}
+        {([["all", `All (${products.length})`], ["low", `Low stock ≤ ${low} (${products.filter((p) => p.stock > 0 && p.stock <= low).length})`], ["out", `Out of stock (${products.filter((p) => p.stock === 0).length})`]] as const).map(([k, l]) => <button key={k} type="button" className="chip" data-active={view === k} onClick={() => setView(k)}>{l}</button>)}
       </div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Producto</th><th>In stock</th><th>Registrar entrada / salida</th></tr></thead>
+          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Product</th><th>In stock</th><th>Record stock in / out</th></tr></thead>
           <tbody className="divide-y divide-border">{list.map((p) => <InventoryRow key={p.id} p={p} low={low} onAdjust={adjust} />)}</tbody>
         </table>
       </div>
       <div>
-        <h2 className="mb-2 font-bold text-primary">Movimientos recientes</h2>
+        <h2 className="mb-2 font-bold text-primary">Recent inventory activity</h2>
         <ul className="divide-y divide-border rounded-xl border border-border text-sm">
-          {moves.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 p-3"><span><strong className={m.kind === "out" ? "text-accent" : "text-success"}>{m.kind === "out" ? "−" : "+"}{m.quantity}</strong> {(m.products as { name: string } | null)?.name ?? "Producto"} · {m.reason}</span><span className="text-muted-foreground">Queda {m.stock_after} · {m.created_by_email ?? "sistema"} · {fmt(m.created_at)}</span></li>)}
-          {!moves.length && <li className="p-3 text-muted-foreground">Sin movimientos.</li>}
+          {moves.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 p-3"><span><strong className={m.kind === "out" ? "text-accent" : "text-success"}>{m.kind === "out" ? "−" : "+"}{m.quantity}</strong> {(m.products as { name: string } | null)?.name ?? "Product"} · {m.reason}</span><span className="text-muted-foreground">Remaining: {m.stock_after} · {m.created_by_email ?? "system"} · {fmt(m.created_at)}</span></li>)}
+          {!moves.length && <li className="p-3 text-muted-foreground">No inventory activity.</li>}
         </ul>
       </div>
     </div>
@@ -191,7 +191,7 @@ function InventoryRow({ p, low, onAdjust }: { p: Product; low: number; onAdjust:
     <tr>
       <td className="p-3 font-semibold">{p.name}</td>
       <td><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-accent/10 text-accent" : p.stock <= low ? "bg-surface text-foreground" : "text-success"}`}>{p.stock === 0 ? "Out of stock" : p.stock}</span></td>
-      <td className="flex gap-2 py-2"><input type="number" min={1} className="field h-9 w-20" value={qty} onChange={(e) => setQty(e.target.value)} /><Button size="sm" variant="outline" onClick={() => onAdjust(p, n)}>+ Entrada</Button><Button size="sm" variant="outline" onClick={() => onAdjust(p, -n)}>− Salida</Button></td>
+      <td className="flex gap-2 py-2"><input type="number" min={1} className="field h-9 w-20" value={qty} onChange={(e) => setQty(e.target.value)} /><Button size="sm" variant="outline" onClick={() => onAdjust(p, n)}>+ Stock in</Button><Button size="sm" variant="outline" onClick={() => onAdjust(p, -n)}>− Stock out</Button></td>
     </tr>
   );
 }

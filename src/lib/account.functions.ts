@@ -14,6 +14,6 @@ export const getMyOrders = createServerFn({ method: "GET" })
       .ilike("email", email)
       .order("created_at", { ascending: false })
       .limit(50);
-    if (error) throw new Error("No se pudieron cargar los pedidos");
+    if (error) throw new Error("Could not load orders");
     return data ?? [];
   });

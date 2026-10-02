@@ -4,13 +4,13 @@ import { Customers, Orders, Payments, Tracking } from "@/components/admin/admin-
 import { Inventory, Products } from "@/components/admin/admin-products";
 
 const sections: Record<string, { title: string; C: () => React.ReactNode }> = {
-  productos: { title: "Products", C: Products },
+  products: { title: "Products", C: Products },
   categorias: { title: "Categories", C: Categories },
   inventario: { title: "Inventory", C: Inventory },
   pedidos: { title: "Orders", C: Orders },
   clientes: { title: "Customers", C: Customers },
   servicios: { title: "Services", C: ServicesAdmin },
-  solicitudes: { title: "Service requests", C: Requests },
+  requests: { title: "Service requests", C: Requests },
   pagos: { title: "Payments", C: Payments },
   promociones: { title: "Promotions", C: Promotions },
   seguimiento: { title: "Tracking and notifications", C: Tracking },

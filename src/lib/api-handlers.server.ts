@@ -75,7 +75,7 @@ export const adminUpdateCategory = handle(async ({ request, params }: Ctx) => {
 export const adminDeleteCategory = handle(async ({ request, params }: Ctx) => {
   const { supabase } = await requireAdmin(request);
   const used = must(await supabase.from("products").select("id").eq("category_id", params["id"]!).limit(1));
-  if (used?.length) throw new ApiError(409, "La categoría tiene productos; desactívala en lugar de eliminarla");
+  if (used?.length) throw new ApiError(409, "This category has products. Deactivate it instead of deleting it");
   must(await supabase.from("categories").delete().eq("id", params["id"]!));
   return ok({ id: params["id"], deleted: true });
 });
