@@ -4,7 +4,7 @@ import { ArrowRight, CheckCircle2, MapPin, MessageCircle, ShieldCheck, Sparkles,
 import { buttonVariants } from "@/components/ui/button";
 import { PageIntro, SectionHeading } from "@/components/site-shell";
 import { ProductGrid, useProducts } from "@/components/product-catalog";
-import { categoriesQuery } from "@/lib/catalog";
+import { categoriesQuery, type Product } from "@/lib/catalog";
 import { productImage, services, socialLinks } from "@/lib/site-data";
 import heroPhone from "@/assets/phone-titanium.jpg";
 
@@ -66,7 +66,7 @@ export function HomePage() {
   );
 }
 
-function HomeRow({ eyebrow, title, items }: { eyebrow: string; title: string; items: ReturnType<typeof useProducts>["data"] & object }) {
+function HomeRow({ eyebrow, title, items }: { eyebrow: string; title: string; items: Product[] }) {
   if (!items.length) return null;
   return <div className="section-pad"><div className="container-page"><SectionHeading eyebrow={eyebrow} title={title} action={<Link to="/productos" className="text-sm font-semibold text-primary hover:text-accent">Ver todo →</Link>} /><ProductGrid products={items} /></div></div>;
 }
