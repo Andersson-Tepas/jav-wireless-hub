@@ -99,7 +99,7 @@ export function Payments() {
       ? await supabase.from("orders").update({ payment_status, ...(payment_status === "confirmed" ? { status: "payment_confirmed" } : {}) }).eq("id", r.id)
       : await supabase.from("service_requests").update({ payment_status, updated_at: new Date().toISOString() }).eq("id", r.id);
     if (error) { toast.error("Could not update"); return; }
-    toast.success(`Pago ${paymentStatusLabels[payment_status]?.toLowerCase()}`); invalidate("admin-orders", "admin-requests");
+    toast.success(`Payment ${paymentStatusLabels[payment_status]?.toLowerCase()}`); invalidate("admin-orders", "admin-requests");
   }
 
   return (

@@ -3,8 +3,8 @@ import { HomePage } from "@/components/commercial-pages";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
-    { title: "JAV Wireless — Phones, accesorios, perfumes y joyería" },
-    { name: "description", content: "Compra teléfonos, accesorios, perfumes, joyería y más con recogida en tienda o envío." },
+    { title: "JAV Wireless — Phones, accessories, fragrances, and jewelry" },
+    { name: "description", content: "Shop phones, accessories, fragrances, jewelry, and more for in-store pickup or delivery." },
     { property: "og:title", content: "JAV Wireless" },
     { property: "og:description", content: "Featured products, ofertas y novedades." },
     { property: "og:type", content: "website" },
