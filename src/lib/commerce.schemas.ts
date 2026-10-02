@@ -14,8 +14,8 @@ export const orderSchema = z.object({
   payment_reference: z.string().trim().max(120).optional(),
   notes: z.string().trim().max(500).optional(),
   items: z.array(z.object({ id: z.string().uuid(), quantity: z.number().int().min(1).max(50) })).min(1).max(50),
-}).refine((d) => d.delivery_method !== "shipping" || (d.address && d.address.length > 5), { message: "Dirección requerida", path: ["address"] })
-  .refine((d) => d.payment_method !== "zelle" || (d.payment_reference && d.payment_reference.length > 2), { message: "Referencia de Zelle requerida", path: ["payment_reference"] });
+}).refine((d) => d.delivery_method !== "shipping" || (d.address && d.address.length > 5), { message: "Shipping address is required", path: ["address"] })
+  .refine((d) => d.payment_method !== "zelle" || (d.payment_reference && d.payment_reference.length > 2), { message: "Zelle confirmation number is required", path: ["payment_reference"] });
 
 export const lookupSchema = z.object({ order_number: z.string().trim().min(3).max(20), contact: z.string().trim().min(3).max(255) });
 

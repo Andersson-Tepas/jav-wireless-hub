@@ -29,13 +29,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     count: items.reduce((n, i) => n + i.quantity, 0),
     total: items.reduce((n, i) => n + i.quantity * i.price, 0),
     add: (item, qty = 1) => {
-      if (item.stock <= 0) { toast.error("Producto agotado"); return; }
+      if (item.stock <= 0) { toast.error("Product is out of stock"); return; }
       setItems((prev) => {
         const found = prev.find((i) => i.id === item.id);
         if (found) return prev.map((i) => i.id === item.id ? { ...i, quantity: Math.min(i.stock, i.quantity + qty) } : i);
         return [...prev, { ...item, quantity: Math.min(item.stock, qty) }];
       });
-      toast.success(`${item.name} agregado al carrito`);
+      toast.success(`${item.name} added to cart`);
     },
     setQty: (id, qty) => setItems((prev) => prev.map((i) => i.id === id ? { ...i, quantity: Math.max(1, Math.min(i.stock, qty)) } : i)),
     remove: (id) => setItems((prev) => prev.filter((i) => i.id !== id)),

@@ -17,7 +17,7 @@ export const listProducts = handle(async ({ request }: Ctx) => {
 });
 export const getProduct = handle(async ({ params }: Ctx) => {
   const p = must(await publicClient().from("products").select("*").eq("id", params["id"]!).eq("active", true).maybeSingle());
-  if (!p) throw new ApiError(404, "Producto no encontrado");
+  if (!p) throw new ApiError(404, "Product not found");
   return ok(p);
 });
 export const listCategories = handle(async (_c: Ctx) => ok(must(await publicClient().from("categories").select("id,name,sort").eq("active", true).order("sort"))));
@@ -27,7 +27,7 @@ export const trackOrder = handle(async ({ request, params }: Ctx) => {
   const contact = new URL(request.url).searchParams.get("contact") ?? "";
   const { order_number, contact: c } = lookupSchema.parse({ order_number: params["code"], contact });
   const r = await lookupOrderCore(order_number, c);
-  if (!r.found) throw new ApiError(404, "Pedido no encontrado. Verifica el número y tu teléfono o correo.");
+  if (!r.found) throw new ApiError(404, "Order not found. Check the number and your phone or email.");
   return ok(r);
 });
 export const postServiceRequest = handle(async ({ request }: Ctx) => ok(await createServiceRequestCore(serviceSchema.parse(await readJson(request))), 201));
@@ -46,7 +46,7 @@ export const adminUpdateProduct = handle(async ({ request, params }: Ctx) => {
   const { supabase } = await requireAdmin(request);
   const body = productInput.partial().parse(await readJson(request));
   const row = must(await supabase.from("products").update(body as never).eq("id", params["id"]!).select().maybeSingle());
-  if (!row) throw new ApiError(404, "Producto no encontrado");
+  if (!row) throw new ApiError(404, "Product not found");
   return ok(row);
 });
 export const adminDeleteProduct = handle(async ({ request, params }: Ctx) => {
@@ -87,7 +87,7 @@ export const adminUpdateOrderStatus = handle(async ({ request, params }: Ctx) =>
   const { supabase } = await requireAdmin(request);
   const b = orderStatusInput.parse(await readJson(request));
   const row = must(await supabase.from("orders").update(b as never).eq("id", params["id"]!).select().maybeSingle());
-  if (!row) throw new ApiError(404, "Pedido no encontrado");
+  if (!row) throw new ApiError(404, "Order no encontrado");
   return ok(row);
 });
 export const adminListPayments = handle(async ({ request }: Ctx) => {
@@ -110,7 +110,7 @@ export const adminUpdateService = handle(async ({ request, params }: Ctx) => {
   const { supabase } = await requireAdmin(request);
   const b = serviceInput.partial().parse(await readJson(request));
   const row = must(await supabase.from("services").update({ ...b, updated_at: new Date().toISOString() } as never).eq("slug", params["id"]!).select().maybeSingle());
-  if (!row) throw new ApiError(404, "Servicio no encontrado");
+  if (!row) throw new ApiError(404, "Service not found");
   return ok(row);
 });
 export const adminCreateService = handle(async ({ request }: Ctx) => {

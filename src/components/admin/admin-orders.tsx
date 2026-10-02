@@ -12,7 +12,7 @@ type OrderPatch = { status?: string; payment_status?: string; tracking_number?: 
 
 function useUpdateOrder() {
   const invalidate = useInvalidate();
-  return async (id: string, patch: OrderPatch, msg = "Pedido actualizado") => {
+  return async (id: string, patch: OrderPatch, msg = "Order actualizado") => {
     const { error } = await supabase.from("orders").update(patch).eq("id", id);
     if (error) { toast.error("No se pudo actualizar"); return; }
     toast.success(msg); invalidate("admin-orders");
@@ -31,8 +31,8 @@ export function Orders() {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        <input className="field max-w-xs" placeholder="Buscar por orden, nombre, teléfono..." value={filter} onChange={(e) => setFilter(e.target.value)} />
-        <select className="field max-w-[200px]" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos los estados</option>{Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+        <input className="field max-w-xs" placeholder="Search por orden, nombre, teléfono..." value={filter} onChange={(e) => setFilter(e.target.value)} />
+        <select className="field max-w-[200px]" value={status} onChange={(e) => setStatus(e.target.value)}><option value="">All los estados</option>{Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <button type="button" className="chip" data-active={showArchived} onClick={() => setShowArchived(!showArchived)}>Archivados</button>
       </div>
       {!list.length && <p className="text-muted-foreground">Sin pedidos.</p>}
@@ -50,17 +50,17 @@ export function Orders() {
               <p><span className="text-muted-foreground">Total:</span> <strong>{money(Number(o.total))}</strong></p>
               <p><span className="text-muted-foreground">Pago:</span> {paymentLabels[o.payment_method]} · <strong>{paymentStatusLabels[o.payment_status]}</strong></p>
               {o.payment_reference && <p><span className="text-muted-foreground">Referencia:</span> {o.payment_reference}</p>}
-              <p><span className="text-muted-foreground">Entrega:</span> {deliveryLabels[o.delivery_method]}</p>
+              <p><span className="text-muted-foreground">Delivery:</span> {deliveryLabels[o.delivery_method]}</p>
               {o.tracking_number && <p><span className="text-muted-foreground">Guía:</span> {o.carrier} {o.tracking_number}</p>}
             </div>
             <div className="space-y-2">
-              <label className="grid gap-1 text-xs font-semibold">Estado
+              <label className="grid gap-1 text-xs font-semibold">Status
                 <select className="field" value={o.status} onChange={(e) => update(o.id, { status: e.target.value })}>{allStatusesFor(o.delivery_method).map((s) => <option key={s} value={s}>{statusLabels[s]}</option>)}</select>
               </label>
               {o.delivery_method === "shipping" && <TrackingInput o={o} onSave={(carrier, tracking_number) => update(o.id, { carrier, tracking_number })} />}
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="ghost" onClick={() => setOpen(open === o.id ? null : o.id)}><ChevronDown /> Historial</Button>
-                <Button size="sm" variant="ghost" onClick={() => update(o.id, { archived: !o.archived }, o.archived ? "Pedido restaurado" : "Pedido archivado")}>{o.archived ? "Restaurar" : "Archivar"}</Button>
+                <Button size="sm" variant="ghost" onClick={() => update(o.id, { archived: !o.archived }, o.archived ? "Order restaurado" : "Order archivado")}>{o.archived ? "Restaurar" : "Archivar"}</Button>
               </div>
             </div>
           </div>
@@ -105,13 +105,13 @@ export function Payments() {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">Verifica las referencias de Zelle en tu banco antes de confirmar. Tarjeta y PayPal son de demostración; nunca se guardan datos de tarjetas.</p>
-      <div className="flex gap-2">{([["pending", "Pendientes"], ["confirmed", "Confirmados"], ["rejected", "Rechazados"], ["", "Todos"]] as const).map(([k, l]) => <button key={k} type="button" className="chip" data-active={filter === k} onClick={() => setFilter(k)}>{l}</button>)}</div>
+      <div className="flex gap-2">{([["pending", "Pendings"], ["confirmed", "Confirmeds"], ["rejected", "Rejecteds"], ["", "All"]] as const).map(([k, l]) => <button key={k} type="button" className="chip" data-active={filter === k} onClick={() => setFilter(k)}>{l}</button>)}</div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[820px] text-sm">
-          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Orden / Ref.</th><th>Cliente</th><th>Método</th><th>Referencia</th><th>Total</th><th>Fecha</th><th>Estado</th></tr></thead>
+          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Orden / Ref.</th><th>Customer</th><th>Método</th><th>Referencia</th><th>Total</th><th>Date</th><th>Status</th></tr></thead>
           <tbody className="divide-y divide-border">{list.map((r) => (
             <tr key={r.kind + r.id}>
-              <td className="p-3 font-semibold">{r.code}<div className="text-xs font-normal text-muted-foreground">{r.kind === "order" ? "Pedido" : "Servicio"}</div></td>
+              <td className="p-3 font-semibold">{r.code}<div className="text-xs font-normal text-muted-foreground">{r.kind === "order" ? "Order" : "Servicio"}</div></td>
               <td>{r.customer}</td><td>{paymentLabels[r.method] ?? r.method}</td><td className="max-w-[160px] truncate">{r.reference ?? "—"}</td>
               <td className="font-semibold">{r.total !== null ? money(r.total) : "—"}</td><td className="text-muted-foreground">{fmt(r.created_at)}</td>
               <td><select className="field h-9 w-36" value={r.status} onChange={(e) => setStatus(r, e.target.value)}>{Object.entries(paymentStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></td>
@@ -141,13 +141,13 @@ export function Customers() {
   if (!profiles.length) return <p className="text-muted-foreground">Sin clientes todavía.</p>;
   return (
     <div className="space-y-4">
-      <input className="field max-w-sm" placeholder="Buscar por nombre, correo o teléfono" value={q} onChange={(e) => setQ(e.target.value)} />
+      <input className="field max-w-sm" placeholder="Search por nombre, correo o teléfono" value={q} onChange={(e) => setQ(e.target.value)} />
       <div className="divide-y divide-border rounded-xl border border-border">
         {list.map((p) => {
           const email = p.email.toLowerCase();
           const os = orders.filter((o) => o.email.toLowerCase() === email);
           const rs = reqs.filter((r) => r.email.toLowerCase() === email);
-          const name = p.full_name || p.email.split("@")[0] || "Cliente";
+          const name = p.full_name || p.email.split("@")[0] || "Customer";
           const isOpen = open === p.user_id;
           return (
             <div key={p.user_id}>
@@ -155,7 +155,7 @@ export function Customers() {
                 {p.avatar_url ? <img src={p.avatar_url} alt="" referrerPolicy="no-referrer" className="h-10 w-10 rounded-full object-cover" /> : <span className="grid h-10 w-10 place-items-center rounded-full bg-primary font-bold text-primary-foreground">{name[0]?.toUpperCase()}</span>}
                 <span className="min-w-[180px] flex-1"><span className="font-semibold">{name}</span><span className="block text-xs text-muted-foreground">{p.email}</span></span>
                 <span className="w-32 text-muted-foreground">{p.phone || "—"}</span>
-                <span className="w-24 text-xs text-muted-foreground">{p.provider === "google" ? "Google" : "Correo"}</span>
+                <span className="w-24 text-xs text-muted-foreground">{p.provider === "google" ? "Google" : "Email"}</span>
                 <span className="w-36 text-muted-foreground">Registro: {new Date(p.created_at).toLocaleDateString("es")}</span>
                 <span className="text-xs">{os.length} pedidos · {rs.length} solicitudes</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -163,11 +163,11 @@ export function Customers() {
               {isOpen && (
                 <div className="grid gap-6 bg-surface p-4 text-sm md:grid-cols-2">
                   <div>
-                    <h3 className="mb-2 font-bold text-primary">Pedidos ({os.length})</h3>
+                    <h3 className="mb-2 font-bold text-primary">Orders ({os.length})</h3>
                     {os.length ? <ul className="space-y-2">{os.map((o) => <li key={o.id} className="card-soft flex flex-wrap justify-between gap-2 p-3"><span><strong>#{o.order_number}</strong> · {fmt(o.created_at)}</span><span>{statusLabels[o.status] ?? o.status} · <strong>{money(Number(o.total))}</strong></span></li>)}</ul> : <p className="text-muted-foreground">Sin pedidos.</p>}
                   </div>
                   <div>
-                    <h3 className="mb-2 font-bold text-primary">Solicitudes ({rs.length})</h3>
+                    <h3 className="mb-2 font-bold text-primary">Requests ({rs.length})</h3>
                     {rs.length ? <ul className="space-y-2">{rs.map((r) => <li key={r.id} className="card-soft flex flex-wrap justify-between gap-2 p-3"><span><strong>{r.reference}</strong> · {r.service_name}</span><span className="text-muted-foreground">{fmt(r.created_at)}</span></li>)}</ul> : <p className="text-muted-foreground">Sin solicitudes.</p>}
                   </div>
                 </div>
@@ -188,8 +188,8 @@ export function Tracking() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="mb-2 font-bold text-primary">Pedidos en curso ({active.length})</h2>
-        <p className="mb-3 text-sm text-muted-foreground">El cliente ve cada cambio en la página Seguimiento en segundos, sin recargar.</p>
+        <h2 className="mb-2 font-bold text-primary">Orders en curso ({active.length})</h2>
+        <p className="mb-3 text-sm text-muted-foreground">El cliente ve cada cambio en la página Tracking en segundos, sin recargar.</p>
         <ul className="divide-y divide-border rounded-xl border border-border text-sm">
           {active.map((o) => <li key={o.id} className="flex flex-wrap justify-between gap-2 p-3"><span><strong>#{o.order_number}</strong> · {o.customer_name} · {deliveryLabels[o.delivery_method]}</span><span className="font-semibold text-primary">{statusLabels[o.status]}<span className="ml-2 font-normal text-muted-foreground">{fmt(o.updated_at)}</span></span></li>)}
           {!active.length && <li className="p-3 text-muted-foreground">No hay pedidos en curso.</li>}
@@ -198,7 +198,7 @@ export function Tracking() {
       <div>
         <h2 className="mb-2 font-bold text-primary">Avisos al cliente</h2>
         <p className="mb-3 text-sm text-muted-foreground">Se generan automáticamente con cada cambio de estado. Quedan listos para enviarse por correo, SMS o WhatsApp.</p>
-        <div className="space-y-2">{notes.map((n) => <div key={n.id} className="card-soft flex flex-wrap justify-between gap-2 p-3 text-sm"><span>{n.message}</span><span className="text-muted-foreground">{n.recipient} · {n.status === "sent" ? "Enviado" : "Pendiente"} · {fmt(n.created_at)}</span></div>)}{!notes.length && <p className="text-muted-foreground">Sin avisos.</p>}</div>
+        <div className="space-y-2">{notes.map((n) => <div key={n.id} className="card-soft flex flex-wrap justify-between gap-2 p-3 text-sm"><span>{n.message}</span><span className="text-muted-foreground">{n.recipient} · {n.status === "sent" ? "Enviado" : "Pending"} · {fmt(n.created_at)}</span></div>)}{!notes.length && <p className="text-muted-foreground">Sin avisos.</p>}</div>
       </div>
     </div>
   );

@@ -4,23 +4,23 @@ import { Customers, Orders, Payments, Tracking } from "@/components/admin/admin-
 import { Inventory, Products } from "@/components/admin/admin-products";
 
 const sections: Record<string, { title: string; C: () => React.ReactNode }> = {
-  productos: { title: "Productos", C: Products },
-  categorias: { title: "Categorías", C: Categories },
-  inventario: { title: "Inventario", C: Inventory },
-  pedidos: { title: "Pedidos", C: Orders },
-  clientes: { title: "Clientes", C: Customers },
-  servicios: { title: "Servicios", C: ServicesAdmin },
-  solicitudes: { title: "Solicitudes de servicio", C: Requests },
-  pagos: { title: "Pagos", C: Payments },
-  promociones: { title: "Promociones", C: Promotions },
-  seguimiento: { title: "Seguimiento y avisos", C: Tracking },
-  configuracion: { title: "Configuración", C: Settings },
+  productos: { title: "Products", C: Products },
+  categorias: { title: "Categories", C: Categories },
+  inventario: { title: "Inventory", C: Inventory },
+  pedidos: { title: "Orders", C: Orders },
+  clientes: { title: "Customers", C: Customers },
+  servicios: { title: "Services", C: ServicesAdmin },
+  solicitudes: { title: "Service requests", C: Requests },
+  pagos: { title: "Payments", C: Payments },
+  promociones: { title: "Promotions", C: Promotions },
+  seguimiento: { title: "Tracking and notifications", C: Tracking },
+  configuracion: { title: "Settings", C: Settings },
 };
 
 export const Route = createFileRoute("/_authenticated/panel/$seccion")({
   beforeLoad: ({ params }) => { if (!sections[params.seccion]) throw notFound(); },
-  head: ({ params }) => ({ meta: [{ title: `${sections[params.seccion]?.title ?? "Panel"} — Panel JAV Wireless` }, { name: "robots", content: "noindex" }] }),
-  notFoundComponent: () => <p className="text-muted-foreground">Sección no encontrada.</p>,
+  head: ({ params }) => ({ meta: [{ title: `${sections[params.seccion]?.title ?? "Panel"} — JAV Wireless Admin` }, { name: "robots", content: "noindex" }] }),
+  notFoundComponent: () => <p className="text-muted-foreground">Section not found.</p>,
   component: Section,
 });
 

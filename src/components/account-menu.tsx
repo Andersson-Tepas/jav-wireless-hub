@@ -35,7 +35,7 @@ export function AccountMenu() {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
     setBusy(false);
-    if (result.error) toast.error("No se pudo iniciar sesión con Google.");
+    if (result.error) toast.error("Could not sign in with Google.");
   }
 
   async function signOut() {
@@ -46,31 +46,31 @@ export function AccountMenu() {
 
   if (!user) {
     return (
-      <button type="button" onClick={signIn} disabled={busy} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:opacity-60" aria-label="Iniciar sesión con Google">
-        <GoogleIcon /> <span className="hidden whitespace-nowrap 2xl:inline">Iniciar sesión con Google</span><span className="hidden whitespace-nowrap md:inline 2xl:hidden">Iniciar sesión</span>
+      <button type="button" onClick={signIn} disabled={busy} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:opacity-60" aria-label="Sign in with Google">
+        <GoogleIcon /> <span className="hidden whitespace-nowrap 2xl:inline">Sign in with Google</span><span className="hidden whitespace-nowrap md:inline 2xl:hidden">Sign in</span>
       </button>
     );
   }
 
   const meta = (user.user_metadata ?? {}) as { full_name?: string; name?: string; avatar_url?: string; picture?: string };
-  const name = meta.full_name || meta.name || user.email?.split("@")[0] || "Mi cuenta";
+  const name = meta.full_name || meta.name || user.email?.split("@")[0] || "My account";
   const avatar = meta.avatar_url || meta.picture;
   const itemCls = "cursor-pointer gap-2";
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="inline-flex h-10 items-center gap-2 rounded-md border border-border px-2 text-sm font-semibold text-foreground outline-none hover:border-primary hover:text-primary" aria-label="Menú de cuenta">
+      <DropdownMenuTrigger className="inline-flex h-10 items-center gap-2 rounded-md border border-border px-2 text-sm font-semibold text-foreground outline-none hover:border-primary hover:text-primary" aria-label="Account menu">
         {avatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" className="size-7 rounded-full object-cover" /> : <span className="grid size-7 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground">{name.charAt(0).toUpperCase()}</span>}
         <span className="hidden max-w-28 truncate md:inline">{name.split(" ")[0]}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className={itemCls}><Link to="/cuenta"><User className="size-4" /> Mi cuenta</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild className={itemCls}><Link to="/mis-pedidos"><Package className="size-4" /> Mis pedidos</Link></DropdownMenuItem>
-        <DropdownMenuItem asChild className={itemCls}><Link to="/seguimiento"><RouteIcon className="size-4" /> Seguimiento</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild className={itemCls}><Link to="/cuenta"><User className="size-4" /> My account</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild className={itemCls}><Link to="/mis-pedidos"><Package className="size-4" /> My orders</Link></DropdownMenuItem>
+        <DropdownMenuItem asChild className={itemCls}><Link to="/seguimiento"><RouteIcon className="size-4" /> Tracking</Link></DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className={itemCls} onSelect={signOut}><LogOut className="size-4" /> Cerrar sesión</DropdownMenuItem>
+        <DropdownMenuItem className={itemCls} onSelect={signOut}><LogOut className="size-4" /> Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

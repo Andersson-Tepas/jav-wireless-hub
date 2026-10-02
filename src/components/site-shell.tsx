@@ -16,7 +16,7 @@ function Brand({ light }: { light?: boolean }) {
     if (c.n >= 5) { e.preventDefault(); c.n = 0; navigate({ to: "/panel" }); }
   }
   return (
-    <Link to="/" onClick={onClick} className="flex shrink-0 items-center gap-2" aria-label="JAV Wireless, inicio">
+    <Link to="/" onClick={onClick} className="flex shrink-0 items-center gap-2" aria-label="JAV Wireless, home">
       <span className="grid size-9 place-items-center rounded-md bg-primary font-display text-lg font-bold text-primary-foreground">J</span>
       <span className={`font-display text-xl font-bold ${light ? "text-primary-foreground" : "text-primary"}`}>JAV <span className="text-accent">Wireless</span></span>
     </Link>
@@ -26,8 +26,8 @@ function Brand({ light }: { light?: boolean }) {
 function CartLink({ onClick }: { onClick?: () => void }) {
   const { count } = useCart();
   return (
-    <Link to="/carrito" onClick={onClick} className="relative inline-flex h-10 items-center gap-2 rounded-md border border-border px-3 text-sm font-semibold text-foreground hover:border-primary hover:text-primary" aria-label={`Carrito (${count})`}>
-      <ShoppingCart className="size-4" /> <span className="hidden sm:inline">Carrito</span>
+    <Link to="/carrito" onClick={onClick} className="relative inline-flex h-10 items-center gap-2 rounded-md border border-border px-3 text-sm font-semibold text-foreground hover:border-primary hover:text-primary" aria-label={`Cart (${count})`}>
+      <ShoppingCart className="size-4" /> <span className="hidden sm:inline">Cart</span>
       <span className="grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-xs font-bold text-accent-foreground">{count}</span>
     </Link>
   );
@@ -37,20 +37,20 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-      <div className="bg-primary text-primary-foreground"><p className="container-page py-1.5 text-center text-xs font-medium">Envíos con seguimiento · Recogida en tienda · Financiamiento disponible</p></div>
+      <div className="bg-primary text-primary-foreground"><p className="container-page py-1.5 text-center text-xs font-medium">Trackable shipping · In-store pickup · Financing available</p></div>
       <div className="container-page flex h-16 items-center gap-3">
         <Brand />
-        <nav className="ml-auto hidden items-center xl:flex" aria-label="Navegación principal">
+        <nav className="ml-auto hidden items-center xl:flex" aria-label="Main navigation">
           {navItems.map((item) => <Link key={item.to} to={item.to} activeOptions={{ exact: item.to === "/" }} className="nav-link">{item.label}</Link>)}
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-2">
           <CartLink />
           <AccountMenu />
-          <button type="button" className="grid size-10 place-items-center rounded-md hover:bg-muted xl:hidden" onClick={() => setOpen((v) => !v)} aria-label={open ? "Cerrar menú" : "Abrir menú"}>{open ? <X /> : <Menu />}</button>
+          <button type="button" className="grid size-10 place-items-center rounded-md hover:bg-muted xl:hidden" onClick={() => setOpen((v) => !v)} aria-label={open ? "Close menu" : "Open menu"}>{open ? <X /> : <Menu />}</button>
         </div>
       </div>
       {open && (
-        <nav className="grid gap-1 border-t border-border bg-background p-4 xl:hidden" aria-label="Navegación móvil">
+        <nav className="grid gap-1 border-t border-border bg-background p-4 xl:hidden" aria-label="Mobile navigation">
           {navItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted">{item.label}</Link>)}
         </nav>
       )}
@@ -62,7 +62,7 @@ export function SiteFooter() {
   return (
     <footer className="mt-10 bg-navy-deep text-primary-foreground">
       <div className="container-page grid gap-10 py-12 md:grid-cols-4">
-        <div className="md:col-span-2"><Brand light /><p className="mt-4 max-w-md text-sm leading-6 opacity-75">Teléfonos, accesorios, perfumes, joyería y servicios para tu día a día, con atención cercana y confiable.</p>
+        <div className="md:col-span-2"><Brand light /><p className="mt-4 max-w-md text-sm leading-6 opacity-75">Phones, accessories, fragrances, jewelry, and everyday services with friendly, dependable support.</p>
           <div className="mt-5 flex gap-2">
             <SocialLink href={socialLinks.whatsapp} label="WhatsApp"><MessageCircle /></SocialLink>
             <SocialLink href={socialLinks.facebook} label="Facebook"><Facebook /></SocialLink>
@@ -70,10 +70,10 @@ export function SiteFooter() {
             <SocialLink href={socialLinks.tiktok} label="TikTok"><span className="text-xs font-bold">TikTok</span></SocialLink>
           </div>
         </div>
-        <div><h3 className="font-bold">Tienda</h3><ul className="mt-3 space-y-2 text-sm opacity-80"><li><Link to="/productos">Productos</Link></li><li><Link to="/carrito">Carrito</Link></li><li><Link to="/seguimiento">Seguimiento de pedido</Link></li></ul></div>
-        <div><h3 className="font-bold">Empresa</h3><ul className="mt-3 space-y-2 text-sm opacity-80"><li><Link to="/servicios">Servicios</Link></li><li><Link to="/nosotros">Nosotros</Link></li><li><Link to="/contacto">Contacto</Link></li></ul></div>
+        <div><h3 className="font-bold">Shop</h3><ul className="mt-3 space-y-2 text-sm opacity-80"><li><Link to="/productos">Products</Link></li><li><Link to="/carrito">Cart</Link></li><li><Link to="/seguimiento">Order tracking</Link></li></ul></div>
+        <div><h3 className="font-bold">Company</h3><ul className="mt-3 space-y-2 text-sm opacity-80"><li><Link to="/servicios">Services</Link></li><li><Link to="/nosotros">About Us</Link></li><li><Link to="/contacto">Contact</Link></li></ul></div>
       </div>
-      <div className="border-t border-primary-foreground/10 py-4 text-center text-xs opacity-70">© 2026 JAV Wireless. Todos los derechos reservados.</div>
+      <div className="border-t border-primary-foreground/10 py-4 text-center text-xs opacity-70">© 2026 JAV Wireless. All rights reserved.</div>
     </footer>
   );
 }
@@ -83,7 +83,7 @@ function SocialLink({ href, label, children }: { href: string; label: string; ch
 }
 
 export function WhatsAppFloat() {
-  return <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" aria-label="Escribir por WhatsApp" className="fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full bg-success text-success-foreground shadow-lift transition hover:-translate-y-0.5"><MessageCircle className="size-6" /></a>;
+  return <a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" aria-label="Message us on WhatsApp" className="fixed bottom-5 right-5 z-40 grid size-14 place-items-center rounded-full bg-success text-success-foreground shadow-lift transition hover:-translate-y-0.5"><MessageCircle className="size-6" /></a>;
 }
 
 export function PageIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {

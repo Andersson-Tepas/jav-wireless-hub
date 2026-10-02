@@ -18,7 +18,7 @@ export function Kpi({ label, value, tone = "primary" }: { label: string; value: 
   return <div className="card-soft p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p><p className={`mt-1 font-display text-3xl font-bold ${color}`}>{value}</p></div>;
 }
 
-export const paymentStatusLabels: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmado", rejected: "Rechazado" };
+export const paymentStatusLabels: Record<string, string> = { pending: "Pending", confirmed: "Confirmed", rejected: "Rejected" };
 
 export function useAdminOrders() {
   return useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(name,quantity,price), order_status_history(status,previous_status,changed_by_email,created_at)").order("created_at", { ascending: false })).data ?? [] });
@@ -38,7 +38,7 @@ export function useLowStock() {
     return data ?? [];
   } });
 }
-// Same source as Panel → Clientes: customer_profiles excluding admins.
+// Same source as Panel → Customers: customer_profiles excluding admins.
 export function useAdminCustomers() {
   return useQuery({ queryKey: ["admin-customers"], queryFn: async () => {
     const [{ data: p }, { data: admins }] = await Promise.all([

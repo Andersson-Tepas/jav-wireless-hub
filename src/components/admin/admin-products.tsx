@@ -48,7 +48,7 @@ export function Products() {
   const list = data.filter((p) => !filter || `${p.name} ${p.brand} ${p.model}`.toLowerCase().includes(filter.toLowerCase()));
 
   async function remove(p: Product) {
-    if (!confirm(`¿Eliminar "${p.name}"? Si tiene pedidos se desactivará en lugar de borrarse.`)) return;
+    if (!confirm(`¿Delete "${p.name}"? Si tiene pedidos se desactivará en lugar de borrarse.`)) return;
     const { data: used } = await supabase.from("order_items").select("id").eq("product_id", p.id).limit(1);
     const { error } = used?.length ? await supabase.from("products").update({ active: false }).eq("id", p.id) : await supabase.from("products").delete().eq("id", p.id);
     if (error) { toast.error("No se pudo eliminar"); return; }
@@ -61,10 +61,10 @@ export function Products() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2"><input className="field max-w-sm" placeholder="Buscar producto..." value={filter} onChange={(e) => setFilter(e.target.value)} /><Button onClick={() => setEditing("new")}><Plus /> Nuevo producto</Button></div>
+      <div className="flex flex-wrap gap-2"><input className="field max-w-sm" placeholder="Search producto..." value={filter} onChange={(e) => setFilter(e.target.value)} /><Button onClick={() => setEditing("new")}><Plus /> New producto</Button></div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[820px] text-sm">
-          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th className="text-center">Destacado</th><th className="text-center">Oferta</th><th className="text-center">Activo</th><th /></tr></thead>
+          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Producto</th><th>Categoría</th><th>Price</th><th>Stock</th><th className="text-center">Destacado</th><th className="text-center">Sale</th><th className="text-center">Activo</th><th /></tr></thead>
           <tbody className="divide-y divide-border">{list.map((p) => (
             <tr key={p.id} className={p.active ? "" : "opacity-60"}>
               <td className="flex items-center gap-3 p-3"><img src={productImage(p.image)} alt="" className="size-10 rounded object-cover" /><div><p className="font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">{p.brand} {p.model}</p></div></td>
@@ -72,7 +72,7 @@ export function Products() {
               <td className="font-semibold">{money(Number(p.price))}{p.old_price ? <span className="ml-1 text-xs text-muted-foreground line-through">{money(Number(p.old_price))}</span> : null}</td>
               <td>{p.stock}</td>
               {(["is_featured", "is_offer", "active"] as const).map((k) => <td key={k} className="text-center"><input type="checkbox" aria-label={k} className="size-4 accent-primary" checked={p[k]} onChange={(e) => toggle(p, k, e.target.checked)} /></td>)}
-              <td className="whitespace-nowrap pr-3 text-right"><Button size="icon" variant="ghost" aria-label="Editar" onClick={() => setEditing(p)}><Pencil /></Button><Button size="icon" variant="ghost" aria-label="Eliminar" onClick={() => remove(p)}><Trash2 /></Button></td>
+              <td className="whitespace-nowrap pr-3 text-right"><Button size="icon" variant="ghost" aria-label="Edit" onClick={() => setEditing(p)}><Pencil /></Button><Button size="icon" variant="ghost" aria-label="Delete" onClick={() => remove(p)}><Trash2 /></Button></td>
             </tr>))}</tbody>
         </table>
       </div>
@@ -96,7 +96,7 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
       let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
       const r = await upload({ data: { filename: f.name, contentType: f.type as "image/jpeg", base64: btoa(bin) } });
       set("image", r.url); toast.success("Imagen subida");
-    } catch { toast.error("No se pudo subir la imagen (JPG, PNG o WEBP)"); }
+    } catch { toast.error("Could not upload the image (JPG, PNG o WEBP)"); }
     finally { setBusy(false); }
   }
 
@@ -112,21 +112,21 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
-        <DialogHeader><DialogTitle>{product ? "Editar producto" : "Nuevo producto"}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{product ? "Edit producto" : "New producto"}</DialogTitle></DialogHeader>
         <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
-          <Field label="Nombre" className="sm:col-span-2"><input required className="field" value={d.name} onChange={(e) => set("name", e.target.value)} /></Field>
-          <Field label="Marca"><input className="field" value={d.brand} onChange={(e) => set("brand", e.target.value)} /></Field>
-          <Field label="Modelo"><input className="field" value={d.model} onChange={(e) => set("model", e.target.value)} /></Field>
+          <Field label="Name" className="sm:col-span-2"><input required className="field" value={d.name} onChange={(e) => set("name", e.target.value)} /></Field>
+          <Field label="Brand"><input className="field" value={d.brand} onChange={(e) => set("brand", e.target.value)} /></Field>
+          <Field label="Model"><input className="field" value={d.model} onChange={(e) => set("model", e.target.value)} /></Field>
           <Field label="Categoría"><select className="field" value={d.category_id} onChange={(e) => set("category_id", e.target.value)}>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
           <Field label="Capacidad / talla"><input className="field" value={d.capacity} onChange={(e) => set("capacity", e.target.value)} /></Field>
-          <Field label="Precio (USD)"><input required type="number" min={0} step="0.01" className="field" value={d.price} onChange={(e) => set("price", e.target.value)} /></Field>
-          <Field label="Precio anterior (para ofertas)"><input type="number" min={0} step="0.01" className="field" value={d.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
+          <Field label="Price (USD)"><input required type="number" min={0} step="0.01" className="field" value={d.price} onChange={(e) => set("price", e.target.value)} /></Field>
+          <Field label="Price anterior (para ofertas)"><input type="number" min={0} step="0.01" className="field" value={d.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
           <Field label="Stock"><input required type="number" min={0} className="field" value={d.stock} onChange={(e) => set("stock", e.target.value)} /></Field>
-          <Field label="Colores (separados por coma)"><input className="field" value={d.colors} onChange={(e) => set("colors", e.target.value)} /></Field>
+          <Field label="Colors (separados por coma)"><input className="field" value={d.colors} onChange={(e) => set("colors", e.target.value)} /></Field>
           <Field label="Descripción" className="sm:col-span-2"><textarea className="field h-24 py-2" value={d.description} onChange={(e) => set("description", e.target.value)} /></Field>
-          <Field label="Características (una por línea)"><textarea className="field h-28 py-2" value={d.features} onChange={(e) => set("features", e.target.value)} /></Field>
-          <Field label="Especificaciones (Etiqueta: valor)"><textarea className="field h-28 py-2" value={d.specs} onChange={(e) => set("specs", e.target.value)} /></Field>
-          <Field label="Financiamiento (opcional)" className="sm:col-span-2"><input className="field" value={d.financing} onChange={(e) => set("financing", e.target.value)} /></Field>
+          <Field label="Features (una por línea)"><textarea className="field h-28 py-2" value={d.features} onChange={(e) => set("features", e.target.value)} /></Field>
+          <Field label="Specifications (Etiqueta: valor)"><textarea className="field h-28 py-2" value={d.specs} onChange={(e) => set("specs", e.target.value)} /></Field>
+          <Field label="Financing (opcional)" className="sm:col-span-2"><input className="field" value={d.financing} onChange={(e) => set("financing", e.target.value)} /></Field>
           <div className="grid gap-2 sm:col-span-2 sm:grid-cols-[96px_1fr]">
             <img src={productImage(d.image)} alt="" className="size-24 rounded-lg border border-border object-cover" />
             <div className="grid gap-2">
@@ -135,7 +135,7 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
             </div>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-semibold sm:col-span-2">
-            {([["is_featured", "Destacado"], ["is_bestseller", "Más vendido"], ["is_new", "Nuevo"], ["is_offer", "Oferta"], ["active", "Activo (visible)"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-primary" checked={d[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>)}
+            {([["is_featured", "Destacado"], ["is_bestseller", "Más vendido"], ["is_new", "New"], ["is_offer", "Sale"], ["active", "Activo (visible)"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-primary" checked={d[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>)}
           </div>
           <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={onClose}>Cancelar</Button><Button type="submit" disabled={busy}>{busy ? "Guardando..." : "Guardar"}</Button></div>
         </form>
@@ -165,11 +165,11 @@ export function Inventory() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
-        {([["all", `Todos (${products.length})`], ["low", `Stock bajo ≤ ${low} (${products.filter((p) => p.stock > 0 && p.stock <= low).length})`], ["out", `Agotados (${products.filter((p) => p.stock === 0).length})`]] as const).map(([k, l]) => <button key={k} type="button" className="chip" data-active={view === k} onClick={() => setView(k)}>{l}</button>)}
+        {([["all", `All (${products.length})`], ["low", `Stock bajo ≤ ${low} (${products.filter((p) => p.stock > 0 && p.stock <= low).length})`], ["out", `Out of stock (${products.filter((p) => p.stock === 0).length})`]] as const).map(([k, l]) => <button key={k} type="button" className="chip" data-active={view === k} onClick={() => setView(k)}>{l}</button>)}
       </div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Producto</th><th>Disponible</th><th>Registrar entrada / salida</th></tr></thead>
+          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Producto</th><th>In stock</th><th>Registrar entrada / salida</th></tr></thead>
           <tbody className="divide-y divide-border">{list.map((p) => <InventoryRow key={p.id} p={p} low={low} onAdjust={adjust} />)}</tbody>
         </table>
       </div>
@@ -190,7 +190,7 @@ function InventoryRow({ p, low, onAdjust }: { p: Product; low: number; onAdjust:
   return (
     <tr>
       <td className="p-3 font-semibold">{p.name}</td>
-      <td><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-accent/10 text-accent" : p.stock <= low ? "bg-surface text-foreground" : "text-success"}`}>{p.stock === 0 ? "Agotado" : p.stock}</span></td>
+      <td><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-accent/10 text-accent" : p.stock <= low ? "bg-surface text-foreground" : "text-success"}`}>{p.stock === 0 ? "Out of stock" : p.stock}</span></td>
       <td className="flex gap-2 py-2"><input type="number" min={1} className="field h-9 w-20" value={qty} onChange={(e) => setQty(e.target.value)} /><Button size="sm" variant="outline" onClick={() => onAdjust(p, n)}>+ Entrada</Button><Button size="sm" variant="outline" onClick={() => onAdjust(p, -n)}>− Salida</Button></td>
     </tr>
   );

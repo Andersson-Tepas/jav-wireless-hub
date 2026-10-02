@@ -14,14 +14,14 @@ export const uploadProductImage = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => uploadSchema.parse(d))
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" });
-    if (isAdmin !== true) throw new Error("Solo administradores");
+    if (isAdmin !== true) throw new Error("Administrators only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const ext = data.contentType.split("/")[1];
     const path = `${crypto.randomUUID()}.${ext}`;
     const bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
     const up = await supabaseAdmin.storage.from("product-images").upload(path, bytes, { contentType: data.contentType });
-    if (up.error) throw new Error("No se pudo subir la imagen");
+    if (up.error) throw new Error("Could not upload the image");
     const signed = await supabaseAdmin.storage.from("product-images").createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
-    if (signed.error || !signed.data) throw new Error("No se pudo generar el enlace");
+    if (signed.error || !signed.data) throw new Error("Could not generate the link");
     return { url: signed.data.signedUrl };
   });
