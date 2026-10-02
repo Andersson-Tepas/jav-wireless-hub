@@ -1,10 +1,7 @@
 # Roadmap
-- [x] Rediseño formal (azul marino, blanco, rojo)
-- [x] Inicio enfocado en productos
-- [x] Catálogo con categorías, filtros y modal
-- [x] Servicios con formulario → revisión → pago → referencia
-- [x] Carrito y checkout (tarjeta/PayPal simulados, Zelle con referencia)
-- [x] Seguimiento por orden + teléfono/correo, auto-actualización
-- [x] Panel protegido (pedidos, pagos, solicitudes, productos, categorías, clientes, avisos)
-- [ ] Envío real de avisos por correo — requiere configurar dominio de correo
-- [ ] Correo real de Zelle — pendiente del usuario
+- [x] Panel with sidebar: dashboard, products, categories, inventory, orders, customers, services, requests, payments, promotions, tracking, settings
+- [x] Public + admin REST API with role checks
+- [x] Order history with previous status and admin; cancel/archive instead of delete
+- [ ] Real Zelle email (waiting on user — editable in Panel → Configuración)
+- [ ] Sending status emails (needs a sender email domain)
+- [ ] Real card/PayPal charges (needs a payment provider)

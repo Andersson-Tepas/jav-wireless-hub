@@ -16,21 +16,68 @@ export type Database = {
     Tables: {
       categories: {
         Row: {
+          active: boolean
           id: string
           name: string
           sort: number
         }
         Insert: {
+          active?: boolean
           id: string
           name: string
           sort?: number
         }
         Update: {
+          active?: boolean
           id?: string
           name?: string
           sort?: number
         }
         Relationships: []
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_by_email: string | null
+          id: string
+          kind: string
+          product_id: string
+          quantity: number
+          reason: string
+          stock_after: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          id?: string
+          kind: string
+          product_id: string
+          quantity: number
+          reason?: string
+          stock_after: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
+          id?: string
+          kind?: string
+          product_id?: string
+          quantity?: number
+          reason?: string
+          stock_after?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
@@ -117,21 +164,30 @@ export type Database = {
       }
       order_status_history: {
         Row: {
+          changed_by: string | null
+          changed_by_email: string | null
           created_at: string
           id: string
           order_id: string
+          previous_status: string | null
           status: string
         }
         Insert: {
+          changed_by?: string | null
+          changed_by_email?: string | null
           created_at?: string
           id?: string
           order_id: string
+          previous_status?: string | null
           status: string
         }
         Update: {
+          changed_by?: string | null
+          changed_by_email?: string | null
           created_at?: string
           id?: string
           order_id?: string
+          previous_status?: string | null
           status?: string
         }
         Relationships: [
@@ -147,6 +203,7 @@ export type Database = {
       orders: {
         Row: {
           address: string | null
+          archived: boolean
           carrier: string | null
           created_at: string
           customer_name: string
@@ -157,6 +214,7 @@ export type Database = {
           order_number: string
           payment_method: string
           payment_reference: string | null
+          payment_status: string
           phone: string
           status: string
           subtotal: number
@@ -166,6 +224,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          archived?: boolean
           carrier?: string | null
           created_at?: string
           customer_name: string
@@ -176,6 +235,7 @@ export type Database = {
           order_number?: string
           payment_method: string
           payment_reference?: string | null
+          payment_status?: string
           phone: string
           status?: string
           subtotal?: number
@@ -185,6 +245,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          archived?: boolean
           carrier?: string | null
           created_at?: string
           customer_name?: string
@@ -195,6 +256,7 @@ export type Database = {
           order_number?: string
           payment_method?: string
           payment_reference?: string | null
+          payment_status?: string
           phone?: string
           status?: string
           subtotal?: number
@@ -284,6 +346,69 @@ export type Database = {
           },
         ]
       }
+      promotion_products: {
+        Row: {
+          product_id: string
+          promotion_id: string
+        }
+        Insert: {
+          product_id: string
+          promotion_id: string
+        }
+        Update: {
+          product_id?: string
+          promotion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promotion_products_promotion_id_fkey"
+            columns: ["promotion_id"]
+            isOneToOne: false
+            referencedRelation: "promotions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promotions: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          discount_percent: number | null
+          ends_at: string | null
+          id: string
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          discount_percent?: number | null
+          ends_at?: string | null
+          id?: string
+          starts_at?: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          discount_percent?: number | null
+          ends_at?: string | null
+          id?: string
+          starts_at?: string
+          title?: string
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
           amount: number | null
@@ -292,8 +417,10 @@ export type Database = {
           details: Json
           email: string
           id: string
+          internal_notes: string | null
           payment_method: string
           payment_reference: string | null
+          payment_status: string
           phone: string
           reference: string
           service_name: string
@@ -308,8 +435,10 @@ export type Database = {
           details?: Json
           email: string
           id?: string
+          internal_notes?: string | null
           payment_method: string
           payment_reference?: string | null
+          payment_status?: string
           phone: string
           reference?: string
           service_name: string
@@ -324,14 +453,79 @@ export type Database = {
           details?: Json
           email?: string
           id?: string
+          internal_notes?: string | null
           payment_method?: string
           payment_reference?: string | null
+          payment_status?: string
           phone?: string
           reference?: string
           service_name?: string
           service_slug?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          amount_field: boolean
+          cost: string
+          description: string
+          fee: number | null
+          fields: Json
+          name: string
+          requirements: string[]
+          short: string
+          slug: string
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_field?: boolean
+          cost?: string
+          description?: string
+          fee?: number | null
+          fields?: Json
+          name: string
+          requirements?: string[]
+          short?: string
+          slug: string
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_field?: boolean
+          cost?: string
+          description?: string
+          fee?: number | null
+          fields?: Json
+          name?: string
+          requirements?: string[]
+          short?: string
+          slug?: string
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          is_public: boolean
+          key: string
+          value: string
+        }
+        Insert: {
+          is_public?: boolean
+          key: string
+          value?: string
+        }
+        Update: {
+          is_public?: boolean
+          key?: string
+          value?: string
         }
         Relationships: []
       }

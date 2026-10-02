@@ -31,7 +31,8 @@ function TrackingPage() {
   const { data, isFetching } = useQuery({
     queryKey: ["tracking", query],
     enabled: !!query,
-    refetchInterval: 15000,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
     queryFn: async () => isService
       ? { kind: "service" as const, r: await lookupSr({ data: { reference: query!.n, contact: query!.c } }) }
       : { kind: "order" as const, r: await lookup({ data: { order_number: query!.n, contact: query!.c } }) },
@@ -70,7 +71,9 @@ function TrackingPage() {
                   <div><p className="text-sm text-muted-foreground">Pedido</p><h2 className="font-display text-3xl font-bold text-primary">#{order.order_number}</h2></div>
                   <span className="rounded-full bg-accent/10 px-3 py-1 text-sm font-bold text-accent">{statusLabels[order.status]}</span>
                 </div>
-                <ol className="mt-6 space-y-0">
+                <p className="mt-2 text-xs text-muted-foreground">Última actualización: {fmt(order.updated_at)} · se actualiza automáticamente</p>
+                {order.status === "cancelled" && <p className="mt-4 rounded-lg bg-destructive/10 p-3 text-sm font-semibold text-destructive">Este pedido fue cancelado. Contáctanos si tienes dudas.</p>}
+                <ol className={`mt-6 space-y-0 ${order.status === "cancelled" ? "hidden" : ""}`}>
                   {flow.map((s, i) => {
                     const state = i < current ? "done" : i === current ? "current" : "todo";
                     return (

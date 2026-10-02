@@ -1,5 +1,7 @@
 import { CreditCard, Store, Wallet } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { zelleInfo } from "@/lib/site-data";
+import { settingsQuery } from "@/lib/catalog";
 
 const options = [
   { id: "card", label: "Tarjeta de débito/crédito", icon: CreditCard },
@@ -8,6 +10,8 @@ const options = [
 ] as const;
 
 export function PaymentPicker({ value, onChange, reference, onReference, allowStore, amount }: { value: string; onChange: (v: string) => void; reference: string; onReference: (v: string) => void; allowStore?: boolean | undefined; amount?: string | undefined }) {
+  const { data: settings } = useQuery(settingsQuery);
+  const zelle = { recipient: settings?.["zelle_recipient"] || zelleInfo.recipient, name: settings?.["zelle_name"] || zelleInfo.name };
   const list = allowStore ? [...options, { id: "store", label: "Pagar en tienda", icon: Store } as const] : options;
   return (
     <div className="space-y-3">
@@ -33,7 +37,7 @@ export function PaymentPicker({ value, onChange, reference, onReference, allowSt
           <p className="font-semibold text-foreground">Instrucciones para pagar con Zelle</p>
           <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
             <li>Abre Zelle desde la app de tu banco.</li>
-            <li>Envía {amount ? <strong className="text-foreground">{amount}</strong> : "el monto total"} a <strong className="text-foreground">{zelleInfo.recipient}</strong> ({zelleInfo.name}).</li>
+            <li>Envía {amount ? <strong className="text-foreground">{amount}</strong> : "el monto total"} a <strong className="text-foreground">{zelle.recipient}</strong> ({zelle.name}).</li>
             <li>Copia el número de confirmación y escríbelo abajo.</li>
           </ol>
           <input className="field" placeholder="Número de confirmación de Zelle" value={reference} onChange={(e) => onReference(e.target.value)} maxLength={120} required />
