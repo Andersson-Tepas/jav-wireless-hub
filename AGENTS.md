@@ -9,5 +9,10 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Keep shared commercial navigation and footer in the root layout so every public route has consistent brand chrome.
-- Keep product data centralized and render details through one accessible dialog implementation to prevent catalog drift.
+# Project rules
+- Products, categories, orders, service requests and status history live in the database; the catalog reads them publicly via the browser client so admin edits show up immediately.
+- Orders, service requests and tracking lookups go through server functions in src/lib/commerce.functions.ts using the admin client, so customers never get direct table access.
+- Order status changes trigger DB-side history + notification queue rows, so every status-change path is logged identically.
+- Service definitions (fields, requirements, costs) and status flows are centralized in src/lib/site-data.ts to keep the forms, tracking and panel in sync.
+- The cart lives in localStorage via CartProvider in the root layout so it persists across pages without an account.
+- The admin panel sits under the _authenticated layout and checks the admin role via has_role; the first account created becomes admin.

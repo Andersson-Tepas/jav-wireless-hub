@@ -1,6 +1,10 @@
-# JAV Wireless
-
-- [x] Crear identidad visual y navegación responsive
-- [x] Crear páginas comerciales y catálogo con modal
-- [x] Crear dashboard visual
-- [x] Verificar compilación e interacción en PC y celular
+# Roadmap
+- [x] Rediseño formal (azul marino, blanco, rojo)
+- [x] Inicio enfocado en productos
+- [x] Catálogo con categorías, filtros y modal
+- [x] Servicios con formulario → revisión → pago → referencia
+- [x] Carrito y checkout (tarjeta/PayPal simulados, Zelle con referencia)
+- [x] Seguimiento por orden + teléfono/correo, auto-actualización
+- [x] Panel protegido (pedidos, pagos, solicitudes, productos, categorías, clientes, avisos)
+- [ ] Envío real de avisos por correo — requiere configurar dominio de correo
+- [ ] Correo real de Zelle — pendiente del usuario
