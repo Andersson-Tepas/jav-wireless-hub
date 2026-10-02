@@ -23,7 +23,7 @@ const toDraft = (p?: Product): Draft => ({
   price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "", stock: p ? String(p.stock) : "0",
   colors: p?.colors.join(", ") ?? "", capacity: p?.capacity ?? "", description: p?.description ?? "",
   features: p?.features.join("\n") ?? "",
-  specs: Array.isArray(p?.specs) ? (p!.specs as { label: string; value: string }[]).map((s) => `${s.label}: ${s.value}`).join("\n") : "",
+  specs: Array.isArray(p?.specs) ? (p.specs as { label: string; value: string }[]).map((s) => `${s.label}: ${s.value}`).join("\n") : "",
   financing: p?.financing ?? "", image: p?.image ?? "",
   is_featured: p?.is_featured ?? false, is_bestseller: p?.is_bestseller ?? false, is_new: p?.is_new ?? true, is_offer: p?.is_offer ?? false, active: p?.active ?? true,
 });

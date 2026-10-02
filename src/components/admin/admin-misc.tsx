@@ -137,7 +137,7 @@ export function Requests() {
       {list.map((r) => (
         <div key={r.id} className="card-soft grid gap-4 p-4 md:grid-cols-[1.5fr_1fr]">
           <div>
-            <p className="font-bold text-primary">{r.reference} · {r.service_name}</p>
+            <p className="font-bold text-primary">{r.reference} · {serviceCopy[r.service_slug]?.name ?? r.service_name}</p>
             <p className="text-sm">{r.customer_name} · {r.phone} · {r.email}</p>
             <p className="text-xs text-muted-foreground">{fmt(r.created_at)} · {paymentLabels[r.payment_method]}{r.payment_reference ? ` (ref. ${r.payment_reference})` : ""}{r.amount !== null ? ` · ${money(Number(r.amount))}` : ""}</p>
             <dl className="mt-2 text-sm text-muted-foreground">{Object.entries((r.details ?? {}) as Record<string, string>).map(([k, v]) => <div key={k}><span className="font-semibold">{k}:</span> {v}</div>)}</dl>
