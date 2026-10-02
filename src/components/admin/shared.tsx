@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { localizeProduct } from "@/lib/catalog";
+import { categoryNames } from "@/lib/site-data";
 
-export const fmt = (d: string) => new Date(d).toLocaleString("es", { dateStyle: "short", timeStyle: "short" });
+export const fmt = (d: string) => new Date(d).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" });
 export const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 export function useInvalidate() {
@@ -18,16 +20,16 @@ export function Kpi({ label, value, tone = "primary" }: { label: string; value: 
   return <div className="card-soft p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p><p className={`mt-1 font-display text-3xl font-bold ${color}`}>{value}</p></div>;
 }
 
-export const paymentStatusLabels: Record<string, string> = { pending: "Pendiente", confirmed: "Confirmado", rejected: "Rechazado" };
+export const paymentStatusLabels: Record<string, string> = { pending: "Pending", confirmed: "Confirmed", rejected: "Rejected" };
 
 export function useAdminOrders() {
   return useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(name,quantity,price), order_status_history(status,previous_status,changed_by_email,created_at)").order("created_at", { ascending: false })).data ?? [] });
 }
 export function useAdminProducts() {
-  return useQuery({ queryKey: ["admin-products"], queryFn: async () => (await supabase.from("products").select("*").order("created_at", { ascending: false })).data ?? [] });
+  return useQuery({ queryKey: ["admin-products"], queryFn: async () => ((await supabase.from("products").select("*").order("created_at", { ascending: false })).data ?? []).map(localizeProduct) });
 }
 export function useAdminCategories() {
-  return useQuery({ queryKey: ["admin-categories"], queryFn: async () => (await supabase.from("categories").select("*").order("sort")).data ?? [] });
+  return useQuery({ queryKey: ["admin-categories"], queryFn: async () => ((await supabase.from("categories").select("*").order("sort")).data ?? []).map((c) => ({ ...c, name: categoryNames[c.id] ?? c.name })) });
 }
 export function useAdminRequests() {
   return useQuery({ queryKey: ["admin-requests"], queryFn: async () => (await supabase.from("service_requests").select("*").order("created_at", { ascending: false })).data ?? [] });
@@ -38,7 +40,7 @@ export function useLowStock() {
     return data ?? [];
   } });
 }
-// Same source as Panel → Clientes: customer_profiles excluding admins.
+// Same source as Panel → Customers: customer_profiles excluding admins.
 export function useAdminCustomers() {
   return useQuery({ queryKey: ["admin-customers"], queryFn: async () => {
     const [{ data: p }, { data: admins }] = await Promise.all([

@@ -15,10 +15,10 @@ export function handle<A extends unknown[]>(fn: (...args: A) => Promise<Response
     try { return await fn(...args); }
     catch (e) {
       if (e instanceof ApiError) return fail(e.status, e.message);
-      if (e instanceof ZodError) return fail(400, "Datos inválidos", e.flatten());
+      if (e instanceof ZodError) return fail(400, "Invalid information", e.flatten());
       if (e instanceof Error && e.message && !e.message.includes("supabase")) return fail(400, e.message);
       console.error(e);
-      return fail(500, "Error interno");
+      return fail(500, "Internal error");
     }
   };
 }
@@ -46,16 +46,16 @@ export const publicClient = () => client();
 export async function requireAdmin(request: Request) {
   const auth = request.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!token || token.split(".").length !== 3) throw new ApiError(401, "No autenticado");
+  if (!token || token.split(".").length !== 3) throw new ApiError(401, "Not authenticated");
   const supabase = client(token);
   const { data, error } = await supabase.auth.getClaims(token);
   const userId = data?.claims?.sub;
-  if (error || !userId) throw new ApiError(401, "Sesión inválida");
+  if (error || !userId) throw new ApiError(401, "Invalid session");
   const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (isAdmin !== true) throw new ApiError(403, "Se requiere rol de administrador");
+  if (isAdmin !== true) throw new ApiError(403, "Administrator access is required");
   return { supabase, userId };
 }
 
 export async function readJson(request: Request) {
-  try { return await request.json(); } catch { throw new ApiError(400, "JSON inválido"); }
+  try { return await request.json(); } catch { throw new ApiError(400, "Invalid JSON"); }
 }

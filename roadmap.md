@@ -1,3 +1,4 @@
+- [ ] Convert all public and admin interface copy to natural U.S. English
 # Roadmap
 - [x] Panel with sidebar: dashboard, products, categories, inventory, orders, customers, services, requests, payments, promotions, tracking, settings
 - [x] Public + admin REST API with role checks

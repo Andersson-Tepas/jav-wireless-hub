@@ -10,11 +10,11 @@ const matchesContact = (email: string, phone: string, contact: string) => {
 export async function createOrderCore(data: OrderInput) {
   const ids = data.items.map((i) => i.id);
   const { data: products, error } = await supabaseAdmin.from("products").select("id,name,price,stock,image,active").in("id", ids);
-  if (error) throw new Error("No se pudo procesar el pedido");
+  if (error) throw new Error("Could not process the order");
   const lines = data.items.map((i) => {
     const p = products.find((x) => x.id === i.id);
-    if (!p || !p.active) throw new Error("Un producto ya no está disponible");
-    if (p.stock < i.quantity) throw new Error(`Stock insuficiente para ${p.name}`);
+    if (!p || !p.active) throw new Error("An item is no longer available");
+    if (p.stock < i.quantity) throw new Error(`Insufficient stock for ${p.name}`);
     return { p, quantity: i.quantity };
   });
   const subtotal = lines.reduce((n, l) => n + Number(l.p.price) * l.quantity, 0);
@@ -28,7 +28,7 @@ export async function createOrderCore(data: OrderInput) {
     payment_status: isZelle ? "pending" : "confirmed",
     notes: data.notes ?? null, subtotal, total: subtotal, status: isZelle ? "payment_pending" : "payment_confirmed",
   }).select().single();
-  if (oErr || !order) throw new Error("No se pudo crear el pedido");
+  if (oErr || !order) throw new Error("Could not create the order");
   await supabaseAdmin.from("order_items").insert(lines.map((l) => ({ order_id: order.id, product_id: l.p.id, name: l.p.name, price: l.p.price, quantity: l.quantity, image: l.p.image })));
   for (const l of lines) await supabaseAdmin.from("products").update({ stock: l.p.stock - l.quantity }).eq("id", l.p.id);
   return { order_number: order.order_number, email: order.email };
@@ -56,14 +56,14 @@ export async function lookupOrderCore(orderNumber: string, contact: string) {
 
 export async function createServiceRequestCore(data: ServiceInput) {
   const { data: svc } = await supabaseAdmin.from("services").select("slug,name,active").eq("slug", data.service_slug).maybeSingle();
-  if (!svc || !svc.active) throw new Error("Este servicio no está disponible");
+  if (!svc || !svc.active) throw new Error("This service is not available");
   const { data: row, error } = await supabaseAdmin.from("service_requests").insert({
     customer_name: data.customer_name, email: data.email, phone: data.phone,
     service_slug: svc.slug, service_name: svc.name, details: data.details, amount: data.amount,
     payment_method: data.payment_method, payment_reference: data.payment_reference ?? null,
     payment_status: data.payment_method === "card" || data.payment_method === "paypal" ? "confirmed" : "pending",
   }).select("reference").single();
-  if (error || !row) throw new Error("No se pudo enviar la solicitud");
+  if (error || !row) throw new Error("Could not submit the request");
   return { reference: row.reference };
 }
 
