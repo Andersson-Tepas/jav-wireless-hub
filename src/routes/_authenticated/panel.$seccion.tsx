@@ -17,8 +17,8 @@ const sections: Record<string, { title: string; C: () => React.ReactNode }> = {
   configuracion: { title: "Settings", C: Settings },
 };
 // English aliases so /panel/products and /panel/requests also work.
-sections.products = sections.productos!;
-sections.requests = sections.solicitudes!;
+sections["products"] = sections["productos"]!;
+sections["requests"] = sections["solicitudes"]!;
 
 export const Route = createFileRoute("/_authenticated/panel/$seccion")({
   beforeLoad: ({ params }) => { if (!sections[params.seccion]) throw notFound(); },
