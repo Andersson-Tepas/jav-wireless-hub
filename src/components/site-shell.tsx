@@ -1,12 +1,21 @@
-import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Lock, Menu, MessageCircle, ShoppingCart, X } from "lucide-react";
-import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Facebook, Instagram, Menu, MessageCircle, ShoppingCart, X } from "lucide-react";
+import { useRef, useState } from "react";
 import { navItems, socialLinks } from "@/lib/site-data";
 import { useCart } from "@/lib/cart";
 
 function Brand({ light }: { light?: boolean }) {
+  const navigate = useNavigate();
+  const clicks = useRef({ n: 0, t: 0 });
+  function onClick(e: React.MouseEvent) {
+    const now = Date.now();
+    const c = clicks.current;
+    c.n = now - c.t > 3000 ? 1 : c.n + 1;
+    c.t = now;
+    if (c.n >= 5) { e.preventDefault(); c.n = 0; navigate({ to: "/panel" }); }
+  }
   return (
-    <Link to="/" className="flex shrink-0 items-center gap-2" aria-label="JAV Wireless, inicio">
+    <Link to="/" onClick={onClick} className="flex shrink-0 items-center gap-2" aria-label="JAV Wireless, inicio">
       <span className="grid size-9 place-items-center rounded-md bg-primary font-display text-lg font-bold text-primary-foreground">J</span>
       <span className={`font-display text-xl font-bold ${light ? "text-primary-foreground" : "text-primary"}`}>JAV <span className="text-accent">Wireless</span></span>
     </Link>
@@ -35,14 +44,12 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2 xl:ml-2">
           <CartLink />
-          <Link to="/panel" className="hidden h-10 items-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground hover:bg-navy-deep sm:inline-flex"><Lock className="size-4" /> Panel</Link>
           <button type="button" className="grid size-10 place-items-center rounded-md hover:bg-muted xl:hidden" onClick={() => setOpen((v) => !v)} aria-label={open ? "Cerrar menú" : "Abrir menú"}>{open ? <X /> : <Menu />}</button>
         </div>
       </div>
       {open && (
         <nav className="grid gap-1 border-t border-border bg-background p-4 xl:hidden" aria-label="Navegación móvil">
           {navItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted">{item.label}</Link>)}
-          <Link to="/panel" onClick={() => setOpen(false)} className="rounded-md px-3 py-2.5 font-semibold text-primary hover:bg-muted">Panel administrativo</Link>
         </nav>
       )}
     </header>
