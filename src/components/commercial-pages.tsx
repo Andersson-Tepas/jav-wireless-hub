@@ -18,7 +18,7 @@ export function HomePage() {
   return (
     <>
       <section className="hero-grid-bg overflow-hidden">
-        <div className="mx-auto grid min-h-[calc(100svh-4.5rem)] max-w-7xl items-center gap-10 px-4 py-14 lg:grid-cols-[1.05fr_0.95fr] lg:px-6">
+        <div className="mx-auto grid min-h-[680px] max-w-7xl items-center gap-10 px-4 py-14 lg:min-h-[760px] lg:grid-cols-[1.05fr_0.95fr] lg:px-6">
           <div className="relative z-10">
             <p className="eyebrow">Conecta · Estrena · Avanza</p>
             <h1 className="mt-5 max-w-3xl font-display text-5xl font-black leading-[0.98] tracking-normal text-foreground sm:text-7xl">Tecnología que te mantiene <span className="text-primary">conectado.</span></h1>

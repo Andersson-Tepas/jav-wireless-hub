@@ -14,7 +14,7 @@ export const navItems = [
 ] as const;
 
 export const socialLinks = {
-  whatsapp: "https://wa.me/?text=Hola%20JAV%20Wireless",
+  whatsapp: "https://wa.me/",
   facebook: "https://www.facebook.com/",
   instagram: "https://www.instagram.com/",
   tiktok: "https://www.tiktok.com/",

@@ -25,7 +25,7 @@ function ProductCard({ product }: { product: Product }) {
 }
 
 function ProductDialog({ product }: { product: Product }) {
-  const inquiry = `${socialLinks.whatsapp}&text=${encodeURIComponent(`Me interesa ${product.name}`)}`;
+  const inquiry = `${socialLinks.whatsapp}?text=${encodeURIComponent(`Hola JAV Wireless, me interesa ${product.name}`)}`;
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in" />
