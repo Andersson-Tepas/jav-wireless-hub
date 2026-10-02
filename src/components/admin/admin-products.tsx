@@ -107,9 +107,13 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
     const body = fromDraft(d);
     if (product) {
       const original = toDraft(product);
-      for (const key of ["name", "colors", "capacity", "description", "features", "specs", "financing"] as const) {
-        if (d[key] === initial[key]) Object.assign(body, fromDraft({ ...d, [key]: original[key] }));
-      }
+      if (d.name === initial.name) body.name = original.name.trim();
+      if (d.colors === initial.colors) body.colors = original.colors.split(",").map((s) => s.trim()).filter(Boolean);
+      if (d.capacity === initial.capacity) body.capacity = original.capacity.trim();
+      if (d.description === initial.description) body.description = original.description.trim();
+      if (d.features === initial.features) body.features = original.features.split("\n").map((s) => s.trim()).filter(Boolean);
+      if (d.specs === initial.specs) body.specs = fromDraft({ ...d, specs: original.specs }).specs;
+      if (d.financing === initial.financing) body.financing = original.financing.trim() || null;
     }
     const { error } = product ? await supabase.from("products").update(body).eq("id", product.id) : await supabase.from("products").insert(body);
     setBusy(false);
