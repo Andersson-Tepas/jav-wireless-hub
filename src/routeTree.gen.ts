@@ -10,27 +10,47 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CarritoRouteImport } from './routes/carrito'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactoRouteImport } from './routes/contacto'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as FinanciamientoRouteImport } from './routes/financiamiento'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as ReparacionesRouteImport } from './routes/reparaciones'
-import { Route as ServiciosRouteImport } from './routes/servicios'
+import { Route as SeguimientoRouteImport } from './routes/seguimiento'
+import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
+import { Route as ServiciosIndexRouteImport } from './routes/servicios.index'
+import { Route as ServiciosSlugRouteImport } from './routes/servicios.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarritoRoute = CarritoRouteImport.update({
+  id: '/carrito',
+  path: '/carrito',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactoRoute = ContactoRouteImport.update({
   id: '/contacto',
   path: '/contacto',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanciamientoRoute = FinanciamientoRouteImport.update({
@@ -53,85 +73,137 @@ const ReparacionesRoute = ReparacionesRouteImport.update({
   path: '/reparaciones',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ServiciosRoute = ServiciosRouteImport.update({
-  id: '/servicios',
-  path: '/servicios',
+const SeguimientoRoute = SeguimientoRouteImport.update({
+  id: '/seguimiento',
+  path: '/seguimiento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPanelRoute = AuthenticatedPanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ServiciosIndexRoute = ServiciosIndexRouteImport.update({
+  id: '/servicios/',
+  path: '/servicios/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServiciosSlugRoute = ServiciosSlugRouteImport.update({
+  id: '/servicios/$slug',
+  path: '/servicios/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/carrito': typeof CarritoRoute
+  '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
-  '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
-  '/servicios': typeof ServiciosRoute
+  '/seguimiento': typeof SeguimientoRoute
+  '/panel': typeof AuthenticatedPanelRoute
+  '/servicios/$slug': typeof ServiciosSlugRoute
+  '/servicios/': typeof ServiciosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/carrito': typeof CarritoRoute
+  '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
-  '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
-  '/servicios': typeof ServiciosRoute
+  '/seguimiento': typeof SeguimientoRoute
+  '/panel': typeof AuthenticatedPanelRoute
+  '/servicios/$slug': typeof ServiciosSlugRoute
+  '/servicios': typeof ServiciosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/carrito': typeof CarritoRoute
+  '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
-  '/dashboard': typeof DashboardRoute
   '/financiamiento': typeof FinanciamientoRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
-  '/servicios': typeof ServiciosRoute
+  '/seguimiento': typeof SeguimientoRoute
+  '/_authenticated/panel': typeof AuthenticatedPanelRoute
+  '/servicios/$slug': typeof ServiciosSlugRoute
+  '/servicios/': typeof ServiciosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
+    | '/carrito'
+    | '/checkout'
     | '/contacto'
-    | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
-    | '/servicios'
+    | '/seguimiento'
+    | '/panel'
+    | '/servicios/$slug'
+    | '/servicios/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
+    | '/carrito'
+    | '/checkout'
     | '/contacto'
-    | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/seguimiento'
+    | '/panel'
+    | '/servicios/$slug'
     | '/servicios'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/carrito'
+    | '/checkout'
     | '/contacto'
-    | '/dashboard'
     | '/financiamiento'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
-    | '/servicios'
+    | '/seguimiento'
+    | '/_authenticated/panel'
+    | '/servicios/$slug'
+    | '/servicios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  CarritoRoute: typeof CarritoRoute
+  CheckoutRoute: typeof CheckoutRoute
   ContactoRoute: typeof ContactoRoute
-  DashboardRoute: typeof DashboardRoute
   FinanciamientoRoute: typeof FinanciamientoRoute
   NosotrosRoute: typeof NosotrosRoute
   ProductosRoute: typeof ProductosRoute
   ReparacionesRoute: typeof ReparacionesRoute
-  ServiciosRoute: typeof ServiciosRoute
+  SeguimientoRoute: typeof SeguimientoRoute
+  ServiciosSlugRoute: typeof ServiciosSlugRoute
+  ServiciosIndexRoute: typeof ServiciosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -143,18 +215,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/carrito': {
+      id: '/carrito'
+      path: '/carrito'
+      fullPath: '/carrito'
+      preLoaderRoute: typeof CarritoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contacto': {
       id: '/contacto'
       path: '/contacto'
       fullPath: '/contacto'
       preLoaderRoute: typeof ContactoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/financiamiento': {
@@ -185,25 +278,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReparacionesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/servicios': {
-      id: '/servicios'
+    '/seguimiento': {
+      id: '/seguimiento'
+      path: '/seguimiento'
+      fullPath: '/seguimiento'
+      preLoaderRoute: typeof SeguimientoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/panel': {
+      id: '/_authenticated/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof AuthenticatedPanelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/servicios/': {
+      id: '/servicios/'
       path: '/servicios'
-      fullPath: '/servicios'
-      preLoaderRoute: typeof ServiciosRouteImport
+      fullPath: '/servicios/'
+      preLoaderRoute: typeof ServiciosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/servicios/$slug': {
+      id: '/servicios/$slug'
+      path: '/servicios/$slug'
+      fullPath: '/servicios/$slug'
+      preLoaderRoute: typeof ServiciosSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPanelRoute: typeof AuthenticatedPanelRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPanelRoute: AuthenticatedPanelRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  CarritoRoute: CarritoRoute,
+  CheckoutRoute: CheckoutRoute,
   ContactoRoute: ContactoRoute,
-  DashboardRoute: DashboardRoute,
   FinanciamientoRoute: FinanciamientoRoute,
   NosotrosRoute: NosotrosRoute,
   ProductosRoute: ProductosRoute,
   ReparacionesRoute: ReparacionesRoute,
-  ServiciosRoute: ServiciosRoute,
+  SeguimientoRoute: SeguimientoRoute,
+  ServiciosSlugRoute: ServiciosSlugRoute,
+  ServiciosIndexRoute: ServiciosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

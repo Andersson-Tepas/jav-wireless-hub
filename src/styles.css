@@ -4,30 +4,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
-
 @theme inline {
   --font-sans: "Manrope", sans-serif;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-display: "Playfair Display", serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -44,10 +27,14 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-surface: var(--surface);
+  --color-navy-deep: var(--navy-deep);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
+  --color-overlay: var(--overlay);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -61,162 +48,63 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-surface-deep: var(--surface-deep);
-  --color-product: var(--product);
-  --color-product-foreground: var(--product-foreground);
-  --color-offer: var(--offer);
-  --color-offer-foreground: var(--offer-foreground);
-  --color-finance: var(--finance);
-  --color-repair: var(--repair);
-  --color-shipping: var(--shipping);
-  --color-shipping-foreground: var(--shipping-foreground);
-  --color-overlay: var(--overlay);
-  --shadow-glow: var(--shadow-glow);
-  --shadow-cyan: var(--shadow-cyan);
-  --shadow-red: var(--shadow-red);
-  --shadow-green: var(--shadow-green);
-  --shadow-modal: var(--shadow-modal);
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lift: var(--shadow-lift);
 }
 
 :root {
-  --radius: 0.5rem;
-  --background: oklch(0.105 0.025 255);
-  --foreground: oklch(0.98 0.008 245);
-  --card: oklch(0.15 0.027 255);
-  --card-foreground: oklch(0.98 0.008 245);
-  --popover: oklch(0.14 0.03 255);
-  --popover-foreground: oklch(0.98 0.008 245);
-  --primary: oklch(0.66 0.225 255);
-  --primary-foreground: oklch(0.99 0.005 245);
-  --secondary: oklch(0.22 0.035 255);
-  --secondary-foreground: oklch(0.98 0.008 245);
-  --muted: oklch(0.2 0.025 255);
-  --muted-foreground: oklch(0.72 0.035 250);
-  --accent: oklch(0.23 0.065 250);
-  --accent-foreground: oklch(0.98 0.008 245);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.3 0.04 255 / 65%);
-  --input: oklch(0.28 0.035 255);
-  --ring: oklch(0.66 0.225 255);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
-  --surface-deep: oklch(0.085 0.022 255);
-  --product: oklch(0.79 0.145 205);
-  --product-foreground: oklch(0.11 0.025 235);
-  --offer: oklch(0.62 0.245 25);
-  --offer-foreground: oklch(0.99 0.005 25);
-  --finance: oklch(0.78 0.155 80);
-  --repair: oklch(0.67 0.07 235);
-  --shipping: oklch(0.72 0.18 155);
-  --shipping-foreground: oklch(0.11 0.025 155);
-  --overlay: oklch(0.03 0.015 255 / 82%);
-  --shadow-glow: 0 12px 40px color-mix(in oklab, var(--primary) 28%, transparent);
-  --shadow-cyan: 0 12px 40px color-mix(in oklab, var(--product) 20%, transparent);
-  --shadow-red: 0 12px 40px color-mix(in oklab, var(--offer) 22%, transparent);
-  --shadow-green: 0 12px 40px color-mix(in oklab, var(--shipping) 28%, transparent);
-  --shadow-modal: 0 30px 90px oklch(0.02 0.01 255 / 70%);
-}
-
-.dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.22 0.04 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.04 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.04 260);
+  --primary: oklch(0.3 0.09 262);
+  --primary-foreground: oklch(0.99 0 0);
+  --navy-deep: oklch(0.22 0.07 262);
+  --secondary: oklch(0.96 0.005 260);
+  --secondary-foreground: oklch(0.25 0.05 262);
+  --muted: oklch(0.965 0.004 260);
+  --muted-foreground: oklch(0.5 0.02 260);
+  --accent: oklch(0.55 0.21 27);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.55 0.21 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.55 0.13 155);
+  --success-foreground: oklch(0.99 0 0);
+  --surface: oklch(0.975 0.004 260);
+  --border: oklch(0.91 0.008 260);
+  --input: oklch(0.88 0.01 260);
+  --ring: oklch(0.3 0.09 262);
+  --overlay: oklch(0.15 0.03 262 / 0.55);
+  --chart-1: oklch(0.3 0.09 262);
+  --chart-2: oklch(0.55 0.21 27);
+  --chart-3: oklch(0.6 0.02 260);
+  --chart-4: oklch(0.55 0.13 155);
+  --chart-5: oklch(0.75 0.12 80);
+  --sidebar: oklch(0.98 0.003 260);
+  --sidebar-foreground: oklch(0.22 0.04 260);
+  --sidebar-primary: oklch(0.3 0.09 262);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.95 0.006 260);
+  --sidebar-accent-foreground: oklch(0.25 0.05 262);
+  --sidebar-border: oklch(0.91 0.008 260);
+  --sidebar-ring: oklch(0.3 0.09 262);
+  --shadow-soft: 0 1px 2px oklch(0.22 0.04 260 / 0.05), 0 4px 16px oklch(0.22 0.04 260 / 0.06);
+  --shadow-lift: 0 12px 32px oklch(0.22 0.04 260 / 0.12);
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    font-family: var(--font-sans);
-    min-width: 320px;
-    letter-spacing: 0;
-  }
-
-  button, a, input, textarea { letter-spacing: 0; }
+  * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
 }
 
-@utility nav-link {
-  @apply rounded-md px-3 py-2 text-xs font-bold text-muted-foreground transition hover:bg-accent hover:text-foreground;
-  &[data-status="active"] { @apply bg-primary/10 text-primary; }
-}
-
-@utility nav-link-mobile {
-  @apply rounded-md px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground;
-  &[data-status="active"] { @apply bg-primary/10 text-primary; }
-}
-
-@utility eyebrow { @apply text-xs font-black uppercase text-primary; letter-spacing: 0.15em; }
-@utility section-pad { @apply py-16 sm:py-20 lg:py-24; }
-@utility hero-grid-bg {
-  background-image: linear-gradient(color-mix(in oklab, var(--primary) 7%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in oklab, var(--primary) 7%, transparent) 1px, transparent 1px), radial-gradient(circle at 80% 45%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 34%);
-  background-size: 48px 48px, 48px 48px, 100% 100%;
-}
-@utility signal-ring { @apply absolute rounded-full border border-primary/30; animation: pulse-ring 4s ease-in-out infinite; }
-@utility signal-ring-one { width: min(72vw, 28rem); aspect-ratio: 1; }
-@utility signal-ring-two { width: min(52vw, 20rem); aspect-ratio: 1; animation-delay: -2s; }
-@utility signal-core { @apply relative z-10 flex size-40 flex-col items-center justify-center rounded-full border border-primary/40 bg-background/80 shadow-glow backdrop-blur-md; }
-@utility hero-chip { @apply absolute flex items-center gap-2 rounded-md border border-border bg-card/90 px-4 py-3 text-xs font-bold text-foreground shadow-modal backdrop-blur-md; & > svg { @apply size-4 text-product; } }
-@utility service-card { @apply rounded-lg border border-border bg-card p-6 transition duration-300 hover:-translate-y-1 hover:border-primary/60 hover:shadow-glow; }
-@utility color-panel { @apply rounded-lg border border-border bg-card p-6; &.tone-offer { @apply border-t-offer text-offer; } &.tone-finance { @apply border-t-finance text-finance; } &.tone-shipping { @apply border-t-shipping text-shipping; } }
-@utility page-intro { @apply border-b border-border; background-image: linear-gradient(110deg, color-mix(in oklab, var(--primary) 13%, transparent), transparent 50%); &.tone-product { background-image: linear-gradient(110deg, color-mix(in oklab, var(--product) 13%, transparent), transparent 50%); } &.tone-offer { background-image: linear-gradient(110deg, color-mix(in oklab, var(--offer) 13%, transparent), transparent 50%); } &.tone-finance { background-image: linear-gradient(110deg, color-mix(in oklab, var(--finance) 13%, transparent), transparent 50%); } &.tone-repair { background-image: linear-gradient(110deg, color-mix(in oklab, var(--repair) 13%, transparent), transparent 50%); } &.tone-shipping { background-image: linear-gradient(110deg, color-mix(in oklab, var(--shipping) 13%, transparent), transparent 50%); } }
-@utility badge-offer { @apply absolute left-3 top-3 rounded-sm bg-offer px-2.5 py-1 text-xs font-black uppercase text-offer-foreground; }
-@utility badge-product { @apply absolute left-3 top-3 rounded-sm bg-product px-2.5 py-1 text-xs font-black uppercase text-product-foreground; }
-@utility stock-pill { @apply inline-flex items-center gap-1.5 rounded-full bg-shipping/10 px-3 py-1 text-xs font-bold text-shipping; }
-@utility detail-box { @apply rounded-md border border-border bg-card p-3; & dt { @apply text-xs text-muted-foreground; } & dd { @apply mt-1 text-sm font-bold text-foreground; } }
-@utility process-step { @apply relative min-h-44 rounded-lg border border-border bg-card p-6; & span { @apply font-display text-4xl font-black text-finance/50; } & h3 { @apply mt-8 text-lg font-bold text-foreground; } }
-@utility repair-row { @apply flex items-center gap-3 border-b border-border py-5 font-semibold text-foreground; }
-@utility form-panel { @apply grid gap-5 rounded-lg border border-border bg-card p-6 sm:p-8; }
-@utility field { @apply min-h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20; }
-@utility dashboard-tile { @apply flex min-h-44 flex-col items-start rounded-lg border border-border bg-card p-5 text-left transition hover:-translate-y-1; &.tone-primary { @apply border-t-primary text-primary; } &.tone-product { @apply border-t-product text-product; } &.tone-shipping { @apply border-t-shipping text-shipping; } &.tone-finance { @apply border-t-finance text-finance; } &.tone-offer { @apply border-t-offer text-offer; } }
-@utility dashboard-panel { @apply rounded-lg border border-border bg-card p-6; }
-@utility status-live { @apply rounded-full bg-shipping/10 px-3 py-1 text-xs font-bold text-shipping; }
-@utility chart-bars { @apply mt-8 flex h-56 items-end gap-3 border-b border-border px-2; }
-@utility chart-column { @apply flex h-full flex-1 flex-col justify-end gap-3 text-center text-xs text-muted-foreground; & > div { @apply min-h-3 rounded-t-sm bg-primary; } }
-
-@keyframes pulse-ring { 0%, 100% { transform: scale(.94); opacity: .45; } 50% { transform: scale(1.04); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
+@utility container-page { @apply mx-auto w-full max-w-7xl px-4 lg:px-6; }
+@utility section-pad { @apply py-14 lg:py-20; }
+@utility eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-accent; }
+@utility nav-link { @apply rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary; &[data-status="active"] { @apply text-primary; } }
+@utility field { @apply h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15; }
+@utility card-soft { @apply rounded-xl border border-border bg-card shadow-soft; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-semibold text-muted-foreground transition hover:border-primary hover:text-primary; &[data-active="true"] { @apply border-primary bg-primary text-primary-foreground; } }

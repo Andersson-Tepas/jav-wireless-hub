@@ -1,3 +1,0 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ServicesPage } from "@/components/commercial-pages";
-export const Route = createFileRoute("/servicios")({ head: () => ({ meta: [{ title: "Servicios móviles — JAV Wireless" }, { name: "description", content: "Activaciones, equipos, accesorios, envíos y soporte móvil de JAV Wireless." }, { property: "og:title", content: "Servicios — JAV Wireless" }, { property: "og:description", content: "Soluciones móviles y atención personalizada." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: ServicesPage });
