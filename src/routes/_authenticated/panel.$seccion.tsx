@@ -4,18 +4,21 @@ import { Customers, Orders, Payments, Tracking } from "@/components/admin/admin-
 import { Inventory, Products } from "@/components/admin/admin-products";
 
 const sections: Record<string, { title: string; C: () => React.ReactNode }> = {
-  products: { title: "Products", C: Products },
+  productos: { title: "Products", C: Products },
   categorias: { title: "Categories", C: Categories },
   inventario: { title: "Inventory", C: Inventory },
   pedidos: { title: "Orders", C: Orders },
   clientes: { title: "Customers", C: Customers },
   servicios: { title: "Services", C: ServicesAdmin },
-  requests: { title: "Service requests", C: Requests },
+  solicitudes: { title: "Service requests", C: Requests },
   pagos: { title: "Payments", C: Payments },
   promociones: { title: "Promotions", C: Promotions },
   seguimiento: { title: "Tracking and notifications", C: Tracking },
   configuracion: { title: "Settings", C: Settings },
 };
+// English aliases so /panel/products and /panel/requests also work.
+sections["products"] = sections["productos"]!;
+sections["requests"] = sections["solicitudes"]!;
 
 export const Route = createFileRoute("/_authenticated/panel/$seccion")({
   beforeLoad: ({ params }) => { if (!sections[params.seccion]) throw notFound(); },
