@@ -1,13 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { money } from "@/lib/cart";
 import { statusLabels } from "@/lib/site-data";
-import { Kpi, fmt, lowStockFrom, useAdminOrders, useAdminProducts, useAdminRequests, useLowStock } from "./shared";
+import { Kpi, fmt, lowStockFrom, useAdminCustomers, useAdminOrders, useAdminProducts, useAdminRequests, useLowStock } from "./shared";
 
 export function Dashboard() {
   const { data: orders = [] } = useAdminOrders();
   const { data: products = [] } = useAdminProducts();
   const { data: requests = [] } = useAdminRequests();
   const { data: settings } = useLowStock();
+  const { data: customers = 0 } = useAdminCustomers();
   const low = lowStockFrom(settings);
   const today = new Date().toDateString();
   const live = orders.filter((o) => o.status !== "cancelled");
