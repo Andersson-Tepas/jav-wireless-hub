@@ -147,7 +147,7 @@ export function Customers() {
           const email = p.email.toLowerCase();
           const os = orders.filter((o) => o.email.toLowerCase() === email);
           const rs = reqs.filter((r) => r.email.toLowerCase() === email);
-          const name = p.full_name || p.email.split("@")[0];
+          const name = p.full_name || p.email.split("@")[0] || "Cliente";
           const isOpen = open === p.user_id;
           return (
             <div key={p.user_id}>
