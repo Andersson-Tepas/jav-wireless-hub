@@ -14,7 +14,7 @@ function useAddToCart() {
 
 function Availability({ stock }: { stock: number }) {
   if (stock <= 0) return <span className="text-xs font-semibold text-destructive">Out of stock</span>;
-  if (stock <= 5) return <span className="text-xs font-semibold text-accent">Últimas {stock} units</span>;
+  if (stock <= 5) return <span className="text-xs font-semibold text-accent">Only {stock} left</span>;
   return <span className="text-xs font-semibold text-success">In stock</span>;
 }
 
@@ -22,7 +22,7 @@ export function ProductCard({ product, onOpen }: { product: Product; onOpen: () 
   const addToCart = useAddToCart();
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition hover:shadow-lift">
-      <button type="button" onClick={onOpen} className="relative aspect-square overflow-hidden bg-surface" aria-label={`View details de ${product.name}`}>
+      <button type="button" onClick={onOpen} className="relative aspect-square overflow-hidden bg-surface" aria-label={`View details for ${product.name}`}>
         <img src={productImage(product.image)} alt={product.name} loading="lazy" width={1024} height={1024} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         <div className="absolute left-3 top-3 flex flex-col gap-1">
           {product.is_offer && <span className="rounded bg-accent px-2 py-1 text-[11px] font-bold uppercase text-accent-foreground">Sale</span>}
@@ -76,7 +76,7 @@ function ProductDialog({ product, onClose }: { product: Product | null; onClose:
               {product.financing && <p className="mt-5 rounded-lg border border-border bg-surface p-3 text-sm"><strong className="text-primary">Financing:</strong> {product.financing}</p>}
               <div className="mt-6 grid gap-2 sm:grid-cols-2">
                 <Button disabled={product.stock <= 0} onClick={() => { addToCart(product); onClose(); }}><ShoppingCart /> Add to cart</Button>
-                <a className="inline-flex h-11 items-center justify-center rounded-md border border-input px-5 text-sm font-semibold hover:border-primary hover:text-primary" href={`${socialLinks.whatsapp}?text=${encodeURIComponent(`Hola JAV Wireless, me interesa ${product.name}`)}`} target="_blank" rel="noreferrer">Ask about this item</a>
+                <a className="inline-flex h-11 items-center justify-center rounded-md border border-input px-5 text-sm font-semibold hover:border-primary hover:text-primary" href={`${socialLinks.whatsapp}?text=${encodeURIComponent(`Hello JAV Wireless, I’m interested in ${product.name}`)}`} target="_blank" rel="noreferrer">Ask about this item</a>
               </div>
             </div>
           </Dialog.Content>
@@ -140,7 +140,7 @@ export function ProductBrowser({ initialCategory = "" }: { initialCategory?: str
         <select className="field" value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort"><option value="featured">Featured</option><option value="new">Newest</option><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option></select>
         <label className="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={onlyAvailable} onChange={(e) => setOnlyAvailable(e.target.checked)} className="size-4 accent-primary" /> In stock</label>
       </div>
-      <p className="my-5 text-sm text-muted-foreground">{isLoading ? "Loading products..." : `${list.length} producto${list.length === 1 ? "" : "s"}`}</p>
+      <p className="my-5 text-sm text-muted-foreground">{isLoading ? "Loading products..." : `${list.length} product${list.length === 1 ? "" : "s"}`}</p>
       {!isLoading && <ProductGrid products={list} />}
     </div>
   );

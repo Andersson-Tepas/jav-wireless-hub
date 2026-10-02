@@ -37,7 +37,7 @@ export function PaymentPicker({ value, onChange, reference, onReference, allowSt
           <p className="font-semibold text-foreground">How to pay with Zelle</p>
           <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
             <li>Open Zelle in your banking app.</li>
-            <li>Envía {amount ? <strong className="text-foreground">{amount}</strong> : "the total amount"} a <strong className="text-foreground">{zelle.recipient}</strong> ({zelle.name}).</li>
+            <li>Send {amount ? <strong className="text-foreground">{amount}</strong> : "the total amount"} to <strong className="text-foreground">{zelle.recipient}</strong> ({zelle.name}).</li>
             <li>Copy the confirmation number and enter it below.</li>
           </ol>
           <input className="field" placeholder="Zelle confirmation number" value={reference} onChange={(e) => onReference(e.target.value)} maxLength={120} required />
