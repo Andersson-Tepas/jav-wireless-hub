@@ -45,11 +45,11 @@ function ServiceDetail() {
     try {
       const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details, amount: total, payment_method: payment as "card", payment_reference: reference || undefined } });
       setResult(r.reference); setStep("done");
-    } catch { setError("No pudimos enviar tu solicitud. Revisa los datos e inténtalo de nuevo."); }
+    } catch { setError("We couldn’t submit your request. Check your information and try again."); }
     finally { setSending(false); }
   }
 
-  const steps: { id: Step; label: string }[] = [{ id: "form", label: "Form" }, { id: "review", label: "Review" }, { id: "payment", label: "Pago" }, { id: "done", label: "Confirmation" }];
+  const steps: { id: Step; label: string }[] = [{ id: "form", label: "Form" }, { id: "review", label: "Review" }, { id: "payment", label: "Payment" }, { id: "done", label: "Confirmation" }];
   const idx = steps.findIndex((s) => s.id === step);
 
   return (
@@ -77,7 +77,7 @@ function ServiceDetail() {
             {service.fields.map((f) => (
               <Field key={f.name} label={f.label}>
                 {f.type === "textarea" ? <textarea required maxLength={1000} className="field h-28 py-2" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />
-                  : <input required={!f.label.includes("opcional")} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
+                  : <input required={!f.label.toLowerCase().includes("optional")} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
               </Field>
             ))}
             {service.amountField && <Field label="Amount (USD)"><input required type="number" min={1} max={100000} step="0.01" className="field" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>}
@@ -115,7 +115,7 @@ function ServiceDetail() {
             <h2 className="mt-4 font-display text-2xl font-bold text-primary">Request submitted!</h2>
             <p className="mt-2 text-muted-foreground">Your reference number is</p>
             <p className="mt-2 font-display text-4xl font-bold text-accent">{result}</p>
-            <p className="mt-4 text-sm text-muted-foreground">Pago: {paymentLabels[payment]}. Save this number to check its status in Tracking.</p>
+            <p className="mt-4 text-sm text-muted-foreground">Payment: {paymentLabels[payment]}. Save this number to check its status in Tracking.</p>
             <Link to="/seguimiento" className={`${buttonVariants()} mt-6`}>Go to tracking</Link>
           </div>
         )}

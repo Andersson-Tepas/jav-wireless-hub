@@ -19,7 +19,7 @@ function AccountPage() {
           {avatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" className="size-16 rounded-full object-cover" /> : <span className="grid size-16 place-items-center rounded-full bg-primary text-2xl font-bold text-primary-foreground">{name.charAt(0)}</span>}
           <div><h1 className="font-display text-2xl font-bold text-primary">{name}</h1><p className="text-sm text-muted-foreground">{user.email}</p></div>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">Customer since {new Date(user.created_at).toLocaleDateString("es")}</p>
+        <p className="mt-6 text-sm text-muted-foreground">Customer since {new Date(user.created_at).toLocaleDateString("en-US")}</p>
         <div className="mt-6 flex flex-wrap gap-2">
           <Link to="/mis-pedidos" className={buttonVariants()}>My orders</Link>
           <Link to="/seguimiento" className={buttonVariants({ variant: "outline" })}>Tracking</Link>

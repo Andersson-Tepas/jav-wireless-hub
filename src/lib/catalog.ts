@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import type { Service, ServiceField } from "@/lib/site-data";
+import { categoryNames, productNames, serviceCopy, type Service, type ServiceField } from "@/lib/site-data";
 
 export type Product = Tables<"products">;
 export type Category = Tables<"categories">;
@@ -13,7 +13,7 @@ export const productsQuery = queryOptions({
   queryFn: async () => {
     const { data, error } = await supabase.from("products").select("*").eq("active", true).order("created_at", { ascending: false });
     if (error) throw error;
-    return data;
+    return data.map((p) => ({ ...p, name: productNames[p.name] ?? p.name }));
   },
 });
 
@@ -22,11 +22,11 @@ export const categoriesQuery = queryOptions({
   queryFn: async () => {
     const { data, error } = await supabase.from("categories").select("*").eq("active", true).order("sort");
     if (error) throw error;
-    return data;
+    return data.map((c) => ({ ...c, name: categoryNames[c.id] ?? c.name }));
   },
 });
 
-export const toService = (r: ServiceRow): Service => ({
+export const toService = (r: ServiceRow): Service => serviceCopy[r.slug] ?? ({
   slug: r.slug, name: r.name, short: r.short, description: r.description, requirements: r.requirements, cost: r.cost,
   ...(r.fee !== null ? { fee: Number(r.fee) } : {}), amountField: r.amount_field,
   fields: Array.isArray(r.fields) ? (r.fields as unknown as ServiceField[]) : [],

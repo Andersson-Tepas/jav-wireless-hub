@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const fmt = (d: string) => new Date(d).toLocaleString("es", { dateStyle: "short", timeStyle: "short" });
+export const fmt = (d: string) => new Date(d).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" });
 export const slugify = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 export function useInvalidate() {

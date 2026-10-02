@@ -23,7 +23,7 @@ function MyOrders() {
         {data && data.length === 0 && <div className="card-soft p-6 text-muted-foreground">You don’t have any orders yet. <Link to="/productos" className="font-semibold text-primary">View products</Link></div>}
         {data?.map((o) => (
           <div key={o.order_number} className="card-soft flex flex-wrap items-center justify-between gap-3 p-5">
-            <div><p className="font-bold text-primary">{o.order_number}</p><p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString("es")} · {(deliveryLabels as Record<string, string>)[o.delivery_method] ?? o.delivery_method}</p></div>
+            <div><p className="font-bold text-primary">{o.order_number}</p><p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString("en-US")} · {(deliveryLabels as Record<string, string>)[o.delivery_method] ?? o.delivery_method}</p></div>
             <span className="chip">{(statusLabels as Record<string, string>)[o.status] ?? o.status}</span>
             <p className="font-bold">${Number(o.total).toFixed(2)}</p>
           </div>

@@ -17,7 +17,7 @@ export const Route = createFileRoute("/seguimiento")({
   component: TrackingPage,
 });
 
-const fmt = (d: string) => new Date(d).toLocaleString("es", { dateStyle: "medium", timeStyle: "short" });
+const fmt = (d: string) => new Date(d).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 function TrackingPage() {
   const search = Route.useSearch();
@@ -56,7 +56,7 @@ function TrackingPage() {
             <p className="text-sm text-muted-foreground">Request</p>
             <h2 className="font-display text-2xl font-bold text-primary">{data.r.request.reference} · {data.r.request.service_name}</h2>
             <p className="mt-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">{serviceStatusLabels[data.r.request.status] ?? data.r.request.status}</p>
-            <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Date</dt><dd className="font-semibold">{fmt(data.r.request.created_at)}</dd></div><div><dt className="text-muted-foreground">Last updated</dt><dd className="font-semibold">{fmt(data.r.request.updated_at)}</dd></div><div><dt className="text-muted-foreground">Pago</dt><dd className="font-semibold">{paymentLabels[data.r.request.payment_method]}</dd></div>{data.r.request.amount !== null && <div><dt className="text-muted-foreground">Total</dt><dd className="font-semibold">{money(data.r.request.amount)}</dd></div>}</dl>
+            <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Date</dt><dd className="font-semibold">{fmt(data.r.request.created_at)}</dd></div><div><dt className="text-muted-foreground">Last updated</dt><dd className="font-semibold">{fmt(data.r.request.updated_at)}</dd></div><div><dt className="text-muted-foreground">Payment</dt><dd className="font-semibold">{paymentLabels[data.r.request.payment_method]}</dd></div>{data.r.request.amount !== null && <div><dt className="text-muted-foreground">Total</dt><dd className="font-semibold">{money(data.r.request.amount)}</dd></div>}</dl>
           </div>
         )}
 
