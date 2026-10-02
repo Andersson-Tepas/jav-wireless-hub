@@ -5,7 +5,7 @@ import { getMyOrders } from "@/lib/account.functions";
 import { statusLabels, deliveryLabels } from "@/lib/site-data";
 
 export const Route = createFileRoute("/_authenticated/mis-pedidos")({
-  head: () => ({ meta: [{ title: "My orders — JAV Wireless" }, { name: "description", content: "Consulta tus pedidos en JAV Wireless." }, { property: "og:title", content: "My orders — JAV Wireless" }, { property: "og:description", content: "Historial de tus pedidos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "My Orders — JAV Wireless" }, { name: "description", content: "View your JAV Wireless orders." }, { property: "og:title", content: "My Orders — JAV Wireless" }, { property: "og:description", content: "Your order history." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: MyOrders,
 });
 

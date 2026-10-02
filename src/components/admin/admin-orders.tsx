@@ -156,7 +156,7 @@ export function Customers() {
                 <span className="min-w-[180px] flex-1"><span className="font-semibold">{name}</span><span className="block text-xs text-muted-foreground">{p.email}</span></span>
                 <span className="w-32 text-muted-foreground">{p.phone || "—"}</span>
                 <span className="w-24 text-xs text-muted-foreground">{p.provider === "google" ? "Google" : "Email"}</span>
-                <span className="w-36 text-muted-foreground">Joined: {new Date(p.created_at).toLocaleDateString("es")}</span>
+                <span className="w-36 text-muted-foreground">Joined: {new Date(p.created_at).toLocaleDateString("en-US")}</span>
                 <span className="text-xs">{os.length} orders · {rs.length} requests</span>
                 <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
               </button>
