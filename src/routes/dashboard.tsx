@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { DashboardPage } from "@/components/commercial-pages";
+export const Route = createFileRoute("/dashboard")({ head: () => ({ meta: [{ title: "Dashboard — JAV Wireless" }, { name: "description", content: "Panel operativo demostrativo de JAV Wireless." }, { property: "og:title", content: "Dashboard — JAV Wireless" }, { property: "og:description", content: "Accesos rápidos e indicadores operativos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: DashboardPage });

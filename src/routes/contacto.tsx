@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ContactPage } from "@/components/commercial-pages";
+export const Route = createFileRoute("/contacto")({ head: () => ({ meta: [{ title: "Contacto — JAV Wireless" }, { name: "description", content: "Contacta a JAV Wireless para productos, reparaciones, financiamiento y envíos." }, { property: "og:title", content: "Contacto — JAV Wireless" }, { property: "og:description", content: "Estamos listos para ayudarte." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: ContactPage });
