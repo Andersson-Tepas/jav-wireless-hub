@@ -64,6 +64,7 @@ export const statusLabels: Record<string, string> = {
   ready_for_pickup: "Listo para recoger",
   picked_up: "Recogido",
   delivered: "Entregado",
+  cancelled: "Cancelado",
 };
 
 export const statusFlows: Record<string, string[]> = {
@@ -78,13 +79,14 @@ export function timelineFor(delivery: string, status: string) {
   return { flow, current: Math.max(0, flow.indexOf(status)) };
 }
 
-export const allStatusesFor = (delivery: string) => ["received", "payment_pending", "payment_confirmed", "preparing", "prepared", ...(delivery === "shipping" ? ["handed_to_carrier", "in_transit", "delivered"] : ["ready_for_pickup", "picked_up"])];
+export const allStatusesFor = (delivery: string) => ["received", "payment_pending", "payment_confirmed", "preparing", "prepared", ...(delivery === "shipping" ? ["handed_to_carrier", "in_transit", "delivered"] : ["ready_for_pickup", "picked_up"]), "cancelled"];
 
 export const serviceStatusLabels: Record<string, string> = { received: "Solicitud recibida", in_review: "En revisión", processing: "En proceso", completed: "Completada", cancelled: "Cancelada" };
 
 export type ServiceField = { name: string; label: string; type?: "text" | "number" | "textarea" | "date"; placeholder?: string };
 export type Service = { slug: string; name: string; short: string; description: string; requirements: string[]; cost: string; fee?: number; amountField?: boolean; fields: ServiceField[] };
 
+/** Seed reference only — live services are read from the database (servicesQuery). */
 export const services: Service[] = [
   { slug: "envios-de-dinero", name: "Envíos de dinero", short: "Remesas nacionales e internacionales (no es envío de productos).", description: "Envía dinero a familiares y amigos de forma rápida y segura. Este servicio es para transferencias de dinero, no para envíos de paquetes.", requirements: ["Identificación oficial vigente", "Nombre completo y teléfono del beneficiario", "País y ciudad de destino"], cost: "Comisión desde $5 según destino y monto", fee: 5, amountField: true, fields: [{ name: "beneficiary", label: "Nombre del beneficiario" }, { name: "beneficiary_phone", label: "Teléfono del beneficiario" }, { name: "destination", label: "País y ciudad de destino" }] },
   { slug: "pago-de-bills", name: "Pago de bills", short: "Paga tus facturas en un solo lugar.", description: "Realizamos el pago de tus facturas de teléfono, internet, cable, tarjetas y más.", requirements: ["Número de cuenta o factura", "Nombre de la compañía", "Monto a pagar"], cost: "Cargo por servicio de $2", fee: 2, amountField: true, fields: [{ name: "company", label: "Compañía" }, { name: "account", label: "Número de cuenta" }] },

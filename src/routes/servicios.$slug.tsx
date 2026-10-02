@@ -6,15 +6,18 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { PaymentPicker } from "@/components/payment-picker";
 import { createServiceRequest } from "@/lib/commerce.functions";
 import { money } from "@/lib/cart";
-import { paymentLabels, services } from "@/lib/site-data";
+import { paymentLabels } from "@/lib/site-data";
+import { servicesQuery } from "@/lib/catalog";
 
 export const Route = createFileRoute("/servicios/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params, context }) => {
+    const services = await context.queryClient.ensureQueryData(servicesQuery);
     const service = services.find((s) => s.slug === params.slug);
     if (!service) throw notFound();
     return { service };
   },
   head: ({ loaderData }) => loaderData ? { meta: [{ title: `${loaderData.service.name} — JAV Wireless` }, { name: "description", content: loaderData.service.short }, { property: "og:title", content: `${loaderData.service.name} — JAV Wireless` }, { property: "og:description", content: loaderData.service.description }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] } : { meta: [{ title: "Servicio no encontrado" }, { name: "robots", content: "noindex" }] },
+  errorComponent: () => <div className="container-page py-20 text-center"><h1 className="font-display text-3xl font-bold text-primary">No pudimos cargar el servicio</h1><Link to="/servicios" className={`${buttonVariants()} mt-6`}>Ver servicios</Link></div>,
   notFoundComponent: () => <div className="container-page py-20 text-center"><h1 className="font-display text-3xl font-bold text-primary">Servicio no encontrado</h1><Link to="/servicios" className={`${buttonVariants()} mt-6`}>Ver servicios</Link></div>,
   component: ServiceDetail,
 });

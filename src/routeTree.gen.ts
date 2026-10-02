@@ -23,6 +23,24 @@ import { Route as SeguimientoRouteImport } from './routes/seguimiento'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
 import { Route as ServiciosIndexRouteImport } from './routes/servicios.index'
 import { Route as ServiciosSlugRouteImport } from './routes/servicios.$slug'
+import { Route as AuthenticatedPanelIndexRouteImport } from './routes/_authenticated/panel.index'
+import { Route as AuthenticatedPanelSeccionRouteImport } from './routes/_authenticated/panel.$seccion'
+import { Route as ApiAdminCategoriesRouteImport } from './routes/api/admin/categories'
+import { Route as ApiAdminOrdersRouteImport } from './routes/api/admin/orders'
+import { Route as ApiAdminPaymentsRouteImport } from './routes/api/admin/payments'
+import { Route as ApiAdminProductsRouteImport } from './routes/api/admin/products'
+import { Route as ApiAdminServicesRouteImport } from './routes/api/admin/services'
+import { Route as ApiPublicCategoriesRouteImport } from './routes/api/public/categories'
+import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
+import { Route as ApiPublicProductsRouteImport } from './routes/api/public/products'
+import { Route as ApiPublicServiceRequestsRouteImport } from './routes/api/public/service-requests'
+import { Route as ApiPublicServicesRouteImport } from './routes/api/public/services'
+import { Route as ApiAdminCategoriesIdRouteImport } from './routes/api/admin/categories.$id'
+import { Route as ApiAdminProductsIdRouteImport } from './routes/api/admin/products.$id'
+import { Route as ApiAdminServicesIdRouteImport } from './routes/api/admin/services.$id'
+import { Route as ApiPublicProductsIdRouteImport } from './routes/api/public/products.$id'
+import { Route as ApiAdminOrdersIdStatusRouteImport } from './routes/api/admin/orders.$id.status'
+import { Route as ApiPublicOrdersTrackCodeRouteImport } from './routes/api/public/orders.track.$code'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -93,6 +111,99 @@ const ServiciosSlugRoute = ServiciosSlugRouteImport.update({
   path: '/servicios/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPanelIndexRoute = AuthenticatedPanelIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedPanelRoute,
+} as any)
+const AuthenticatedPanelSeccionRoute =
+  AuthenticatedPanelSeccionRouteImport.update({
+    id: '/$seccion',
+    path: '/$seccion',
+    getParentRoute: () => AuthenticatedPanelRoute,
+  } as any)
+const ApiAdminCategoriesRoute = ApiAdminCategoriesRouteImport.update({
+  id: '/api/admin/categories',
+  path: '/api/admin/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminOrdersRoute = ApiAdminOrdersRouteImport.update({
+  id: '/api/admin/orders',
+  path: '/api/admin/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminPaymentsRoute = ApiAdminPaymentsRouteImport.update({
+  id: '/api/admin/payments',
+  path: '/api/admin/payments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminProductsRoute = ApiAdminProductsRouteImport.update({
+  id: '/api/admin/products',
+  path: '/api/admin/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminServicesRoute = ApiAdminServicesRouteImport.update({
+  id: '/api/admin/services',
+  path: '/api/admin/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicCategoriesRoute = ApiPublicCategoriesRouteImport.update({
+  id: '/api/public/categories',
+  path: '/api/public/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
+  id: '/api/public/orders',
+  path: '/api/public/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProductsRoute = ApiPublicProductsRouteImport.update({
+  id: '/api/public/products',
+  path: '/api/public/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicServiceRequestsRoute =
+  ApiPublicServiceRequestsRouteImport.update({
+    id: '/api/public/service-requests',
+    path: '/api/public/service-requests',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicServicesRoute = ApiPublicServicesRouteImport.update({
+  id: '/api/public/services',
+  path: '/api/public/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCategoriesIdRoute = ApiAdminCategoriesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminCategoriesRoute,
+} as any)
+const ApiAdminProductsIdRoute = ApiAdminProductsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminProductsRoute,
+} as any)
+const ApiAdminServicesIdRoute = ApiAdminServicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiAdminServicesRoute,
+} as any)
+const ApiPublicProductsIdRoute = ApiPublicProductsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiPublicProductsRoute,
+} as any)
+const ApiAdminOrdersIdStatusRoute = ApiAdminOrdersIdStatusRouteImport.update({
+  id: '/$id/status',
+  path: '/$id/status',
+  getParentRoute: () => ApiAdminOrdersRoute,
+} as any)
+const ApiPublicOrdersTrackCodeRoute =
+  ApiPublicOrdersTrackCodeRouteImport.update({
+    id: '/track/$code',
+    path: '/track/$code',
+    getParentRoute: () => ApiPublicOrdersRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -105,9 +216,27 @@ export interface FileRoutesByFullPath {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
-  '/panel': typeof AuthenticatedPanelRoute
+  '/panel': typeof AuthenticatedPanelRouteWithChildren
   '/servicios/$slug': typeof ServiciosSlugRoute
   '/servicios/': typeof ServiciosIndexRoute
+  '/panel/$seccion': typeof AuthenticatedPanelSeccionRoute
+  '/api/admin/categories': typeof ApiAdminCategoriesRouteWithChildren
+  '/api/admin/orders': typeof ApiAdminOrdersRouteWithChildren
+  '/api/admin/payments': typeof ApiAdminPaymentsRoute
+  '/api/admin/products': typeof ApiAdminProductsRouteWithChildren
+  '/api/admin/services': typeof ApiAdminServicesRouteWithChildren
+  '/api/public/categories': typeof ApiPublicCategoriesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRouteWithChildren
+  '/api/public/products': typeof ApiPublicProductsRouteWithChildren
+  '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
+  '/api/public/services': typeof ApiPublicServicesRoute
+  '/panel/': typeof AuthenticatedPanelIndexRoute
+  '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
+  '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
+  '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
+  '/api/public/products/$id': typeof ApiPublicProductsIdRoute
+  '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
+  '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,9 +249,26 @@ export interface FileRoutesByTo {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
-  '/panel': typeof AuthenticatedPanelRoute
   '/servicios/$slug': typeof ServiciosSlugRoute
   '/servicios': typeof ServiciosIndexRoute
+  '/panel/$seccion': typeof AuthenticatedPanelSeccionRoute
+  '/api/admin/categories': typeof ApiAdminCategoriesRouteWithChildren
+  '/api/admin/orders': typeof ApiAdminOrdersRouteWithChildren
+  '/api/admin/payments': typeof ApiAdminPaymentsRoute
+  '/api/admin/products': typeof ApiAdminProductsRouteWithChildren
+  '/api/admin/services': typeof ApiAdminServicesRouteWithChildren
+  '/api/public/categories': typeof ApiPublicCategoriesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRouteWithChildren
+  '/api/public/products': typeof ApiPublicProductsRouteWithChildren
+  '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
+  '/api/public/services': typeof ApiPublicServicesRoute
+  '/panel': typeof AuthenticatedPanelIndexRoute
+  '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
+  '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
+  '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
+  '/api/public/products/$id': typeof ApiPublicProductsIdRoute
+  '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
+  '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,9 +283,27 @@ export interface FileRoutesById {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
-  '/_authenticated/panel': typeof AuthenticatedPanelRoute
+  '/_authenticated/panel': typeof AuthenticatedPanelRouteWithChildren
   '/servicios/$slug': typeof ServiciosSlugRoute
   '/servicios/': typeof ServiciosIndexRoute
+  '/_authenticated/panel/$seccion': typeof AuthenticatedPanelSeccionRoute
+  '/api/admin/categories': typeof ApiAdminCategoriesRouteWithChildren
+  '/api/admin/orders': typeof ApiAdminOrdersRouteWithChildren
+  '/api/admin/payments': typeof ApiAdminPaymentsRoute
+  '/api/admin/products': typeof ApiAdminProductsRouteWithChildren
+  '/api/admin/services': typeof ApiAdminServicesRouteWithChildren
+  '/api/public/categories': typeof ApiPublicCategoriesRoute
+  '/api/public/orders': typeof ApiPublicOrdersRouteWithChildren
+  '/api/public/products': typeof ApiPublicProductsRouteWithChildren
+  '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
+  '/api/public/services': typeof ApiPublicServicesRoute
+  '/_authenticated/panel/': typeof AuthenticatedPanelIndexRoute
+  '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
+  '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
+  '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
+  '/api/public/products/$id': typeof ApiPublicProductsIdRoute
+  '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
+  '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +321,24 @@ export interface FileRouteTypes {
     | '/panel'
     | '/servicios/$slug'
     | '/servicios/'
+    | '/panel/$seccion'
+    | '/api/admin/categories'
+    | '/api/admin/orders'
+    | '/api/admin/payments'
+    | '/api/admin/products'
+    | '/api/admin/services'
+    | '/api/public/categories'
+    | '/api/public/orders'
+    | '/api/public/products'
+    | '/api/public/service-requests'
+    | '/api/public/services'
+    | '/panel/'
+    | '/api/admin/categories/$id'
+    | '/api/admin/products/$id'
+    | '/api/admin/services/$id'
+    | '/api/public/products/$id'
+    | '/api/admin/orders/$id/status'
+    | '/api/public/orders/track/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,9 +351,26 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
-    | '/panel'
     | '/servicios/$slug'
     | '/servicios'
+    | '/panel/$seccion'
+    | '/api/admin/categories'
+    | '/api/admin/orders'
+    | '/api/admin/payments'
+    | '/api/admin/products'
+    | '/api/admin/services'
+    | '/api/public/categories'
+    | '/api/public/orders'
+    | '/api/public/products'
+    | '/api/public/service-requests'
+    | '/api/public/services'
+    | '/panel'
+    | '/api/admin/categories/$id'
+    | '/api/admin/products/$id'
+    | '/api/admin/services/$id'
+    | '/api/public/products/$id'
+    | '/api/admin/orders/$id/status'
+    | '/api/public/orders/track/$code'
   id:
     | '__root__'
     | '/'
@@ -188,6 +387,24 @@ export interface FileRouteTypes {
     | '/_authenticated/panel'
     | '/servicios/$slug'
     | '/servicios/'
+    | '/_authenticated/panel/$seccion'
+    | '/api/admin/categories'
+    | '/api/admin/orders'
+    | '/api/admin/payments'
+    | '/api/admin/products'
+    | '/api/admin/services'
+    | '/api/public/categories'
+    | '/api/public/orders'
+    | '/api/public/products'
+    | '/api/public/service-requests'
+    | '/api/public/services'
+    | '/_authenticated/panel/'
+    | '/api/admin/categories/$id'
+    | '/api/admin/products/$id'
+    | '/api/admin/services/$id'
+    | '/api/public/products/$id'
+    | '/api/admin/orders/$id/status'
+    | '/api/public/orders/track/$code'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -204,6 +421,16 @@ export interface RootRouteChildren {
   SeguimientoRoute: typeof SeguimientoRoute
   ServiciosSlugRoute: typeof ServiciosSlugRoute
   ServiciosIndexRoute: typeof ServiciosIndexRoute
+  ApiAdminCategoriesRoute: typeof ApiAdminCategoriesRouteWithChildren
+  ApiAdminOrdersRoute: typeof ApiAdminOrdersRouteWithChildren
+  ApiAdminPaymentsRoute: typeof ApiAdminPaymentsRoute
+  ApiAdminProductsRoute: typeof ApiAdminProductsRouteWithChildren
+  ApiAdminServicesRoute: typeof ApiAdminServicesRouteWithChildren
+  ApiPublicCategoriesRoute: typeof ApiPublicCategoriesRoute
+  ApiPublicOrdersRoute: typeof ApiPublicOrdersRouteWithChildren
+  ApiPublicProductsRoute: typeof ApiPublicProductsRouteWithChildren
+  ApiPublicServiceRequestsRoute: typeof ApiPublicServiceRequestsRoute
+  ApiPublicServicesRoute: typeof ApiPublicServicesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -306,19 +533,226 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServiciosSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/panel/': {
+      id: '/_authenticated/panel/'
+      path: '/'
+      fullPath: '/panel/'
+      preLoaderRoute: typeof AuthenticatedPanelIndexRouteImport
+      parentRoute: typeof AuthenticatedPanelRoute
+    }
+    '/_authenticated/panel/$seccion': {
+      id: '/_authenticated/panel/$seccion'
+      path: '/$seccion'
+      fullPath: '/panel/$seccion'
+      preLoaderRoute: typeof AuthenticatedPanelSeccionRouteImport
+      parentRoute: typeof AuthenticatedPanelRoute
+    }
+    '/api/admin/categories': {
+      id: '/api/admin/categories'
+      path: '/api/admin/categories'
+      fullPath: '/api/admin/categories'
+      preLoaderRoute: typeof ApiAdminCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/orders': {
+      id: '/api/admin/orders'
+      path: '/api/admin/orders'
+      fullPath: '/api/admin/orders'
+      preLoaderRoute: typeof ApiAdminOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/payments': {
+      id: '/api/admin/payments'
+      path: '/api/admin/payments'
+      fullPath: '/api/admin/payments'
+      preLoaderRoute: typeof ApiAdminPaymentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/products': {
+      id: '/api/admin/products'
+      path: '/api/admin/products'
+      fullPath: '/api/admin/products'
+      preLoaderRoute: typeof ApiAdminProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/services': {
+      id: '/api/admin/services'
+      path: '/api/admin/services'
+      fullPath: '/api/admin/services'
+      preLoaderRoute: typeof ApiAdminServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/categories': {
+      id: '/api/public/categories'
+      path: '/api/public/categories'
+      fullPath: '/api/public/categories'
+      preLoaderRoute: typeof ApiPublicCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/orders': {
+      id: '/api/public/orders'
+      path: '/api/public/orders'
+      fullPath: '/api/public/orders'
+      preLoaderRoute: typeof ApiPublicOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/products': {
+      id: '/api/public/products'
+      path: '/api/public/products'
+      fullPath: '/api/public/products'
+      preLoaderRoute: typeof ApiPublicProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/service-requests': {
+      id: '/api/public/service-requests'
+      path: '/api/public/service-requests'
+      fullPath: '/api/public/service-requests'
+      preLoaderRoute: typeof ApiPublicServiceRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/services': {
+      id: '/api/public/services'
+      path: '/api/public/services'
+      fullPath: '/api/public/services'
+      preLoaderRoute: typeof ApiPublicServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/categories/$id': {
+      id: '/api/admin/categories/$id'
+      path: '/$id'
+      fullPath: '/api/admin/categories/$id'
+      preLoaderRoute: typeof ApiAdminCategoriesIdRouteImport
+      parentRoute: typeof ApiAdminCategoriesRoute
+    }
+    '/api/admin/products/$id': {
+      id: '/api/admin/products/$id'
+      path: '/$id'
+      fullPath: '/api/admin/products/$id'
+      preLoaderRoute: typeof ApiAdminProductsIdRouteImport
+      parentRoute: typeof ApiAdminProductsRoute
+    }
+    '/api/admin/services/$id': {
+      id: '/api/admin/services/$id'
+      path: '/$id'
+      fullPath: '/api/admin/services/$id'
+      preLoaderRoute: typeof ApiAdminServicesIdRouteImport
+      parentRoute: typeof ApiAdminServicesRoute
+    }
+    '/api/public/products/$id': {
+      id: '/api/public/products/$id'
+      path: '/$id'
+      fullPath: '/api/public/products/$id'
+      preLoaderRoute: typeof ApiPublicProductsIdRouteImport
+      parentRoute: typeof ApiPublicProductsRoute
+    }
+    '/api/admin/orders/$id/status': {
+      id: '/api/admin/orders/$id/status'
+      path: '/$id/status'
+      fullPath: '/api/admin/orders/$id/status'
+      preLoaderRoute: typeof ApiAdminOrdersIdStatusRouteImport
+      parentRoute: typeof ApiAdminOrdersRoute
+    }
+    '/api/public/orders/track/$code': {
+      id: '/api/public/orders/track/$code'
+      path: '/track/$code'
+      fullPath: '/api/public/orders/track/$code'
+      preLoaderRoute: typeof ApiPublicOrdersTrackCodeRouteImport
+      parentRoute: typeof ApiPublicOrdersRoute
+    }
   }
 }
 
+interface AuthenticatedPanelRouteChildren {
+  AuthenticatedPanelSeccionRoute: typeof AuthenticatedPanelSeccionRoute
+  AuthenticatedPanelIndexRoute: typeof AuthenticatedPanelIndexRoute
+}
+
+const AuthenticatedPanelRouteChildren: AuthenticatedPanelRouteChildren = {
+  AuthenticatedPanelSeccionRoute: AuthenticatedPanelSeccionRoute,
+  AuthenticatedPanelIndexRoute: AuthenticatedPanelIndexRoute,
+}
+
+const AuthenticatedPanelRouteWithChildren =
+  AuthenticatedPanelRoute._addFileChildren(AuthenticatedPanelRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedPanelRoute: typeof AuthenticatedPanelRoute
+  AuthenticatedPanelRoute: typeof AuthenticatedPanelRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedPanelRoute: AuthenticatedPanelRoute,
+  AuthenticatedPanelRoute: AuthenticatedPanelRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface ApiAdminCategoriesRouteChildren {
+  ApiAdminCategoriesIdRoute: typeof ApiAdminCategoriesIdRoute
+}
+
+const ApiAdminCategoriesRouteChildren: ApiAdminCategoriesRouteChildren = {
+  ApiAdminCategoriesIdRoute: ApiAdminCategoriesIdRoute,
+}
+
+const ApiAdminCategoriesRouteWithChildren =
+  ApiAdminCategoriesRoute._addFileChildren(ApiAdminCategoriesRouteChildren)
+
+interface ApiAdminOrdersRouteChildren {
+  ApiAdminOrdersIdStatusRoute: typeof ApiAdminOrdersIdStatusRoute
+}
+
+const ApiAdminOrdersRouteChildren: ApiAdminOrdersRouteChildren = {
+  ApiAdminOrdersIdStatusRoute: ApiAdminOrdersIdStatusRoute,
+}
+
+const ApiAdminOrdersRouteWithChildren = ApiAdminOrdersRoute._addFileChildren(
+  ApiAdminOrdersRouteChildren,
+)
+
+interface ApiAdminProductsRouteChildren {
+  ApiAdminProductsIdRoute: typeof ApiAdminProductsIdRoute
+}
+
+const ApiAdminProductsRouteChildren: ApiAdminProductsRouteChildren = {
+  ApiAdminProductsIdRoute: ApiAdminProductsIdRoute,
+}
+
+const ApiAdminProductsRouteWithChildren =
+  ApiAdminProductsRoute._addFileChildren(ApiAdminProductsRouteChildren)
+
+interface ApiAdminServicesRouteChildren {
+  ApiAdminServicesIdRoute: typeof ApiAdminServicesIdRoute
+}
+
+const ApiAdminServicesRouteChildren: ApiAdminServicesRouteChildren = {
+  ApiAdminServicesIdRoute: ApiAdminServicesIdRoute,
+}
+
+const ApiAdminServicesRouteWithChildren =
+  ApiAdminServicesRoute._addFileChildren(ApiAdminServicesRouteChildren)
+
+interface ApiPublicOrdersRouteChildren {
+  ApiPublicOrdersTrackCodeRoute: typeof ApiPublicOrdersTrackCodeRoute
+}
+
+const ApiPublicOrdersRouteChildren: ApiPublicOrdersRouteChildren = {
+  ApiPublicOrdersTrackCodeRoute: ApiPublicOrdersTrackCodeRoute,
+}
+
+const ApiPublicOrdersRouteWithChildren = ApiPublicOrdersRoute._addFileChildren(
+  ApiPublicOrdersRouteChildren,
+)
+
+interface ApiPublicProductsRouteChildren {
+  ApiPublicProductsIdRoute: typeof ApiPublicProductsIdRoute
+}
+
+const ApiPublicProductsRouteChildren: ApiPublicProductsRouteChildren = {
+  ApiPublicProductsIdRoute: ApiPublicProductsIdRoute,
+}
+
+const ApiPublicProductsRouteWithChildren =
+  ApiPublicProductsRoute._addFileChildren(ApiPublicProductsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -334,6 +768,16 @@ const rootRouteChildren: RootRouteChildren = {
   SeguimientoRoute: SeguimientoRoute,
   ServiciosSlugRoute: ServiciosSlugRoute,
   ServiciosIndexRoute: ServiciosIndexRoute,
+  ApiAdminCategoriesRoute: ApiAdminCategoriesRouteWithChildren,
+  ApiAdminOrdersRoute: ApiAdminOrdersRouteWithChildren,
+  ApiAdminPaymentsRoute: ApiAdminPaymentsRoute,
+  ApiAdminProductsRoute: ApiAdminProductsRouteWithChildren,
+  ApiAdminServicesRoute: ApiAdminServicesRouteWithChildren,
+  ApiPublicCategoriesRoute: ApiPublicCategoriesRoute,
+  ApiPublicOrdersRoute: ApiPublicOrdersRouteWithChildren,
+  ApiPublicProductsRoute: ApiPublicProductsRouteWithChildren,
+  ApiPublicServiceRequestsRoute: ApiPublicServiceRequestsRoute,
+  ApiPublicServicesRoute: ApiPublicServicesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

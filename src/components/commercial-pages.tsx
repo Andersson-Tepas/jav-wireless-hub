@@ -5,7 +5,9 @@ import { buttonVariants } from "@/components/ui/button";
 import { PageIntro, SectionHeading } from "@/components/site-shell";
 import { ProductGrid, useProducts } from "@/components/product-catalog";
 import { categoriesQuery, type Product } from "@/lib/catalog";
-import { productImage, services, socialLinks } from "@/lib/site-data";
+import { productImage, socialLinks } from "@/lib/site-data";
+import { servicesQuery } from "@/lib/catalog";
+import { useQuery as useServicesQuery } from "@tanstack/react-query";
 import heroPhone from "@/assets/phone-titanium.jpg";
 
 export function HomePage() {
@@ -72,6 +74,7 @@ function HomeRow({ eyebrow, title, items }: { eyebrow: string; title: string; it
 }
 
 export function ServicesPage() {
+  const { data: services = [] } = useServicesQuery(servicesQuery);
   return (
     <>
       <PageIntro eyebrow="Servicios" title="Servicios JAV Wireless" description="Elige un servicio, completa el formulario, selecciona cómo pagar y recibe tu número de referencia." />
