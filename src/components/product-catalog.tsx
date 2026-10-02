@@ -1,11 +1,13 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Check, PackageCheck, ShoppingBag, X } from "lucide-react";
+import { useState } from "react";
 import { products, socialLinks, type Product } from "@/lib/site-data";
 import { Button } from "@/components/ui/button";
 
 function ProductCard({ product }: { product: Product }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <button className="group overflow-hidden rounded-lg border border-border bg-card text-left transition duration-300 hover:-translate-y-1 hover:border-product/60 hover:shadow-cyan" aria-label={`Ver detalles de ${product.name}`}>
           <div className="relative aspect-square overflow-hidden bg-surface-deep">
@@ -19,16 +21,16 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         </button>
       </Dialog.Trigger>
-      <ProductDialog product={product} />
+      <ProductDialog product={product} onClose={() => setOpen(false)} />
     </Dialog.Root>
   );
 }
 
-function ProductDialog({ product }: { product: Product }) {
+function ProductDialog({ product, onClose }: { product: Product; onClose: () => void }) {
   const inquiry = `${socialLinks.whatsapp}?text=${encodeURIComponent(`Hola JAV Wireless, me interesa ${product.name}`)}`;
   return (
     <Dialog.Portal>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in" />
+      <Dialog.Overlay onClick={onClose} className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in" />
       <Dialog.Content className="fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-1.5rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg border border-border bg-background shadow-modal md:grid-cols-[0.9fr_1.1fr]" aria-describedby={`description-${product.id}`}>
         <div className="min-h-72 bg-surface-deep"><img src={product.image} alt={product.name} width={1024} height={1024} className="h-full w-full object-cover" /></div>
         <div className="relative p-6 sm:p-8">
