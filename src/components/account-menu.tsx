@@ -46,8 +46,8 @@ export function AccountMenu() {
 
   if (!user) {
     return (
-      <button type="button" onClick={signIn} disabled={busy} className="inline-flex h-10 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:opacity-60" aria-label="Iniciar sesión con Google">
-        <GoogleIcon /> <span className="hidden md:inline">Iniciar sesión con Google</span>
+      <button type="button" onClick={signIn} disabled={busy} className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-border bg-background px-3 text-sm font-semibold text-foreground transition hover:border-primary hover:text-primary disabled:opacity-60" aria-label="Iniciar sesión con Google">
+        <GoogleIcon /> <span className="hidden whitespace-nowrap 2xl:inline">Iniciar sesión con Google</span><span className="hidden whitespace-nowrap md:inline 2xl:hidden">Iniciar sesión</span>
       </button>
     );
   }
