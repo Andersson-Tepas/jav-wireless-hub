@@ -77,7 +77,7 @@ function ServiceDetail() {
             {service.fields.map((f) => (
               <Field key={f.name} label={f.label}>
                 {f.type === "textarea" ? <textarea required maxLength={1000} className="field h-28 py-2" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />
-                  : <input required={!f.label.toLowerCase().includes("optional")} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
+                  : <input required={!/(optional|opcional)/i.test(f.label)} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
               </Field>
             ))}
             {service.amountField && <Field label="Amount (USD)"><input required type="number" min={1} max={100000} step="0.01" className="field" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>}

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/lib/catalog";
+import { localizeProduct, type Product } from "@/lib/catalog";
 import { uploadProductImage } from "@/lib/admin.functions";
 import { money } from "@/lib/cart";
 import { productImage } from "@/lib/site-data";
@@ -23,7 +23,7 @@ const toDraft = (p?: Product): Draft => ({
   price: p ? String(p.price) : "", old_price: p?.old_price != null ? String(p.old_price) : "", stock: p ? String(p.stock) : "0",
   colors: p?.colors.join(", ") ?? "", capacity: p?.capacity ?? "", description: p?.description ?? "",
   features: p?.features.join("\n") ?? "",
-  specs: Array.isArray(p?.specs) ? (p!.specs as { label: string; value: string }[]).map((s) => `${s.label}: ${s.value}`).join("\n") : "",
+  specs: Array.isArray(p?.specs) ? (p.specs as { label: string; value: string }[]).map((s) => `${s.label}: ${s.value}`).join("\n") : "",
   financing: p?.financing ?? "", image: p?.image ?? "",
   is_featured: p?.is_featured ?? false, is_bestseller: p?.is_bestseller ?? false, is_new: p?.is_new ?? true, is_offer: p?.is_offer ?? false, active: p?.active ?? true,
 });
@@ -45,7 +45,7 @@ export function Products() {
   const [editing, setEditing] = useState<Product | "new" | null>(null);
   const [filter, setFilter] = useState("");
   const refresh = () => invalidate("admin-products", "products");
-  const list = data.filter((p) => !filter || `${p.name} ${p.brand} ${p.model}`.toLowerCase().includes(filter.toLowerCase()));
+  const list = data.filter((p) => !filter || `${localizeProduct(p).name} ${p.brand} ${p.model}`.toLowerCase().includes(filter.toLowerCase()));
 
   async function remove(p: Product) {
     if (!confirm(`Delete "${p.name}"? If it has orders, it will be deactivated instead of deleted.`)) return;
@@ -67,7 +67,7 @@ export function Products() {
           <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Product</th><th>Category</th><th>Price</th><th>Stock</th><th className="text-center">Featured</th><th className="text-center">Sale</th><th className="text-center">Active</th><th /></tr></thead>
           <tbody className="divide-y divide-border">{list.map((p) => (
             <tr key={p.id} className={p.active ? "" : "opacity-60"}>
-              <td className="flex items-center gap-3 p-3"><img src={productImage(p.image)} alt="" className="size-10 rounded object-cover" /><div><p className="font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">{p.brand} {p.model}</p></div></td>
+              <td className="flex items-center gap-3 p-3"><img src={productImage(p.image)} alt="" className="size-10 rounded object-cover" /><div><p className="font-semibold">{localizeProduct(p).name}</p><p className="text-xs text-muted-foreground">{p.brand} {p.model}</p></div></td>
               <td>{cats.find((c) => c.id === p.category_id)?.name ?? p.category_id}</td>
               <td className="font-semibold">{money(Number(p.price))}{p.old_price ? <span className="ml-1 text-xs text-muted-foreground line-through">{money(Number(p.old_price))}</span> : null}</td>
               <td>{p.stock}</td>
@@ -82,7 +82,9 @@ export function Products() {
 }
 
 function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product | undefined; cats: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
-  const [d, setD] = useState<Draft>(toDraft(product));
+  const localized = product ? localizeProduct(product) : undefined;
+  const initial = toDraft(localized);
+  const [d, setD] = useState<Draft>(initial);
   const [busy, setBusy] = useState(false);
   const upload = useServerFn(uploadProductImage);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
@@ -103,6 +105,16 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
     const body = fromDraft(d);
+    if (product) {
+      const original = toDraft(product);
+      if (d.name === initial.name) body.name = original.name.trim();
+      if (d.colors === initial.colors) body.colors = original.colors.split(",").map((s) => s.trim()).filter(Boolean);
+      if (d.capacity === initial.capacity) body.capacity = original.capacity.trim();
+      if (d.description === initial.description) body.description = original.description.trim();
+      if (d.features === initial.features) body.features = original.features.split("\n").map((s) => s.trim()).filter(Boolean);
+      if (d.specs === initial.specs) body.specs = fromDraft({ ...d, specs: original.specs }).specs;
+      if (d.financing === initial.financing) body.financing = original.financing.trim() || null;
+    }
     const { error } = product ? await supabase.from("products").update(body).eq("id", product.id) : await supabase.from("products").insert(body);
     setBusy(false);
     if (error) { toast.error("Could not save the product"); return; }
@@ -189,7 +201,7 @@ function InventoryRow({ p, low, onAdjust }: { p: Product; low: number; onAdjust:
   const n = Math.max(0, Math.floor(Number(qty) || 0));
   return (
     <tr>
-      <td className="p-3 font-semibold">{p.name}</td>
+      <td className="p-3 font-semibold">{localizeProduct(p).name}</td>
       <td><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-accent/10 text-accent" : p.stock <= low ? "bg-surface text-foreground" : "text-success"}`}>{p.stock === 0 ? "Out of stock" : p.stock}</span></td>
       <td className="flex gap-2 py-2"><input type="number" min={1} className="field h-9 w-20" value={qty} onChange={(e) => setQty(e.target.value)} /><Button size="sm" variant="outline" onClick={() => onAdjust(p, n)}>+ Stock in</Button><Button size="sm" variant="outline" onClick={() => onAdjust(p, -n)}>− Stock out</Button></td>
     </tr>

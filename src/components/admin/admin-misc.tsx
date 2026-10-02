@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { money } from "@/lib/cart";
-import { paymentLabels, serviceStatusLabels } from "@/lib/site-data";
+import { paymentLabels, serviceCopy, serviceStatusLabels } from "@/lib/site-data";
 import { Field, fmt, paymentStatusLabels, slugify, useAdminCategories, useAdminProducts, useAdminRequests, useInvalidate } from "./shared";
 
 // ---------------- Categories ----------------
@@ -63,23 +63,38 @@ export function ServicesAdmin() {
   return (
     <div className="space-y-3">
       <Button onClick={() => setEditing("new")}><Plus /> New service</Button>
-      <div className="grid gap-3 md:grid-cols-2">{data.map((s) => (
+      <div className="grid gap-3 md:grid-cols-2">{data.map((s) => {
+        const copy = serviceCopy[s.slug];
+        return (
         <div key={s.slug} className={`card-soft flex items-start justify-between gap-3 p-4 ${s.active ? "" : "opacity-60"}`}>
-          <div><p className="font-bold text-primary">{s.name}</p><p className="text-sm text-muted-foreground">{s.cost}</p><p className="mt-1 text-xs text-muted-foreground">{(s.fields as unknown as Fld[]).length} fields · {s.requirements.length} requirements</p></div>
+          <div><p className="font-bold text-primary">{copy?.name ?? s.name}</p><p className="text-sm text-muted-foreground">{copy?.cost ?? s.cost}</p><p className="mt-1 text-xs text-muted-foreground">{(s.fields as unknown as Fld[]).length} fields · {s.requirements.length} requirements</p></div>
           <div className="flex shrink-0 items-center gap-2"><label className="flex items-center gap-1 text-xs font-semibold"><input type="checkbox" className="size-4 accent-primary" checked={s.active} onChange={() => toggle(s)} />Active</label><Button size="icon" variant="ghost" aria-label="Edit" onClick={() => setEditing(s)}><Pencil /></Button></div>
-        </div>))}</div>
+        </div>);})}</div>
       {editing && <ServiceEditor s={editing === "new" ? undefined : editing} nextSort={data.length} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); invalidate("admin-services", "services"); }} />}
     </div>
   );
 }
 
 function ServiceEditor({ s, nextSort, onClose, onSaved }: { s?: ServiceRow | undefined; nextSort: number; onClose: () => void; onSaved: () => void }) {
-  const [d, setD] = useState({ name: s?.name ?? "", short: s?.short ?? "", description: s?.description ?? "", requirements: s?.requirements.join("\n") ?? "", cost: s?.cost ?? "", fee: s?.fee != null ? String(s.fee) : "", amount_field: s?.amount_field ?? false, active: s?.active ?? true });
-  const [fields, setFields] = useState<Fld[]>(s ? (s.fields as unknown as Fld[]) : []);
+  const copy = s ? serviceCopy[s.slug] : undefined;
+  const [d, setD] = useState({ name: copy?.name ?? s?.name ?? "", short: copy?.short ?? s?.short ?? "", description: copy?.description ?? s?.description ?? "", requirements: copy?.requirements.join("\n") ?? s?.requirements.join("\n") ?? "", cost: copy?.cost ?? s?.cost ?? "", fee: s?.fee != null ? String(s.fee) : "", amount_field: s?.amount_field ?? false, active: s?.active ?? true });
+  const [fields, setFields] = useState<Fld[]>(copy?.fields ?? (s ? (s.fields as unknown as Fld[]) : []));
   const [busy, setBusy] = useState(false);
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
-    const body = { name: d.name.trim(), short: d.short.trim(), description: d.description.trim(), requirements: d.requirements.split("\n").map((x) => x.trim()).filter(Boolean), cost: d.cost.trim(), fee: d.fee ? Number(d.fee) : null, amount_field: d.amount_field, active: d.active, fields: fields.filter((f) => f.label.trim()).map((f) => ({ ...f, name: f.name || slugify(f.label).replace(/-/g, "_") })), updated_at: new Date().toISOString() };
+    const localizedInitial = copy ? { name: copy.name, short: copy.short, description: copy.description, requirements: copy.requirements.join("\n"), cost: copy.cost, fields: copy.fields } : undefined;
+    const body = {
+      name: s && localizedInitial && d.name === localizedInitial.name ? s.name : d.name.trim(),
+      short: s && localizedInitial && d.short === localizedInitial.short ? s.short : d.short.trim(),
+      description: s && localizedInitial && d.description === localizedInitial.description ? s.description : d.description.trim(),
+      requirements: s && localizedInitial && d.requirements === localizedInitial.requirements ? s.requirements : d.requirements.split("\n").map((x) => x.trim()).filter(Boolean),
+      cost: s && localizedInitial && d.cost === localizedInitial.cost ? s.cost : d.cost.trim(),
+      fee: d.fee ? Number(d.fee) : null,
+      amount_field: d.amount_field,
+      active: d.active,
+      fields: s && localizedInitial && JSON.stringify(fields) === JSON.stringify(localizedInitial.fields) ? s.fields : fields.filter((f) => f.label.trim()).map((f) => ({ ...f, name: f.name || slugify(f.label).replace(/-/g, "_") })),
+      updated_at: new Date().toISOString(),
+    };
     const { error } = s ? await supabase.from("services").update(body).eq("slug", s.slug) : await supabase.from("services").insert({ ...body, slug: slugify(d.name), sort: nextSort });
     setBusy(false);
     if (error) { toast.error("Could not save the service"); return; }
@@ -134,7 +149,7 @@ export function Requests() {
       {list.map((r) => (
         <div key={r.id} className="card-soft grid gap-4 p-4 md:grid-cols-[1.5fr_1fr]">
           <div>
-            <p className="font-bold text-primary">{r.reference} · {r.service_name}</p>
+            <p className="font-bold text-primary">{r.reference} · {serviceCopy[r.service_slug]?.name ?? r.service_name}</p>
             <p className="text-sm">{r.customer_name} · {r.phone} · {r.email}</p>
             <p className="text-xs text-muted-foreground">{fmt(r.created_at)} · {paymentLabels[r.payment_method]}{r.payment_reference ? ` (ref. ${r.payment_reference})` : ""}{r.amount !== null ? ` · ${money(Number(r.amount))}` : ""}</p>
             <dl className="mt-2 text-sm text-muted-foreground">{Object.entries((r.details ?? {}) as Record<string, string>).map(([k, v]) => <div key={k}><span className="font-semibold">{k}:</span> {v}</div>)}</dl>
@@ -142,7 +157,7 @@ export function Requests() {
           </div>
           <div className="grid h-fit gap-2">
             <Field label="Status"><select className="field" value={r.status} onChange={(e) => patch(r.id, { status: e.target.value })}>{Object.entries(serviceStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
-            <Field label="Pago"><select className="field" value={r.payment_status} onChange={(e) => patch(r.id, { payment_status: e.target.value })}>{Object.entries(paymentStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
+            <Field label="Payment"><select className="field" value={r.payment_status} onChange={(e) => patch(r.id, { payment_status: e.target.value })}>{Object.entries(paymentStatusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></Field>
             {r.status !== "completed" && <Button size="sm" onClick={() => patch(r.id, { status: "completed" }, "Request completed")}>Mark as completed</Button>}
           </div>
         </div>))}
@@ -205,7 +220,7 @@ function PromoEditor({ p, products, onClose, onSaved }: { p?: Promo | undefined;
           <Field label="Description" className="sm:col-span-2"><input className="field" value={d.description} onChange={(e) => setD({ ...d, description: e.target.value })} /></Field>
           <Field label="Discount % (optional)"><input type="number" min={0} max={100} className="field" value={d.discount} onChange={(e) => setD({ ...d, discount: e.target.value })} /></Field>
           <label className="flex items-end gap-2 pb-2 text-sm font-semibold"><input type="checkbox" className="size-4 accent-primary" checked={d.active} onChange={(e) => setD({ ...d, active: e.target.checked })} />Active</label>
-          <Field label="Home"><input required type="datetime-local" className="field" value={d.starts_at} onChange={(e) => setD({ ...d, starts_at: e.target.value })} /></Field>
+          <Field label="Start"><input required type="datetime-local" className="field" value={d.starts_at} onChange={(e) => setD({ ...d, starts_at: e.target.value })} /></Field>
           <Field label="End (optional)"><input type="datetime-local" className="field" value={d.ends_at} onChange={(e) => setD({ ...d, ends_at: e.target.value })} /></Field>
           <div className="sm:col-span-2">
             <p className="mb-2 text-xs font-semibold">Products in promotion</p>
