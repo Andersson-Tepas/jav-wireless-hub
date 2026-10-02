@@ -15,7 +15,7 @@
 - Order status changes trigger DB-side history + notification queue rows, so every status-change path is logged identically.
 - Service definitions (fields, requirements, costs) and status flows are centralized in src/lib/site-data.ts to keep the forms, tracking and panel in sync.
 - The cart lives in localStorage via CartProvider in the root layout so it persists across pages without an account.
-- The admin panel sits under the _authenticated layout and checks the admin role via has_role; the first account created becomes admin.
+- The admin panel sits under the _authenticated layout and checks the admin role via has_role; every new account gets the user role; only the first email/password account becomes admin (Google sign-ups never do). Panel is reached via 5 quick clicks on the logo, with no visible link.
 - Services, promotions, settings (Zelle, WhatsApp, low-stock threshold) live in the database; site-data.ts `services` is seed reference only, so admins can edit without code changes.
 - Inventory movements are logged by a DB trigger on products.stock, so every stock change (sale or panel adjustment) is recorded identically.
 - REST API: public endpoints under src/routes/api/public/*, admin under src/routes/api/admin/*; handlers live in src/lib/api-handlers.server.ts and every admin handler calls requireAdmin (token + has_role) so security never depends on the UI.
