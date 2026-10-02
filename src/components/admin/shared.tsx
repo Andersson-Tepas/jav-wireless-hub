@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { localizeProduct } from "@/lib/catalog";
 import { categoryNames } from "@/lib/site-data";
 
 export const fmt = (d: string) => new Date(d).toLocaleString("en-US", { dateStyle: "short", timeStyle: "short" });
@@ -26,7 +25,7 @@ export function useAdminOrders() {
   return useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(name,quantity,price), order_status_history(status,previous_status,changed_by_email,created_at)").order("created_at", { ascending: false })).data ?? [] });
 }
 export function useAdminProducts() {
-  return useQuery({ queryKey: ["admin-products"], queryFn: async () => ((await supabase.from("products").select("*").order("created_at", { ascending: false })).data ?? []).map(localizeProduct) });
+  return useQuery({ queryKey: ["admin-products"], queryFn: async () => (await supabase.from("products").select("*").order("created_at", { ascending: false })).data ?? [] });
 }
 export function useAdminCategories() {
   return useQuery({ queryKey: ["admin-categories"], queryFn: async () => ((await supabase.from("categories").select("*").order("sort")).data ?? []).map((c) => ({ ...c, name: categoryNames[c.id] ?? c.name })) });

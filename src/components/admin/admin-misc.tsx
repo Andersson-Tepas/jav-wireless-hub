@@ -82,7 +82,19 @@ function ServiceEditor({ s, nextSort, onClose, onSaved }: { s?: ServiceRow | und
   const [busy, setBusy] = useState(false);
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
-    const body = { name: d.name.trim(), short: d.short.trim(), description: d.description.trim(), requirements: d.requirements.split("\n").map((x) => x.trim()).filter(Boolean), cost: d.cost.trim(), fee: d.fee ? Number(d.fee) : null, amount_field: d.amount_field, active: d.active, fields: fields.filter((f) => f.label.trim()).map((f) => ({ ...f, name: f.name || slugify(f.label).replace(/-/g, "_") })), updated_at: new Date().toISOString() };
+    const localizedInitial = copy ? { name: copy.name, short: copy.short, description: copy.description, requirements: copy.requirements.join("\n"), cost: copy.cost, fields: copy.fields } : undefined;
+    const body = {
+      name: s && localizedInitial && d.name === localizedInitial.name ? s.name : d.name.trim(),
+      short: s && localizedInitial && d.short === localizedInitial.short ? s.short : d.short.trim(),
+      description: s && localizedInitial && d.description === localizedInitial.description ? s.description : d.description.trim(),
+      requirements: s && localizedInitial && d.requirements === localizedInitial.requirements ? s.requirements : d.requirements.split("\n").map((x) => x.trim()).filter(Boolean),
+      cost: s && localizedInitial && d.cost === localizedInitial.cost ? s.cost : d.cost.trim(),
+      fee: d.fee ? Number(d.fee) : null,
+      amount_field: d.amount_field,
+      active: d.active,
+      fields: s && localizedInitial && JSON.stringify(fields) === JSON.stringify(localizedInitial.fields) ? s.fields : fields.filter((f) => f.label.trim()).map((f) => ({ ...f, name: f.name || slugify(f.label).replace(/-/g, "_") })),
+      updated_at: new Date().toISOString(),
+    };
     const { error } = s ? await supabase.from("services").update(body).eq("slug", s.slug) : await supabase.from("services").insert({ ...body, slug: slugify(d.name), sort: nextSort });
     setBusy(false);
     if (error) { toast.error("Could not save the service"); return; }
