@@ -15,7 +15,6 @@ export function Dashboard() {
   const salesToday = live.filter((o) => new Date(o.created_at).toDateString() === today && o.payment_status === "confirmed").reduce((n, o) => n + Number(o.total), 0);
   const count = (s: string[]) => live.filter((o) => s.includes(o.status)).length;
   const active = products.filter((p) => p.active);
-  const customers = new Set(orders.map((o) => o.email.toLowerCase())).size;
 
   return (
     <div className="space-y-8">
