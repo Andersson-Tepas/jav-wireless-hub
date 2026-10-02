@@ -1,0 +1,3 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { ProductsPage } from "@/components/commercial-pages";
+export const Route = createFileRoute("/productos")({ head: () => ({ meta: [{ title: "Productos y teléfonos — JAV Wireless" }, { name: "description", content: "Explora teléfonos y accesorios disponibles en JAV Wireless." }, { property: "og:title", content: "Productos — JAV Wireless" }, { property: "og:description", content: "Equipos, accesorios, ofertas y financiamiento." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary_large_image" }] }), component: ProductsPage });
