@@ -20,8 +20,8 @@ import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as ReparacionesRouteImport } from './routes/reparaciones'
 import { Route as SeguimientoRouteImport } from './routes/seguimiento'
-import { Route as ServiciosRouteImport } from './routes/servicios'
 import { Route as AuthenticatedPanelRouteImport } from './routes/_authenticated/panel'
+import { Route as ServiciosIndexRouteImport } from './routes/servicios.index'
 import { Route as ServiciosSlugRouteImport } from './routes/servicios.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -78,20 +78,20 @@ const SeguimientoRoute = SeguimientoRouteImport.update({
   path: '/seguimiento',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ServiciosRoute = ServiciosRouteImport.update({
-  id: '/servicios',
-  path: '/servicios',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedPanelRoute = AuthenticatedPanelRouteImport.update({
   id: '/panel',
   path: '/panel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ServiciosIndexRoute = ServiciosIndexRouteImport.update({
+  id: '/servicios/',
+  path: '/servicios/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ServiciosSlugRoute = ServiciosSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ServiciosRoute,
+  id: '/servicios/$slug',
+  path: '/servicios/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -105,9 +105,9 @@ export interface FileRoutesByFullPath {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
-  '/servicios': typeof ServiciosRouteWithChildren
   '/panel': typeof AuthenticatedPanelRoute
   '/servicios/$slug': typeof ServiciosSlugRoute
+  '/servicios/': typeof ServiciosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -120,9 +120,9 @@ export interface FileRoutesByTo {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
-  '/servicios': typeof ServiciosRouteWithChildren
   '/panel': typeof AuthenticatedPanelRoute
   '/servicios/$slug': typeof ServiciosSlugRoute
+  '/servicios': typeof ServiciosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -137,9 +137,9 @@ export interface FileRoutesById {
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
   '/seguimiento': typeof SeguimientoRoute
-  '/servicios': typeof ServiciosRouteWithChildren
   '/_authenticated/panel': typeof AuthenticatedPanelRoute
   '/servicios/$slug': typeof ServiciosSlugRoute
+  '/servicios/': typeof ServiciosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,9 +154,9 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
-    | '/servicios'
     | '/panel'
     | '/servicios/$slug'
+    | '/servicios/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -169,9 +169,9 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
-    | '/servicios'
     | '/panel'
     | '/servicios/$slug'
+    | '/servicios'
   id:
     | '__root__'
     | '/'
@@ -185,9 +185,9 @@ export interface FileRouteTypes {
     | '/productos'
     | '/reparaciones'
     | '/seguimiento'
-    | '/servicios'
     | '/_authenticated/panel'
     | '/servicios/$slug'
+    | '/servicios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,7 +202,8 @@ export interface RootRouteChildren {
   ProductosRoute: typeof ProductosRoute
   ReparacionesRoute: typeof ReparacionesRoute
   SeguimientoRoute: typeof SeguimientoRoute
-  ServiciosRoute: typeof ServiciosRouteWithChildren
+  ServiciosSlugRoute: typeof ServiciosSlugRoute
+  ServiciosIndexRoute: typeof ServiciosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -284,13 +285,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeguimientoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/servicios': {
-      id: '/servicios'
-      path: '/servicios'
-      fullPath: '/servicios'
-      preLoaderRoute: typeof ServiciosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/panel': {
       id: '/_authenticated/panel'
       path: '/panel'
@@ -298,12 +292,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPanelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/servicios/': {
+      id: '/servicios/'
+      path: '/servicios'
+      fullPath: '/servicios/'
+      preLoaderRoute: typeof ServiciosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/servicios/$slug': {
       id: '/servicios/$slug'
-      path: '/$slug'
+      path: '/servicios/$slug'
       fullPath: '/servicios/$slug'
       preLoaderRoute: typeof ServiciosSlugRouteImport
-      parentRoute: typeof ServiciosRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -319,18 +320,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface ServiciosRouteChildren {
-  ServiciosSlugRoute: typeof ServiciosSlugRoute
-}
-
-const ServiciosRouteChildren: ServiciosRouteChildren = {
-  ServiciosSlugRoute: ServiciosSlugRoute,
-}
-
-const ServiciosRouteWithChildren = ServiciosRoute._addFileChildren(
-  ServiciosRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -343,7 +332,8 @@ const rootRouteChildren: RootRouteChildren = {
   ProductosRoute: ProductosRoute,
   ReparacionesRoute: ReparacionesRoute,
   SeguimientoRoute: SeguimientoRoute,
-  ServiciosRoute: ServiciosRouteWithChildren,
+  ServiciosSlugRoute: ServiciosSlugRoute,
+  ServiciosIndexRoute: ServiciosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

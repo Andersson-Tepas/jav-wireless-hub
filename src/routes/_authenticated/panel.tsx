@@ -57,7 +57,7 @@ function Orders({ paymentsOnly }: { paymentsOnly?: boolean }) {
   const list = data.filter((o) => (!paymentsOnly || o.payment_method === "zelle") && (!filter || `${o.order_number} ${o.customer_name} ${o.phone} ${o.email}`.toLowerCase().includes(filter.toLowerCase())));
   async function update(id: string, patch: { status?: string; tracking_number?: string | null; carrier?: string | null }) {
     const { error } = await supabase.from("orders").update(patch).eq("id", id);
-    if (error) return toast.error("No se pudo actualizar");
+    if (error) { toast.error("No se pudo actualizar"); return; }
     toast.success("Pedido actualizado"); qc.invalidateQueries({ queryKey: ["admin-orders"] });
   }
   return (
@@ -102,7 +102,7 @@ function Requests() {
   const { data = [] } = useQuery({ queryKey: ["admin-requests"], queryFn: async () => (await supabase.from("service_requests").select("*").order("created_at", { ascending: false })).data ?? [] });
   async function setStatus(id: string, status: string) {
     const { error } = await supabase.from("service_requests").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
-    if (error) return toast.error("No se pudo actualizar");
+    if (error) { toast.error("No se pudo actualizar"); return; }
     toast.success("Solicitud actualizada"); qc.invalidateQueries({ queryKey: ["admin-requests"] });
   }
   if (!data.length) return <p className="text-muted-foreground">Sin solicitudes.</p>;
@@ -121,13 +121,13 @@ function Products() {
   const [draft, setDraft] = useState({ name: "", brand: "", category_id: "telefonos", price: "", stock: "", image: "" });
   const refresh = () => { qc.invalidateQueries({ queryKey: ["admin-products"] }); qc.invalidateQueries({ queryKey: ["products"] }); };
   async function patch(id: string, p: Record<string, unknown>) {
-    const { error } = await supabase.from("products").update(p).eq("id", id);
+    const { error } = await supabase.from("products").update(p as never).eq("id", id);
     if (error) toast.error("No se pudo guardar"); else { toast.success("Guardado"); refresh(); }
   }
   async function add(e: React.FormEvent) {
     e.preventDefault();
     const { error } = await supabase.from("products").insert({ name: draft.name, brand: draft.brand, category_id: draft.category_id, price: Number(draft.price), stock: Number(draft.stock), image: draft.image });
-    if (error) return toast.error("No se pudo crear");
+    if (error) { toast.error("No se pudo crear"); return; }
     toast.success("Producto creado"); setDraft({ ...draft, name: "", brand: "", price: "", stock: "", image: "" }); refresh();
   }
   return (
@@ -167,7 +167,7 @@ function Categories() {
     e.preventDefault();
     const id = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const { error } = await supabase.from("categories").insert({ id, name, sort: data.length + 1 });
-    if (error) return toast.error("No se pudo crear");
+    if (error) { toast.error("No se pudo crear"); return; }
     setName(""); qc.invalidateQueries({ queryKey: ["categories"] });
   }
   return <div className="max-w-lg space-y-3"><form onSubmit={add} className="flex gap-2"><input required className="field" placeholder="Nueva categoría" value={name} onChange={(e) => setName(e.target.value)} /><Button type="submit">Agregar</Button></form><ul className="divide-y divide-border rounded-xl border border-border">{data.map((c) => <li key={c.id} className="p-3 font-semibold">{c.name}</li>)}</ul></div>;

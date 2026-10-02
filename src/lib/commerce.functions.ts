@@ -35,9 +35,9 @@ export const createOrder = createServerFn({ method: "POST" })
     const status = data.payment_method === "zelle" ? "payment_pending" : "payment_confirmed";
     const { data: order, error: oErr } = await supabaseAdmin.from("orders").insert({
       customer_name: data.customer_name, email: data.email, phone: data.phone,
-      address: data.delivery_method === "shipping" ? data.address : null,
+      address: data.delivery_method === "shipping" ? (data.address ?? null) : null,
       delivery_method: data.delivery_method, payment_method: data.payment_method,
-      payment_reference: data.payment_method === "zelle" ? data.payment_reference : `SIM-${Date.now()}`,
+      payment_reference: data.payment_method === "zelle" ? (data.payment_reference ?? null) : `SIM-${Date.now()}`,
       notes: data.notes ?? null, subtotal, total: subtotal, status,
     }).select().single();
     if (oErr || !order) throw new Error("No se pudo crear el pedido");

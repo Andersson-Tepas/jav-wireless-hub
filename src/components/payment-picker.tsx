@@ -7,7 +7,7 @@ const options = [
   { id: "zelle", label: "Zelle", icon: Wallet },
 ] as const;
 
-export function PaymentPicker({ value, onChange, reference, onReference, allowStore, amount }: { value: string; onChange: (v: string) => void; reference: string; onReference: (v: string) => void; allowStore?: boolean; amount?: string }) {
+export function PaymentPicker({ value, onChange, reference, onReference, allowStore, amount }: { value: string; onChange: (v: string) => void; reference: string; onReference: (v: string) => void; allowStore?: boolean | undefined; amount?: string | undefined }) {
   const list = allowStore ? [...options, { id: "store", label: "Pagar en tienda", icon: Store } as const] : options;
   return (
     <div className="space-y-3">

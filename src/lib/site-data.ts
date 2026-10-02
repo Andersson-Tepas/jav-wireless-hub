@@ -72,7 +72,7 @@ export const statusFlows: Record<string, string[]> = {
 };
 
 export function timelineFor(delivery: string, status: string) {
-  const flow = [...(statusFlows[delivery] ?? statusFlows.pickup)];
+  const flow = [...(statusFlows[delivery] ?? statusFlows["pickup"] ?? [])];
   if (status === "payment_pending") flow.splice(1, 0, "payment_pending");
   if (status === "prepared") flow.splice(flow.indexOf("preparing") + 1, 0, "prepared");
   return { flow, current: Math.max(0, flow.indexOf(status)) };
