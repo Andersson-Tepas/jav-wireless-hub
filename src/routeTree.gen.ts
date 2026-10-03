@@ -37,6 +37,7 @@ import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
 import { Route as ApiPublicProductsRouteImport } from './routes/api/public/products'
 import { Route as ApiPublicServiceRequestsRouteImport } from './routes/api/public/service-requests'
 import { Route as ApiPublicServicesRouteImport } from './routes/api/public/services'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as ApiAdminCategoriesIdRouteImport } from './routes/api/admin/categories.$id'
 import { Route as ApiAdminProductsIdRouteImport } from './routes/api/admin/products.$id'
 import { Route as ApiAdminServicesIdRouteImport } from './routes/api/admin/services.$id'
@@ -185,6 +186,11 @@ const ApiPublicServicesRoute = ApiPublicServicesRouteImport.update({
   path: '/api/public/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminCategoriesIdRoute = ApiAdminCategoriesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -244,6 +250,7 @@ export interface FileRoutesByFullPath {
   '/api/public/products': typeof ApiPublicProductsRouteWithChildren
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/panel/': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/api/public/products': typeof ApiPublicProductsRouteWithChildren
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/panel': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/api/public/products': typeof ApiPublicProductsRouteWithChildren
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/panel/': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
@@ -352,6 +361,7 @@ export interface FileRouteTypes {
     | '/api/public/products'
     | '/api/public/service-requests'
     | '/api/public/services'
+    | '/api/public/stripe-webhook'
     | '/panel/'
     | '/api/admin/categories/$id'
     | '/api/admin/products/$id'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/api/public/products'
     | '/api/public/service-requests'
     | '/api/public/services'
+    | '/api/public/stripe-webhook'
     | '/panel'
     | '/api/admin/categories/$id'
     | '/api/admin/products/$id'
@@ -422,6 +433,7 @@ export interface FileRouteTypes {
     | '/api/public/products'
     | '/api/public/service-requests'
     | '/api/public/services'
+    | '/api/public/stripe-webhook'
     | '/_authenticated/panel/'
     | '/api/admin/categories/$id'
     | '/api/admin/products/$id'
@@ -455,6 +467,7 @@ export interface RootRouteChildren {
   ApiPublicProductsRoute: typeof ApiPublicProductsRouteWithChildren
   ApiPublicServiceRequestsRoute: typeof ApiPublicServiceRequestsRoute
   ApiPublicServicesRoute: typeof ApiPublicServicesRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -655,6 +668,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/categories/$id': {
       id: '/api/admin/categories/$id'
       path: '/$id'
@@ -820,6 +840,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicProductsRoute: ApiPublicProductsRouteWithChildren,
   ApiPublicServiceRequestsRoute: ApiPublicServiceRequestsRoute,
   ApiPublicServicesRoute: ApiPublicServicesRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

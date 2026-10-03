@@ -19,19 +19,30 @@ export async function createOrderCore(data: OrderInput) {
   });
   const subtotal = lines.reduce((n, l) => n + Number(l.p.price) * l.quantity, 0);
   const isZelle = data.payment_method === "zelle";
+  const isCard = data.payment_method === "card";
   const { data: order, error: oErr } = await supabaseAdmin.from("orders").insert({
     customer_name: data.customer_name, email: data.email, phone: data.phone,
     address: data.delivery_method === "shipping" ? (data.address ?? null) : null,
     delivery_method: data.delivery_method, payment_method: data.payment_method,
     // Only a Zelle confirmation code is stored; card/PayPal are simulated and no card data is ever saved.
-    payment_reference: isZelle ? (data.payment_reference ?? null) : `SIM-${Date.now()}`,
-    payment_status: isZelle ? "pending" : "confirmed",
-    notes: data.notes ?? null, subtotal, total: subtotal, status: isZelle ? "payment_pending" : "payment_confirmed",
+    // Card payments are confirmed only by the Stripe webhook; PayPal is still simulated.
+    payment_reference: isZelle ? (data.payment_reference ?? null) : isCard ? null : `SIM-${Date.now()}`,
+    payment_status: isZelle || isCard ? "pending" : "confirmed",
+    notes: data.notes ?? null, subtotal, total: subtotal, status: isZelle || isCard ? "payment_pending" : "payment_confirmed",
   }).select().single();
   if (oErr || !order) throw new Error("Could not create the order");
   await supabaseAdmin.from("order_items").insert(lines.map((l) => ({ order_id: order.id, product_id: l.p.id, name: l.p.name, price: l.p.price, quantity: l.quantity, image: l.p.image })));
   for (const l of lines) await supabaseAdmin.from("products").update({ stock: l.p.stock - l.quantity }).eq("id", l.p.id);
-  return { order_number: order.order_number, email: order.email };
+  let checkout_url: string | null = null;
+  if (isCard) {
+    const { createCheckoutSession, safeOrigin } = await import("./stripe.server");
+    const origin = safeOrigin(data.return_origin ?? "");
+    const track = `${origin}/seguimiento?orden=${encodeURIComponent(order.order_number)}&contacto=${encodeURIComponent(order.email)}`;
+    const session = await createCheckoutSession({ kind: "order", id: order.id, reference: order.order_number, email: order.email,
+      lines: lines.map((l) => ({ name: l.p.name, amount: Number(l.p.price), quantity: l.quantity })), successUrl: track, cancelUrl: track });
+    checkout_url = session.url;
+  }
+  return { order_number: order.order_number, email: order.email, checkout_url };
 }
 
 export async function lookupOrderCore(orderNumber: string, contact: string) {
@@ -55,16 +66,31 @@ export async function lookupOrderCore(orderNumber: string, contact: string) {
 }
 
 export async function createServiceRequestCore(data: ServiceInput) {
-  const { data: svc } = await supabaseAdmin.from("services").select("slug,name,active").eq("slug", data.service_slug).maybeSingle();
+  const { data: svc } = await supabaseAdmin.from("services").select("slug,name,active,fee,amount_field").eq("slug", data.service_slug).maybeSingle();
   if (!svc || !svc.active) throw new Error("This service is not available");
+  const isCard = data.payment_method === "card";
+  // Server-side total: DB fee plus the customer-entered amount only when the service allows one.
+  const fee = Number(svc.fee ?? 0);
+  const customerAmount = svc.amount_field ? Math.max(0, Number(data.amount ?? 0) - fee) : 0;
+  const total = Math.round((fee + customerAmount) * 100) / 100;
+  if (isCard && total < 0.5) throw new Error("Card payment is not available for this service");
   const { data: row, error } = await supabaseAdmin.from("service_requests").insert({
     customer_name: data.customer_name, email: data.email, phone: data.phone,
-    service_slug: svc.slug, service_name: svc.name, details: data.details, amount: data.amount,
+    service_slug: svc.slug, service_name: svc.name, details: data.details, amount: svc.amount_field || svc.fee ? total : data.amount,
     payment_method: data.payment_method, payment_reference: data.payment_reference ?? null,
-    payment_status: data.payment_method === "card" || data.payment_method === "paypal" ? "confirmed" : "pending",
-  }).select("reference").single();
+    payment_status: data.payment_method === "paypal" ? "confirmed" : "pending",
+  }).select("id,reference").single();
   if (error || !row) throw new Error("Could not submit the request");
-  return { reference: row.reference };
+  let checkout_url: string | null = null;
+  if (isCard) {
+    const { createCheckoutSession, safeOrigin } = await import("./stripe.server");
+    const origin = safeOrigin(data.return_origin ?? "");
+    const back = `${origin}/seguimiento?orden=${encodeURIComponent(row.reference)}&contacto=${encodeURIComponent(data.email)}`;
+    const session = await createCheckoutSession({ kind: "service", id: row.id, reference: row.reference, email: data.email,
+      lines: [{ name: svc.name, amount: total, quantity: 1 }], successUrl: back, cancelUrl: back });
+    checkout_url = session.url;
+  }
+  return { reference: row.reference, checkout_url };
 }
 
 export async function lookupServiceRequestCore(reference: string, contact: string) {

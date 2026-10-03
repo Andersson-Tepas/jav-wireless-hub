@@ -43,7 +43,8 @@ function ServiceDetail() {
   async function send() {
     setError(""); setSending(true);
     try {
-      const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details, amount: total, payment_method: payment as "card", payment_reference: reference || undefined } });
+      const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details, amount: total, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin } });
+      if (r.checkout_url) { window.location.assign(r.checkout_url); return; }
       setResult(r.reference); setStep("done");
     } catch { setError("We couldn’t submit your request. Check your information and try again."); }
     finally { setSending(false); }
