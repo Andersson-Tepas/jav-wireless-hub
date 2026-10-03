@@ -22,15 +22,16 @@ export const navItems = [
 
 // Editable contact data (sample values until the real ones are provided)
 export const socialLinks = {
-  whatsapp: "https://wa.me/",
-  facebook: "https://www.facebook.com/",
-  instagram: "https://www.instagram.com/",
+  whatsapp:
+    "https://wa.me/16314553150?text=Hola%2C%20me%20comunico%20con%20JAV%20Wireless%20desde%20su%20sitio%20web.%20Quisiera%20obtener%20m%C3%A1s%20informaci%C3%B3n%20sobre%20sus%20productos%20o%20servicios.",
+  facebook: "https://www.facebook.com/javwirelesscorporation/",
+  instagram: "https://www.instagram.com/javwirelesscellshop/",
   tiktok: "https://www.tiktok.com/",
 };
 
 export const zelleInfo = {
-  recipient: "pagos@javwireless.com",
-  name: "JAV Wireless",
+  recipient: "(646) 575-4597",
+  name: "JAV WIRELESSNY COM LLC",
 };
 
 const localImages: Record<string, string> = {
