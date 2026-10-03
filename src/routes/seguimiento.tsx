@@ -28,14 +28,22 @@ function TrackingPage() {
   const lookupSr = useServerFn(lookupServiceRequest);
   const isService = query?.n.toUpperCase().startsWith("SR-");
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, isError } = useQuery({
     queryKey: ["tracking", query],
     enabled: !!query,
-    refetchInterval: 5000,
+    retry: false,
+    refetchInterval: (q) => (q.state.data?.r.found ? 5000 : false),
     refetchOnWindowFocus: true,
-    queryFn: async () => isService
-      ? { kind: "service" as const, r: await lookupSr({ data: { reference: query!.n, contact: query!.c } }) }
-      : { kind: "order" as const, r: await lookup({ data: { order_number: query!.n, contact: query!.c } }) },
+    queryFn: async () => {
+      try {
+        return isService
+          ? { kind: "service" as const, r: await lookupSr({ data: { reference: query!.n, contact: query!.c } }) }
+          : { kind: "order" as const, r: await lookup({ data: { order_number: query!.n, contact: query!.c } }) };
+      } catch (e) {
+        console.error("Tracking lookup failed", e);
+        return { kind: "none" as const, r: { found: false as const } };
+      }
+    },
   });
 
   return (
@@ -48,12 +56,12 @@ function TrackingPage() {
           <Button type="submit">Search</Button>
         </form>
 
-        {query && isFetching && !data && <p className="mt-6 text-muted-foreground">Searching...</p>}
-        {data && !data.r.found && <p className="mt-6 rounded-lg border border-border bg-surface p-4 text-sm">We couldn’t find an order matching that information. Check the number and phone or email.</p>}
+        {query && isFetching && !data && !isError && <p className="mt-6 text-muted-foreground">Searching...</p>}
+        {query && !isFetching && (isError || (data && !data.r.found)) && <p className="mt-6 rounded-lg border border-border bg-surface p-4 text-sm"><strong>No order or service request found.</strong> Check the reference number (JW-... or SR-...) and the phone or email used.</p>}
 
         {data?.kind === "service" && data.r.found && (
           <div className="card-soft mt-6 p-6">
-            <p className="text-sm text-muted-foreground">Request</p>
+            <p className="text-sm text-muted-foreground">Service request · {data.r.request.customer_name}</p>
             <h2 className="font-display text-2xl font-bold text-primary">{data.r.request.reference} · {data.r.request.service_name}</h2>
             <p className="mt-3 inline-block rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">{serviceStatusLabels[data.r.request.status] ?? data.r.request.status}</p>
             <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2"><div><dt className="text-muted-foreground">Date</dt><dd className="font-semibold">{fmt(data.r.request.created_at)}</dd></div><div><dt className="text-muted-foreground">Last updated</dt><dd className="font-semibold">{fmt(data.r.request.updated_at)}</dd></div><div><dt className="text-muted-foreground">Payment</dt><dd className="font-semibold">{paymentLabels[data.r.request.payment_method]}</dd></div>{data.r.request.amount !== null && <div><dt className="text-muted-foreground">Total</dt><dd className="font-semibold">{money(data.r.request.amount)}</dd></div>}</dl>
@@ -68,7 +76,7 @@ function TrackingPage() {
             <div className="mt-6 space-y-6">
               <div className="card-soft p-6">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div><p className="text-sm text-muted-foreground">Order</p><h2 className="font-display text-3xl font-bold text-primary">#{order.order_number}</h2></div>
+                  <div><p className="text-sm text-muted-foreground">Product order · {order.customer_name}</p><h2 className="font-display text-3xl font-bold text-primary">#{order.order_number}</h2></div>
                   <span className="rounded-full bg-accent/10 px-3 py-1 text-sm font-bold text-accent">{statusLabels[order.status]}</span>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">Last updated: {fmt(order.updated_at)} · updates automatically</p>
