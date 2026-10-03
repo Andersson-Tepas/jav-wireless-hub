@@ -20,15 +20,16 @@ export async function createOrderCore(data: OrderInput) {
   const subtotal = lines.reduce((n, l) => n + Number(l.p.price) * l.quantity, 0);
   const isZelle = data.payment_method === "zelle";
   const isCard = data.payment_method === "card";
+  const isPaypal = data.payment_method === "paypal";
   const { data: order, error: oErr } = await supabaseAdmin.from("orders").insert({
     customer_name: data.customer_name, email: data.email, phone: data.phone,
     address: data.delivery_method === "shipping" ? (data.address ?? null) : null,
     delivery_method: data.delivery_method, payment_method: data.payment_method,
     // Only a Zelle confirmation code is stored; card/PayPal are simulated and no card data is ever saved.
-    // Card payments are confirmed only by the Stripe webhook; PayPal is still simulated.
-    payment_reference: isZelle ? (data.payment_reference ?? null) : isCard ? null : `SIM-${Date.now()}`,
-    payment_status: isZelle || isCard ? "pending" : "confirmed",
-    notes: data.notes ?? null, subtotal, total: subtotal, status: isZelle || isCard ? "payment_pending" : "payment_confirmed",
+    // Card (Stripe webhook) and PayPal (server-side capture) are confirmed only after verification.
+    payment_reference: isZelle ? (data.payment_reference ?? null) : null,
+    payment_status: "pending",
+    notes: data.notes ?? null, subtotal, total: subtotal, status: "payment_pending",
   }).select().single();
   if (oErr || !order) throw new Error("Could not create the order");
   await supabaseAdmin.from("order_items").insert(lines.map((l) => ({ order_id: order.id, product_id: l.p.id, name: l.p.name, price: l.p.price, quantity: l.quantity, image: l.p.image })));
@@ -41,6 +42,16 @@ export async function createOrderCore(data: OrderInput) {
     const session = await createCheckoutSession({ kind: "order", id: order.id, reference: order.order_number, email: order.email,
       lines: lines.map((l) => ({ name: l.p.name, amount: Number(l.p.price), quantity: l.quantity })), successUrl: track, cancelUrl: track });
     checkout_url = session.url;
+  }
+  if (isPaypal) {
+    const { safeOrigin } = await import("./stripe.server");
+    const { createPaypalOrder } = await import("./paypal.server");
+    const origin = safeOrigin(data.return_origin ?? "");
+    const pp = await createPaypalOrder({ kind: "order", id: order.id, reference: order.order_number, total: subtotal,
+      returnUrl: `${origin}/api/public/paypal-return?kind=order&id=${order.id}`,
+      cancelUrl: `${origin}/seguimiento?orden=${encodeURIComponent(order.order_number)}&contacto=${encodeURIComponent(order.email)}` });
+    await supabaseAdmin.from("orders").update({ payment_reference: pp.id }).eq("id", order.id);
+    checkout_url = pp.url;
   }
   return { order_number: order.order_number, email: order.email, checkout_url };
 }
@@ -73,12 +84,13 @@ export async function createServiceRequestCore(data: ServiceInput) {
   const fee = Number(svc.fee ?? 0);
   const customerAmount = svc.amount_field ? Math.max(0, Number(data.amount ?? 0) - fee) : 0;
   const total = Math.round((fee + customerAmount) * 100) / 100;
-  if (isCard && total < 0.5) throw new Error("Card payment is not available for this service");
+  const isPaypal = data.payment_method === "paypal";
+  if ((isCard || isPaypal) && total < 0.5) throw new Error("Card payment is not available for this service");
   const { data: row, error } = await supabaseAdmin.from("service_requests").insert({
     customer_name: data.customer_name, email: data.email, phone: data.phone,
     service_slug: svc.slug, service_name: svc.name, details: data.details, amount: svc.amount_field || svc.fee ? total : data.amount,
     payment_method: data.payment_method, payment_reference: data.payment_reference ?? null,
-    payment_status: data.payment_method === "paypal" ? "confirmed" : "pending",
+    payment_status: "pending",
   }).select("id,reference").single();
   if (error || !row) throw new Error("Could not submit the request");
   let checkout_url: string | null = null;
@@ -89,6 +101,16 @@ export async function createServiceRequestCore(data: ServiceInput) {
     const session = await createCheckoutSession({ kind: "service", id: row.id, reference: row.reference, email: data.email,
       lines: [{ name: svc.name, amount: total, quantity: 1 }], successUrl: back, cancelUrl: back });
     checkout_url = session.url;
+  }
+  if (isPaypal) {
+    const { safeOrigin } = await import("./stripe.server");
+    const { createPaypalOrder } = await import("./paypal.server");
+    const origin = safeOrigin(data.return_origin ?? "");
+    const pp = await createPaypalOrder({ kind: "service", id: row.id, reference: row.reference, total,
+      returnUrl: `${origin}/api/public/paypal-return?kind=service&id=${row.id}`,
+      cancelUrl: `${origin}/seguimiento?orden=${encodeURIComponent(row.reference)}&contacto=${encodeURIComponent(data.email)}` });
+    await supabaseAdmin.from("service_requests").update({ payment_reference: pp.id }).eq("id", row.id);
+    checkout_url = pp.url;
   }
   return { reference: row.reference, checkout_url };
 }

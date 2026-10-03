@@ -24,7 +24,7 @@ export function PaymentPicker({ value, onChange, reference, onReference, allowSt
         ))}
       </div>
       {value === "card" && <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground">You’ll be redirected to Stripe’s secure payment page to enter your card. JAV Wireless never stores your card details.</p>}
-      {value === "paypal" && <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground">Demo PayPal payment: payment approval will be simulated when you confirm.</p>}
+      {value === "paypal" && <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted-foreground">You’ll be redirected to PayPal to approve your payment securely.</p>}
       {value === "zelle" && (
         <div className="space-y-3 rounded-lg border border-border bg-surface p-4 text-sm">
           <p className="font-semibold text-foreground">How to pay with Zelle</p>
