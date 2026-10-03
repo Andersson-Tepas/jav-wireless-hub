@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -89,22 +89,35 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
   const upload = useServerFn(uploadProductImage);
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
 
-  async function onFile(f: File | undefined) {
+  const [pending, setPending] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [drag, setDrag] = useState(false);
+
+  function pick(f: File | undefined) {
     if (!f) return;
-    if (f.size > 5_000_000) { toast.error("The image must be smaller than 5 MB"); return; }
-    setBusy(true);
-    try {
-      const buf = new Uint8Array(await f.arrayBuffer());
-      let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
-      const r = await upload({ data: { filename: f.name, contentType: f.type as "image/jpeg", base64: btoa(bin) } });
-      set("image", r.url); toast.success("Image uploaded");
-    } catch { toast.error("Could not upload the image (JPG, PNG, or WebP)"); }
-    finally { setBusy(false); }
+    const okType = ["image/jpeg", "image/png", "image/webp"].includes(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name);
+    if (!okType) { toast.error("Invalid file type. Please choose a JPG, JPEG, PNG, or WebP image."); return; }
+    if (f.size > 5_000_000) { toast.error("The image is too large. Maximum size is 5 MB."); return; }
+    if (preview) URL.revokeObjectURL(preview);
+    setPending(f); setPreview(URL.createObjectURL(f));
+  }
+
+  async function uploadPending(f: File): Promise<string> {
+    const ext = f.name.split(".").pop()?.toLowerCase();
+    const type = (["image/jpeg", "image/png", "image/webp"].includes(f.type) ? f.type : ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg") as "image/jpeg";
+    const buf = new Uint8Array(await f.arrayBuffer());
+    let bin = ""; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+    const r = await upload({ data: { filename: f.name.slice(0, 120), contentType: type, base64: btoa(bin) } });
+    return r.url;
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
     const body = fromDraft(d);
+    if (pending) {
+      try { body.image = await uploadPending(pending); }
+      catch { setBusy(false); toast.error("Could not upload the image. Please try again."); return; }
+    }
     if (product) {
       const original = toDraft(product);
       if (d.name === initial.name) body.name = original.name.trim();
@@ -139,12 +152,22 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
           <Field label="Features (one per line)"><textarea className="field h-28 py-2" value={d.features} onChange={(e) => set("features", e.target.value)} /></Field>
           <Field label="Specifications (Label: value)"><textarea className="field h-28 py-2" value={d.specs} onChange={(e) => set("specs", e.target.value)} /></Field>
           <Field label="Financing (optional)" className="sm:col-span-2"><input className="field" value={d.financing} onChange={(e) => set("financing", e.target.value)} /></Field>
-          <div className="grid gap-2 sm:col-span-2 sm:grid-cols-[96px_1fr]">
-            <img src={productImage(d.image)} alt="" className="size-24 rounded-lg border border-border object-cover" />
-            <div className="grid gap-2">
-              <Field label="Image"><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={(e) => onFile(e.target.files?.[0])} className="text-sm" /></Field>
-              <input className="field" placeholder="or paste an https:// link..." value={d.image} onChange={(e) => set("image", e.target.value)} />
-            </div>
+          <div className="sm:col-span-2">
+            <p className="mb-1 text-sm font-semibold">Image</p>
+            <label
+              onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+              onDragLeave={() => setDrag(false)}
+              onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files?.[0]); }}
+              className={`flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 border-dashed p-4 text-center sm:flex-row sm:text-left ${drag ? "border-primary bg-primary/5" : "border-border"}`}
+            >
+              <img src={preview ?? productImage(d.image)} alt="Product preview" className="size-24 rounded-lg border border-border object-cover" />
+              <div className="grid gap-1 text-sm">
+                <span className="inline-flex w-fit items-center gap-2 rounded-md border border-border px-3 py-1.5 font-semibold"><Upload className="size-4" /> {d.image || preview ? "Replace image" : "Upload image"}</span>
+                <span className="text-muted-foreground">{pending ? pending.name : "Drag and drop or choose a file"} · JPG, PNG or WebP, up to 5 MB</span>
+                {pending && <span className="text-xs text-muted-foreground">Will upload when you save.</span>}
+              </div>
+              <input type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" disabled={busy} className="sr-only" onChange={(e) => { pick(e.target.files?.[0]); e.target.value = ""; }} />
+            </label>
           </div>
           <div className="flex flex-wrap gap-4 text-sm font-semibold sm:col-span-2">
             {([["is_featured", "Featured"], ["is_bestseller", "Best seller"], ["is_new", "New"], ["is_offer", "Sale"], ["active", "Active (visible)"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-primary" checked={d[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>)}
