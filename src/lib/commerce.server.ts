@@ -1,4 +1,10 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+async function notifyStaff(formName: string, reference: string, fields: { label: string; value: string }[]) {
+  try {
+    const { sendTemplateEmail } = await import("./email-templates/send-email");
+    await sendTemplateEmail("form-submission", "javwireless5@gmail.com", { templateData: { formName, reference, fields }, idempotencyKey: `form-${reference}` });
+  } catch (e) { console.error("Form notification email failed", e); }
+}
 import type { OrderInput, ServiceInput } from "./commerce.schemas";
 
 const digits = (s: string) => s.replace(/\D/g, "");
@@ -34,6 +40,13 @@ export async function createOrderCore(data: OrderInput) {
   if (oErr || !order) throw new Error("Could not create the order");
   await supabaseAdmin.from("order_items").insert(lines.map((l) => ({ order_id: order.id, product_id: l.p.id, name: l.p.name, price: l.p.price, quantity: l.quantity, image: l.p.image })));
   for (const l of lines) await supabaseAdmin.from("products").update({ stock: l.p.stock - l.quantity }).eq("id", l.p.id);
+  await notifyStaff("Checkout order", order.order_number, [
+    { label: "Name", value: data.customer_name }, { label: "Email", value: data.email }, { label: "Phone", value: data.phone },
+    { label: "Delivery", value: data.delivery_method === "shipping" ? `Shipping — ${data.address ?? ""}` : "In-store pickup" },
+    { label: "Payment method", value: data.payment_method }, ...(isZelle && data.payment_reference ? [{ label: "Zelle reference", value: data.payment_reference }] : []),
+    { label: "Items", value: lines.map((l) => `${l.quantity} × ${l.p.name}`).join(", ") }, { label: "Total", value: `$${subtotal.toFixed(2)}` },
+    ...(data.notes ? [{ label: "Notes", value: data.notes }] : []),
+  ]);
   let checkout_url: string | null = null;
   if (isCard) {
     const { createCheckoutSession, safeOrigin } = await import("./stripe.server");
@@ -93,6 +106,13 @@ export async function createServiceRequestCore(data: ServiceInput) {
     payment_status: "pending",
   }).select("id,reference").single();
   if (error || !row) throw new Error("Could not submit the request");
+  await notifyStaff(`${svc.name} request`, row.reference, [
+    { label: "Name", value: data.customer_name }, { label: "Email", value: data.email }, { label: "Phone", value: data.phone },
+    ...Object.entries((data.details ?? {}) as Record<string, unknown>).map(([k, v]) => ({ label: k, value: String(v ?? "") })),
+    ...(svc.amount_field || svc.fee ? [{ label: "Total", value: `$${total.toFixed(2)}` }] : []),
+    { label: "Payment method", value: data.payment_method },
+    ...(data.payment_method === "zelle" && data.payment_reference ? [{ label: "Zelle reference", value: data.payment_reference }] : []),
+  ]);
   let checkout_url: string | null = null;
   if (isCard) {
     const { createCheckoutSession, safeOrigin } = await import("./stripe.server");

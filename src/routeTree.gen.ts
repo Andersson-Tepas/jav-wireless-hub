@@ -43,6 +43,7 @@ import { Route as ApiAdminCategoriesIdRouteImport } from './routes/api/admin/cat
 import { Route as ApiAdminProductsIdRouteImport } from './routes/api/admin/products.$id'
 import { Route as ApiAdminServicesIdRouteImport } from './routes/api/admin/services.$id'
 import { Route as ApiPublicProductsIdRouteImport } from './routes/api/public/products.$id'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiAdminOrdersIdStatusRouteImport } from './routes/api/admin/orders.$id.status'
 import { Route as ApiPublicOrdersTrackCodeRouteImport } from './routes/api/public/orders.track.$code'
 
@@ -217,6 +218,12 @@ const ApiPublicProductsIdRoute = ApiPublicProductsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiPublicProductsRoute,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminOrdersIdStatusRoute = ApiAdminOrdersIdStatusRouteImport.update({
   id: '/$id/status',
   path: '/$id/status',
@@ -263,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
   '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
   '/api/public/products/$id': typeof ApiPublicProductsIdRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
   '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
@@ -299,6 +307,7 @@ export interface FileRoutesByTo {
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
   '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
   '/api/public/products/$id': typeof ApiPublicProductsIdRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
   '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
@@ -338,6 +347,7 @@ export interface FileRoutesById {
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
   '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
   '/api/public/products/$id': typeof ApiPublicProductsIdRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
   '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/api/admin/products/$id'
     | '/api/admin/services/$id'
     | '/api/public/products/$id'
+    | '/lovable/email/transactional/preview'
     | '/api/admin/orders/$id/status'
     | '/api/public/orders/track/$code'
   fileRoutesByTo: FileRoutesByTo
@@ -413,6 +424,7 @@ export interface FileRouteTypes {
     | '/api/admin/products/$id'
     | '/api/admin/services/$id'
     | '/api/public/products/$id'
+    | '/lovable/email/transactional/preview'
     | '/api/admin/orders/$id/status'
     | '/api/public/orders/track/$code'
   id:
@@ -451,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/admin/products/$id'
     | '/api/admin/services/$id'
     | '/api/public/products/$id'
+    | '/lovable/email/transactional/preview'
     | '/api/admin/orders/$id/status'
     | '/api/public/orders/track/$code'
   fileRoutesById: FileRoutesById
@@ -481,6 +494,7 @@ export interface RootRouteChildren {
   ApiPublicServiceRequestsRoute: typeof ApiPublicServiceRequestsRoute
   ApiPublicServicesRoute: typeof ApiPublicServicesRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -723,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicProductsIdRouteImport
       parentRoute: typeof ApiPublicProductsRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/orders/$id/status': {
       id: '/api/admin/orders/$id/status'
       path: '/$id/status'
@@ -862,6 +883,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicServiceRequestsRoute: ApiPublicServiceRequestsRoute,
   ApiPublicServicesRoute: ApiPublicServicesRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
