@@ -30,7 +30,8 @@ function CheckoutPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(""); setSending(true);
     try {
-      const r = await submit({ data: { ...form, address: delivery === "shipping" ? form.address : undefined, notes: form.notes || undefined, delivery_method: delivery, payment_method: payment as "card", payment_reference: reference || undefined, items: items.map((i) => ({ id: i.id, quantity: i.quantity })) } });
+      const r = await submit({ data: { ...form, address: delivery === "shipping" ? form.address : undefined, notes: form.notes || undefined, delivery_method: delivery, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin, items: items.map((i) => ({ id: i.id, quantity: i.quantity })) } });
+      if (r.checkout_url) { clear(); window.location.assign(r.checkout_url); return; }
       setDone({ order_number: r.order_number, items, total, payment, delivery, status: payment === "zelle" ? "payment_pending" : "payment_confirmed", email: r.email });
       clear();
     } catch (err) {

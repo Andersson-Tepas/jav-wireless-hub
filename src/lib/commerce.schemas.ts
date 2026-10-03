@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const contact = {
+  return_origin: z.string().url().max(200).optional(),
   customer_name: z.string().trim().min(2).max(100),
   email: z.string().trim().email().max(255),
   phone: z.string().trim().min(7).max(30),
