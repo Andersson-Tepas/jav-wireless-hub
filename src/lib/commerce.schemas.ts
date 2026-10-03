@@ -28,7 +28,7 @@ export const serviceSchema = z.object({
   amount: z.number().min(0).max(100000).nullable(),
   payment_method: z.enum(["card", "paypal", "zelle", "store"]),
   payment_reference: z.string().trim().max(120).optional(),
-});
+}).refine((d) => d.payment_method !== "zelle" || (d.payment_reference && d.payment_reference.length > 2), { message: "Zelle confirmation number is required", path: ["payment_reference"] });
 
 export const serviceLookupSchema = z.object({ reference: z.string().trim().min(3).max(20), contact: z.string().trim().min(3).max(255) });
 
