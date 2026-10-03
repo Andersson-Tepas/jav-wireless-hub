@@ -33,7 +33,7 @@ function FormSubmission({ formName = "Website form", reference, fields = [] }: P
 
 export const template = {
   component: FormSubmission,
-  subject: (d: Record<string, any>) => `New ${d.formName ?? "form"} submission${d.reference ? ` — ${d.reference}` : ""}`,
+  subject: (d: Record<string, any>) => `New ${d['formName'] ?? "form"} submission${d['reference'] ? ` — ${d['reference']}` : ""}`,
   displayName: "Form submission notification",
   to: "javwireless5@gmail.com",
   previewData: { formName: "Checkout order", reference: "JAV-1001", fields: [{ label: "Name", value: "Jane Doe" }, { label: "Email", value: "jane@example.com" }] },
