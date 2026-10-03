@@ -71,7 +71,7 @@ export async function createOrderCore(data: OrderInput) {
 
 export async function lookupOrderCore(orderNumber: string, contact: string) {
   const num = orderNumber.toUpperCase().replace(/^#/, "").trim();
-  const { data: order } = await supabaseAdmin.from("orders").select("*").eq("order_number", num).maybeSingle();
+  const { data: order } = await supabaseAdmin.from("orders").select("*").ilike("order_number", num).maybeSingle();
   if (!order || !matchesContact(order.email, order.phone, contact)) return { found: false as const };
   const [{ data: items }, { data: history }] = await Promise.all([
     supabaseAdmin.from("order_items").select("name,price,quantity,image").eq("order_id", order.id),
@@ -138,5 +138,5 @@ export async function createServiceRequestCore(data: ServiceInput) {
 export async function lookupServiceRequestCore(reference: string, contact: string) {
   const { data: r } = await supabaseAdmin.from("service_requests").select("*").eq("reference", reference.toUpperCase().trim()).maybeSingle();
   if (!r || !matchesContact(r.email, r.phone, contact)) return { found: false as const };
-  return { found: true as const, request: { reference: r.reference, service_name: r.service_name, status: r.status, created_at: r.created_at, updated_at: r.updated_at, amount: r.amount === null ? null : Number(r.amount), payment_method: r.payment_method } };
+  return { found: true as const, request: { reference: r.reference, customer_name: r.customer_name, service_name: r.service_name, status: r.status, created_at: r.created_at, updated_at: r.updated_at, amount: r.amount === null ? null : Number(r.amount), payment_method: r.payment_method } };
 }
