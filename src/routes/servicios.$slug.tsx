@@ -31,7 +31,7 @@ function ServiceDetail() {
   const [contact, setContact] = useState({ customer_name: "", email: "", phone: "" });
   const [details, setDetails] = useState<Record<string, string>>({});
   const [amount, setAmount] = useState("");
-  const [payment, setPayment] = useState("card");
+  const [payment, setPayment] = useState(service.amountField || service.fee ? "card" : "store");
   const [reference, setReference] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -41,12 +41,14 @@ function ServiceDetail() {
   const total = service.amountField || service.fee ? amountNum + (service.fee ?? 0) : null;
 
   async function send() {
-    setError(""); setSending(true);
+    setError("");
+    if (payment === "zelle" && reference.trim().length < 3) { setError("Enter your Zelle confirmation number to continue."); return; }
+    setSending(true);
     try {
-      const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details, amount: total, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin } });
+      const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details, amount: total, payment_method: payment as "card", payment_reference: payment === "zelle" ? reference.trim() || undefined : undefined, return_origin: window.location.origin } });
       if (r.checkout_url) { window.location.assign(r.checkout_url); return; }
       setResult(r.reference); setStep("done");
-    } catch { setError("We couldn’t submit your request. Check your information and try again."); }
+    } catch (e) { setError(payment === "card" || payment === "paypal" ? "Online payment isn’t available for this request. Choose Zelle or Pay in store." : "We couldn’t submit your request. Check your information and try again."); console.error(e); }
     finally { setSending(false); }
   }
 
@@ -104,9 +106,9 @@ function ServiceDetail() {
           <form onSubmit={(e) => { e.preventDefault(); void send(); }}>
             <h2 className="font-display text-2xl font-bold text-primary">Payment method</h2>
             {total !== null && <p className="mt-1 text-muted-foreground">Total due: <strong className="text-foreground">{money(total)}</strong></p>}
-            <div className="mt-4"><PaymentPicker value={payment} onChange={setPayment} reference={reference} onReference={setReference} allowStore amount={total !== null ? money(total) : undefined} /></div>
+            <div className="mt-4"><PaymentPicker value={payment} onChange={(v) => { setPayment(v); setError(""); }} reference={reference} onReference={setReference} allowStore amount={total !== null ? money(total) : undefined} /></div>
             {error && <p className="mt-4 text-sm font-semibold text-destructive">{error}</p>}
-            <div className="mt-6 flex gap-2"><Button variant="outline" onClick={() => setStep("review")}>Back</Button><Button type="submit" variant="accent" className="flex-1" disabled={sending}>{sending ? "Sending..." : "Submit request"}</Button></div>
+            <div className="mt-6 flex gap-2"><Button type="button" variant="outline" onClick={() => setStep("review")}>Back</Button><Button type="submit" variant="accent" className="flex-1" disabled={sending}>{sending ? "Sending..." : "Submit request"}</Button></div>
           </form>
         )}
 
