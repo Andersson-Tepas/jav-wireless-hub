@@ -34,6 +34,7 @@ import { Route as ApiAdminProductsRouteImport } from './routes/api/admin/product
 import { Route as ApiAdminServicesRouteImport } from './routes/api/admin/services'
 import { Route as ApiPublicCategoriesRouteImport } from './routes/api/public/categories'
 import { Route as ApiPublicOrdersRouteImport } from './routes/api/public/orders'
+import { Route as ApiPublicPaypalReturnRouteImport } from './routes/api/public/paypal-return'
 import { Route as ApiPublicProductsRouteImport } from './routes/api/public/products'
 import { Route as ApiPublicServiceRequestsRouteImport } from './routes/api/public/service-requests'
 import { Route as ApiPublicServicesRouteImport } from './routes/api/public/services'
@@ -170,6 +171,11 @@ const ApiPublicOrdersRoute = ApiPublicOrdersRouteImport.update({
   path: '/api/public/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaypalReturnRoute = ApiPublicPaypalReturnRouteImport.update({
+  id: '/api/public/paypal-return',
+  path: '/api/public/paypal-return',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicProductsRoute = ApiPublicProductsRouteImport.update({
   id: '/api/public/products',
   path: '/api/public/products',
@@ -247,6 +253,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/services': typeof ApiAdminServicesRouteWithChildren
   '/api/public/categories': typeof ApiPublicCategoriesRoute
   '/api/public/orders': typeof ApiPublicOrdersRouteWithChildren
+  '/api/public/paypal-return': typeof ApiPublicPaypalReturnRoute
   '/api/public/products': typeof ApiPublicProductsRouteWithChildren
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByTo {
   '/api/admin/services': typeof ApiAdminServicesRouteWithChildren
   '/api/public/categories': typeof ApiPublicCategoriesRoute
   '/api/public/orders': typeof ApiPublicOrdersRouteWithChildren
+  '/api/public/paypal-return': typeof ApiPublicPaypalReturnRoute
   '/api/public/products': typeof ApiPublicProductsRouteWithChildren
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
@@ -320,6 +328,7 @@ export interface FileRoutesById {
   '/api/admin/services': typeof ApiAdminServicesRouteWithChildren
   '/api/public/categories': typeof ApiPublicCategoriesRoute
   '/api/public/orders': typeof ApiPublicOrdersRouteWithChildren
+  '/api/public/paypal-return': typeof ApiPublicPaypalReturnRoute
   '/api/public/products': typeof ApiPublicProductsRouteWithChildren
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
@@ -358,6 +367,7 @@ export interface FileRouteTypes {
     | '/api/admin/services'
     | '/api/public/categories'
     | '/api/public/orders'
+    | '/api/public/paypal-return'
     | '/api/public/products'
     | '/api/public/service-requests'
     | '/api/public/services'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/api/admin/services'
     | '/api/public/categories'
     | '/api/public/orders'
+    | '/api/public/paypal-return'
     | '/api/public/products'
     | '/api/public/service-requests'
     | '/api/public/services'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/api/admin/services'
     | '/api/public/categories'
     | '/api/public/orders'
+    | '/api/public/paypal-return'
     | '/api/public/products'
     | '/api/public/service-requests'
     | '/api/public/services'
@@ -464,6 +476,7 @@ export interface RootRouteChildren {
   ApiAdminServicesRoute: typeof ApiAdminServicesRouteWithChildren
   ApiPublicCategoriesRoute: typeof ApiPublicCategoriesRoute
   ApiPublicOrdersRoute: typeof ApiPublicOrdersRouteWithChildren
+  ApiPublicPaypalReturnRoute: typeof ApiPublicPaypalReturnRoute
   ApiPublicProductsRoute: typeof ApiPublicProductsRouteWithChildren
   ApiPublicServiceRequestsRoute: typeof ApiPublicServiceRequestsRoute
   ApiPublicServicesRoute: typeof ApiPublicServicesRoute
@@ -645,6 +658,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/orders'
       fullPath: '/api/public/orders'
       preLoaderRoute: typeof ApiPublicOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/paypal-return': {
+      id: '/api/public/paypal-return'
+      path: '/api/public/paypal-return'
+      fullPath: '/api/public/paypal-return'
+      preLoaderRoute: typeof ApiPublicPaypalReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/products': {
@@ -837,6 +857,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminServicesRoute: ApiAdminServicesRouteWithChildren,
   ApiPublicCategoriesRoute: ApiPublicCategoriesRoute,
   ApiPublicOrdersRoute: ApiPublicOrdersRouteWithChildren,
+  ApiPublicPaypalReturnRoute: ApiPublicPaypalReturnRoute,
   ApiPublicProductsRoute: ApiPublicProductsRouteWithChildren,
   ApiPublicServiceRequestsRoute: ApiPublicServiceRequestsRoute,
   ApiPublicServicesRoute: ApiPublicServicesRoute,
