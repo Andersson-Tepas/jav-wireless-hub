@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { User as SbUser } from "@supabase/supabase-js";
-import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,7 +59,6 @@ export function AccountMenu() {
   const qc = useQueryClient();
 
   const [user, setUser] = useState<SbUser | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
