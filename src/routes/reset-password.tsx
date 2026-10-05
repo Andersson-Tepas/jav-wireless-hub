@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { PasswordField } from "@/components/password-field";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -157,31 +158,23 @@ function ResetPasswordPage() {
               </p>
 
               <form onSubmit={onSubmit} className="space-y-4">
-                <label className="grid gap-1.5 text-sm font-semibold">
-                  New password
+                <PasswordField
+                  id="new-password"
+                  label="New password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  value={password}
+                  onChange={setPassword}
+                />
 
-                  <input
-                    required
-                    type="password"
-                    minLength={8}
-                    className="field"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </label>
-
-                <label className="grid gap-1.5 text-sm font-semibold">
-                  Confirm new password
-
-                  <input
-                    required
-                    type="password"
-                    minLength={8}
-                    className="field"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                  />
-                </label>
+                <PasswordField
+                  id="confirm-new-password"
+                  label="Confirm new password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  value={confirm}
+                  onChange={setConfirm}
+                />
 
                 {msg && (
                   <p className="text-sm font-semibold text-accent">{msg}</p>
