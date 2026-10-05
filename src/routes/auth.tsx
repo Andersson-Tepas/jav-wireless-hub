@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
