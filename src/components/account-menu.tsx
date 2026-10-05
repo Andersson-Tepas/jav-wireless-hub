@@ -78,26 +78,6 @@ export function AccountMenu() {
     };
   }, []);
 
-  async function signIn() {
-    setBusy(true);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-
-      options: {
-        redirectTo: `${window.location.origin}/auth`,
-      },
-    });
-
-    if (error) {
-      console.error("Google sign-in error:", error);
-
-      toast.error("Could not sign in with Google.");
-
-      setBusy(false);
-    }
-  }
-
   async function signOut() {
     await qc.cancelQueries();
 
