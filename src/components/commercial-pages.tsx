@@ -108,5 +108,60 @@ export function AboutPage() {
 }
 
 export function ContactPage() {
-  return <><PageIntro eyebrow="Contact" title="We’re here to help." description="Contact us with questions about products, services, or your order status." /><section className="section-pad"><div className="container-page grid gap-6 md:grid-cols-3"><a href={socialLinks.whatsapp} target="_blank" rel="noreferrer" className="card-soft p-6 hover:border-primary"><MessageCircle className="size-7 text-success" /><h3 className="mt-4 font-bold text-primary">WhatsApp</h3><p className="mt-1 text-sm text-muted-foreground">Direct support</p></a><div className="card-soft p-6"><MapPin className="size-7 text-accent" /><h3 className="mt-4 font-bold text-primary">Visit us</h3><p className="mt-1 text-sm text-muted-foreground">Address available upon request</p></div><Link to="/seguimiento" className="card-soft p-6 hover:border-primary"><Truck className="size-7 text-primary" /><h3 className="mt-4 font-bold text-primary">My order</h3><p className="mt-1 text-sm text-muted-foreground">Check your order status</p></Link></div></section></>;
-}
+return (
+  <>
+    <PageIntro
+      eyebrow="Contact"
+      title="We’re here to help."
+      description="Contact us with questions about products, services, or your order status."
+    />
+
+    <section className="section-pad">
+      <div className="container-page grid gap-6 md:grid-cols-3">
+
+        <a
+          href={socialLinks.whatsapp}
+          target="_blank"
+          rel="noreferrer"
+          className="card-soft p-6 hover:border-primary"
+        >
+          <MessageCircle className="size-7 text-success" />
+          <h3 className="mt-4 font-bold text-primary">
+            WhatsApp
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Direct support
+          </p>
+        </a>
+
+        <a
+          href="https://www.google.com/maps/search/?api=1&query=61+Pine+Aire+Dr%2C+Bay+Shore%2C+NY+11706"          target="_blank"
+          rel="noreferrer"
+          className="card-soft p-6 hover:border-primary"
+        >
+          <MapPin className="size-7 text-accent" />
+          <h3 className="mt-4 font-bold text-primary">
+            Visit us
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            61 Pine Aire Dr, Bay Shore, NY 11706
+          </p>
+        </a>
+
+        <Link
+          to="/seguimiento"
+          className="card-soft p-6 hover:border-primary"
+        >
+          <Truck className="size-7 text-primary" />
+          <h3 className="mt-4 font-bold text-primary">
+            My order
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Check your order status
+          </p>
+        </Link>
+
+      </div>
+    </section>
+  </>
+);}
