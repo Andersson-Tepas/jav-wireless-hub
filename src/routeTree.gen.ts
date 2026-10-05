@@ -16,9 +16,11 @@ import { Route as CarritoRouteImport } from './routes/carrito'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as FinanciamientoRouteImport } from './routes/financiamiento'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as NosotrosRouteImport } from './routes/nosotros'
 import { Route as ProductosRouteImport } from './routes/productos'
 import { Route as ReparacionesRouteImport } from './routes/reparaciones'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SeguimientoRouteImport } from './routes/seguimiento'
 import { Route as AuthenticatedCuentaRouteImport } from './routes/_authenticated/cuenta'
 import { Route as AuthenticatedMisPedidosRouteImport } from './routes/_authenticated/mis-pedidos'
@@ -81,6 +83,11 @@ const FinanciamientoRoute = FinanciamientoRouteImport.update({
   path: '/financiamiento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NosotrosRoute = NosotrosRouteImport.update({
   id: '/nosotros',
   path: '/nosotros',
@@ -94,6 +101,11 @@ const ProductosRoute = ProductosRouteImport.update({
 const ReparacionesRoute = ReparacionesRouteImport.update({
   id: '/reparaciones',
   path: '/reparaciones',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SeguimientoRoute = SeguimientoRouteImport.update({
@@ -243,9 +255,11 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
   '/financiamiento': typeof FinanciamientoRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/seguimiento': typeof SeguimientoRoute
   '/cuenta': typeof AuthenticatedCuentaRoute
   '/mis-pedidos': typeof AuthenticatedMisPedidosRoute
@@ -281,9 +295,11 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
   '/financiamiento': typeof FinanciamientoRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/seguimiento': typeof SeguimientoRoute
   '/cuenta': typeof AuthenticatedCuentaRoute
   '/mis-pedidos': typeof AuthenticatedMisPedidosRoute
@@ -320,9 +336,11 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/contacto': typeof ContactoRoute
   '/financiamiento': typeof FinanciamientoRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/nosotros': typeof NosotrosRoute
   '/productos': typeof ProductosRoute
   '/reparaciones': typeof ReparacionesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/seguimiento': typeof SeguimientoRoute
   '/_authenticated/cuenta': typeof AuthenticatedCuentaRoute
   '/_authenticated/mis-pedidos': typeof AuthenticatedMisPedidosRoute
@@ -360,9 +378,11 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contacto'
     | '/financiamiento'
+    | '/forgot-password'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/reset-password'
     | '/seguimiento'
     | '/cuenta'
     | '/mis-pedidos'
@@ -398,9 +418,11 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contacto'
     | '/financiamiento'
+    | '/forgot-password'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/reset-password'
     | '/seguimiento'
     | '/cuenta'
     | '/mis-pedidos'
@@ -436,9 +458,11 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contacto'
     | '/financiamiento'
+    | '/forgot-password'
     | '/nosotros'
     | '/productos'
     | '/reparaciones'
+    | '/reset-password'
     | '/seguimiento'
     | '/_authenticated/cuenta'
     | '/_authenticated/mis-pedidos'
@@ -476,9 +500,11 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   ContactoRoute: typeof ContactoRoute
   FinanciamientoRoute: typeof FinanciamientoRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   NosotrosRoute: typeof NosotrosRoute
   ProductosRoute: typeof ProductosRoute
   ReparacionesRoute: typeof ReparacionesRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SeguimientoRoute: typeof SeguimientoRoute
   ServiciosSlugRoute: typeof ServiciosSlugRoute
   ServiciosIndexRoute: typeof ServiciosIndexRoute
@@ -548,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FinanciamientoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/nosotros': {
       id: '/nosotros'
       path: '/nosotros'
@@ -567,6 +600,13 @@ declare module '@tanstack/react-router' {
       path: '/reparaciones'
       fullPath: '/reparaciones'
       preLoaderRoute: typeof ReparacionesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seguimiento': {
@@ -865,9 +905,11 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   ContactoRoute: ContactoRoute,
   FinanciamientoRoute: FinanciamientoRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   NosotrosRoute: NosotrosRoute,
   ProductosRoute: ProductosRoute,
   ReparacionesRoute: ReparacionesRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SeguimientoRoute: SeguimientoRoute,
   ServiciosSlugRoute: ServiciosSlugRoute,
   ServiciosIndexRoute: ServiciosIndexRoute,

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -275,6 +275,14 @@ function AuthPage() {
               ? "Don’t have an account? Create one"
               : "I already have an account"}
           </button>
+
+          {/* Forgot password */}
+          <Link
+            to="/forgot-password"
+            className="block w-full text-center text-sm font-semibold text-muted-foreground hover:text-primary"
+          >
+            Forgot your password?
+          </Link>
         </form>
       </div>
     </section>
