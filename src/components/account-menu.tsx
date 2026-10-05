@@ -93,10 +93,8 @@ export function AccountMenu() {
 
   if (!user) {
     return (
-      <button
-        type="button"
-        onClick={signIn}
-        disabled={busy}
+      <Link
+        to="/auth"
         className="
           inline-flex
           h-10
