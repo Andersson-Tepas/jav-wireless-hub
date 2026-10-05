@@ -3,6 +3,7 @@ import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { PasswordField } from "@/components/password-field";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -227,18 +228,14 @@ function AuthPage() {
           </label>
 
           {/* Password */}
-          <label className="grid gap-1.5 text-sm font-semibold">
-            Password
-
-            <input
-              required
-              type="password"
-              minLength={8}
-              className="field"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
+          <PasswordField
+            id="auth-password"
+            label="Password"
+            autoComplete={mode === "in" ? "current-password" : "new-password"}
+            minLength={8}
+            value={password}
+            onChange={setPassword}
+          />
 
           {/* Messages */}
           {msg && (
