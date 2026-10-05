@@ -107,11 +107,9 @@ function AuthPage() {
     setMsg("");
     setBusy(true);
 
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth`,
-      },
+    const { lovable } = await import("@/integrations/lovable");
+    const { error } = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/auth`,
     });
 
     if (error) {
