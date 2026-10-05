@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { User as SbUser } from "@supabase/supabase-js";
-import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,7 +59,6 @@ export function AccountMenu() {
   const qc = useQueryClient();
 
   const [user, setUser] = useState<SbUser | null>(null);
-  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -78,26 +76,6 @@ export function AccountMenu() {
     };
   }, []);
 
-  async function signIn() {
-    setBusy(true);
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-
-      options: {
-        redirectTo: `${window.location.origin}/auth`,
-      },
-    });
-
-    if (error) {
-      console.error("Google sign-in error:", error);
-
-      toast.error("Could not sign in with Google.");
-
-      setBusy(false);
-    }
-  }
-
   async function signOut() {
     await qc.cancelQueries();
 
@@ -113,10 +91,8 @@ export function AccountMenu() {
 
   if (!user) {
     return (
-      <button
-        type="button"
-        onClick={signIn}
-        disabled={busy}
+      <Link
+        to="/auth"
         className="
           inline-flex
           h-10
@@ -136,18 +112,18 @@ export function AccountMenu() {
           hover:text-primary
           disabled:opacity-60
         "
-        aria-label="Sign in with Google"
+        aria-label="Sign in"
       >
         <GoogleIcon />
 
         <span className="hidden whitespace-nowrap 2xl:inline">
-          {busy ? "Signing in..." : "Sign in with Google"}
+          Sign in
         </span>
 
         <span className="hidden whitespace-nowrap md:inline 2xl:hidden">
-          {busy ? "Signing in..." : "Sign in"}
+          Sign in
         </span>
-      </button>
+      </Link>
     );
   }
 
