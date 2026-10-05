@@ -16,3 +16,8 @@ export const createServiceRequest = createServerFn({ method: "POST" })
 export const lookupServiceRequest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => serviceLookupSchema.parse(d))
   .handler(async ({ data }) => (await import("./commerce.server")).lookupServiceRequestCore(data.reference, data.contact));
+
+export const getBestSellerProductId = createServerFn({ method: "GET" })
+  .handler(async () =>
+    (await import("./commerce.server")).getBestSellerProductIdCore()
+  );

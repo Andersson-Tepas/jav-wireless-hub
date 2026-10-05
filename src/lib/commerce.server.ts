@@ -140,3 +140,67 @@ export async function lookupServiceRequestCore(reference: string, contact: strin
   if (!r || !matchesContact(r.email, r.phone, contact)) return { found: false as const };
   return { found: true as const, request: { reference: r.reference, customer_name: r.customer_name, service_name: r.service_name, status: r.status, created_at: r.created_at, updated_at: r.updated_at, amount: r.amount === null ? null : Number(r.amount), payment_method: r.payment_method } };
 }
+
+export async function getBestSellerProductIdCore() {
+  try {
+    const { data: orders, error: ordersError } = await supabaseAdmin
+      .from("orders")
+      .select("id")
+      .eq("payment_status", "confirmed")
+      .neq("status", "cancelled");
+
+    if (ordersError || !orders?.length) {
+      return {
+        product_id: null,
+        quantity: 0,
+      };
+    }
+
+    const orderIds = orders.map((order) => order.id);
+
+    const { data: items, error: itemsError } = await supabaseAdmin
+      .from("order_items")
+      .select("product_id,quantity")
+      .in("order_id", orderIds);
+
+    if (itemsError || !items?.length) {
+      return {
+        product_id: null,
+        quantity: 0,
+      };
+    }
+
+    const totals = new Map<string, number>();
+
+    for (const item of items) {
+      if (!item.product_id) continue;
+
+      totals.set(
+        item.product_id,
+        (totals.get(item.product_id) ?? 0) + Number(item.quantity ?? 0),
+      );
+    }
+
+    let product_id: string | null = null;
+    let quantity = 0;
+
+    for (const [id, sold] of totals.entries()) {
+      if (sold > quantity) {
+        product_id = id;
+        quantity = sold;
+      }
+    }
+
+    return {
+      product_id,
+      quantity,
+    };
+  } catch (error) {
+    console.error("Could not calculate best seller", error);
+
+    return {
+      product_id: null,
+      quantity: 0,
+    };
+  }
+}
