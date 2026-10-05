@@ -114,18 +114,18 @@ export function AccountMenu() {
           hover:text-primary
           disabled:opacity-60
         "
-        aria-label="Sign in with Google"
+        aria-label="Sign in"
       >
         <GoogleIcon />
 
         <span className="hidden whitespace-nowrap 2xl:inline">
-          {busy ? "Signing in..." : "Sign in with Google"}
+          Sign in
         </span>
 
         <span className="hidden whitespace-nowrap md:inline 2xl:hidden">
-          {busy ? "Signing in..." : "Sign in"}
+          Sign in
         </span>
-      </button>
+      </Link>
     );
   }
 
