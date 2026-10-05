@@ -108,3 +108,164 @@
 @utility field { @apply h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15; }
 @utility card-soft { @apply rounded-xl border border-border bg-card shadow-soft; }
 @utility chip { @apply inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-semibold text-muted-foreground transition hover:border-primary hover:text-primary; &[data-active="true"] { @apply border-primary bg-primary text-primary-foreground; } }
+
+.jav-topbar {
+  width: 100%;
+  overflow: hidden;
+}
+
+.jav-carousel-window {
+  position: relative;
+  width: 100%;
+  height: 1.9rem;
+  overflow: hidden;
+}
+
+.jav-carousel-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.2rem 0.9rem;
+
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.07);
+
+  color: inherit;
+  white-space: nowrap;
+
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+
+  opacity: 0;
+
+  /*
+    Cada mensaje:
+    derecha → centro → izquierda
+  */
+  animation: jav-carousel-slide 32s linear infinite;
+}
+
+/* Un mensaje nuevo cada 4 segundos */
+
+.jav-carousel-item-1 {
+  animation-delay: 0s;
+}
+
+.jav-carousel-item-2 {
+  animation-delay: 4s;
+}
+
+.jav-carousel-item-3 {
+  animation-delay: 8s;
+}
+
+.jav-carousel-item-4 {
+  animation-delay: 12s;
+}
+
+.jav-carousel-item-5 {
+  animation-delay: 16s;
+}
+
+.jav-carousel-item-6 {
+  animation-delay: 20s;
+}
+
+.jav-carousel-item-7 {
+  animation-delay: 24s;
+}
+
+.jav-carousel-item-8 {
+  animation-delay: 28s;
+}
+
+@keyframes jav-carousel-slide {
+
+  /* Aparece desde la derecha */
+  0% {
+    opacity: 0;
+    transform: translate(180px, -50%);
+  }
+
+  /* Entra al centro */
+  2% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Se queda quieto en el centro */
+  9.5% {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Sale hacia la izquierda */
+  12.5% {
+    opacity: 0;
+    transform: translate(calc(-50% - 180px), -50%);
+  }
+
+  /* Permanece oculto hasta su siguiente turno */
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% - 180px), -50%);
+  }
+}
+
+/* Pausa al poner el mouse */
+.jav-carousel-window:hover .jav-carousel-item {
+  animation-play-state: paused;
+}
+
+@media (max-width: 640px) {
+  .jav-carousel-item {
+    padding: 0.18rem 0.7rem;
+    font-size: 0.68rem;
+  }
+
+  @keyframes jav-carousel-slide {
+    0% {
+      opacity: 0;
+      transform: translate(120px, -50%);
+    }
+
+    2% {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+
+    9.5% {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+
+    12.5% {
+      opacity: 0;
+      transform: translate(calc(-50% - 120px), -50%);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translate(calc(-50% - 120px), -50%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jav-carousel-item {
+    animation: none;
+    opacity: 0;
+  }
+
+  .jav-carousel-item:first-child {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}

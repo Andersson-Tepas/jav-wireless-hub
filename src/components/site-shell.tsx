@@ -35,23 +35,100 @@ function CartLink({ onClick }: { onClick?: () => void }) {
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-      <div className="bg-primary text-primary-foreground"><p className="container-page py-1.5 text-center text-xs font-medium">Trackable shipping · In-store pickup · Financing available</p></div>
+
+      {/* Carrusel superior */}
+      <div className="jav-topbar bg-primary text-primary-foreground">
+        <div className="jav-carousel-window">
+
+          <span className="jav-carousel-item jav-carousel-item-1">
+            Trackable shipping
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-2">
+            In-store pickup
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-3">
+            Easy financing
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-4">
+            Secure payments
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-5">
+            Money transfers
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-6">
+            Bill payments
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-7">
+            Phone repairs
+          </span>
+
+          <span className="jav-carousel-item jav-carousel-item-8">
+            Mobile top-ups
+          </span>
+
+        </div>
+      </div>
+
+      {/* Header principal */}
       <div className="container-page flex h-16 items-center gap-3">
         <Brand />
-        <nav className="ml-auto hidden items-center xl:flex" aria-label="Main navigation">
-          {navItems.map((item) => <Link key={item.to} to={item.to} activeOptions={{ exact: item.to === "/" }} className="nav-link">{item.label}</Link>)}
+
+        <nav
+          className="ml-auto hidden items-center xl:flex"
+          aria-label="Main navigation"
+        >
+          {navItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              activeOptions={{ exact: item.to === "/" }}
+              className="nav-link"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
+
         <div className="ml-auto flex items-center gap-2 xl:ml-2">
           <CartLink />
           <AccountMenu />
-          <button type="button" className="grid size-10 place-items-center rounded-md hover:bg-muted xl:hidden" onClick={() => setOpen((v) => !v)} aria-label={open ? "Close menu" : "Open menu"}>{open ? <X /> : <Menu />}</button>
+
+          <button
+            type="button"
+            className="grid size-10 place-items-center rounded-md hover:bg-muted xl:hidden"
+            onClick={() => setOpen((v) => !v)}
+            aria-label={open ? "Close menu" : "Open menu"}
+          >
+            {open ? <X /> : <Menu />}
+          </button>
         </div>
       </div>
+
+      {/* Menú móvil */}
       {open && (
-        <nav className="grid gap-1 border-t border-border bg-background p-4 xl:hidden" aria-label="Mobile navigation">
-          {navItems.map((item) => <Link key={item.to} to={item.to} onClick={() => setOpen(false)} className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted">{item.label}</Link>)}
+        <nav
+          className="grid gap-1 border-t border-border bg-background p-4 xl:hidden"
+          aria-label="Mobile navigation"
+        >
+          {navItems.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setOpen(false)}
+              className="rounded-md px-3 py-2.5 font-semibold hover:bg-muted"
+            >
+              {item.label}
+            </Link>
+          ))}
         </nav>
       )}
     </header>
