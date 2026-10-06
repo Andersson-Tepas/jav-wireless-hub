@@ -18,9 +18,9 @@ function transferFields(d: Record<string, string>): FormField[] {
     f("first_time", "Is this your first time sending money with us?", { options: ["Yes", "No"] }),
     f("platform", "Platform", { options: ["Barri", "Western Union / Vigo"] }),
   ];
-  const wu = d.platform === "Western Union / Vigo";
-  if (!d.first_time || !d.platform) return list;
-  if (d.first_time === "No") list.push(f("sender_phone", "Registered Phone Number", { type: "tel" }), f("sender_name", "Sender Name"));
+  const wu = d["platform"] === "Western Union / Vigo";
+  if (!d["first_time"] || !d["platform"]) return list;
+  if (d["first_time"] === "No") list.push(f("sender_phone", "Registered Phone Number", { type: "tel" }), f("sender_name", "Sender Name"));
   else if (wu) list.push(f("sender_phone", "Phone Number", { type: "tel" }), f("sender_full_name", "Full Name"), f("sender_dob", "Date of Birth", { type: "date" }), f("sender_country", "Country of Residence"), f("sender_street", "Street and Number"), f("sender_zip", "ZIP Code"), f("sender_state", "State"), f("sender_city", "City"));
   else list.push(f("sender_phone", "Phone Number", { type: "tel" }), f("sender_first_name", "First Name"), f("sender_last_name", "Last Name"), f("sender_city", "City"), f("sender_zip", "ZIP Code"), f("sender_address", "Valid Address (street number + street name)"));
   if (wu) list.push(f("destination_country", "Destination Country"), f("destination_city", "Destination State / City"), f("recipient_first_name", "Recipient First Name"), f("recipient_second_name", "Recipient Second Name (optional)"), f("recipient_paternal_last_name", "Paternal Last Name"), f("recipient_maternal_last_name", "Maternal Last Name"), f("recipient_phone_code", "Recipient Phone Country Code"), f("recipient_phone", "Recipient Phone Number", { type: "tel" }), f("delivery_type", "Delivery / Service Type (optional, when applicable)"));
@@ -60,8 +60,8 @@ function ServiceDetail() {
   const isTransfer = service.slug === "envios-de-dinero";
   const isBill = service.slug === "pago-de-bills";
   const fields: FormField[] = isTransfer ? transferFields(details) : isBill ? billFields : service.fields;
-  const fee = isBill ? billCarrierFees[details.carrier ?? ""] ?? 0 : service.fee ?? 0;
-  const amountLabel = isBill ? "Bill Amount" : isTransfer && details.platform === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
+  const fee = isBill ? billCarrierFees[details["carrier"] ?? ""] ?? 0 : service.fee ?? 0;
+  const amountLabel = isBill ? "Bill Amount" : isTransfer && details["platform"] === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
   const amountNum = amount ? Number(amount) : 0;
   const total = service.amountField || service.fee ? amountNum + fee : null;
   const sentDetails = Object.fromEntries(fields.map((x) => [x.name, details[x.name] ?? ""]));

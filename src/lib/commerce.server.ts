@@ -96,7 +96,7 @@ export async function createServiceRequestCore(data: ServiceInput) {
   // Server-side total: DB fee plus the customer-entered amount only when the service allows one.
   let fee = Number(svc.fee ?? 0);
   if (svc.slug === "pago-de-bills") {
-    const carrierFee = billCarrierFees[data.details?.carrier ?? ""];
+    const carrierFee = billCarrierFees[data.details?["carrier"] ?? ""];
     if (carrierFee === undefined) throw new Error("Select a valid company");
     fee = carrierFee;
   }
