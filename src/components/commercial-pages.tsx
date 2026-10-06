@@ -314,11 +314,13 @@ function HomeRow({ eyebrow, title, items }: { eyebrow: string; title: string; it
 
 export function ServicesPage() {
   const { data: services = [] } = useServicesQuery(servicesQuery);
+  const publicServiceSlugs = new Set(["envios-de-dinero", "pago-de-bills", "pago-de-utilidades", "recargas", "tickets-de-transito", "financiamiento", "reparaciones", "vuelos"]);
+  const visibleServices = services.filter((s) => publicServiceSlugs.has(s.slug));
   return (
     <>
       <PageIntro eyebrow="Services" title="JAV Wireless Services" description="Choose a service, complete the form, select a payment method, and receive your reference number." />
       <section className="section-pad"><div className="container-page grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {services.map((s) => (
+        {visibleServices.map((s) => (
           <Link key={s.slug} to="/servicios/$slug" params={{ slug: s.slug }} className="card-soft group flex flex-col p-6 transition hover:border-primary hover:shadow-lift">
             {s.slug === "envios-de-dinero" && <span className="mb-3 w-fit rounded bg-accent/10 px-2 py-1 text-xs font-bold text-accent">Money transfer</span>}
             <h2 className="text-xl font-bold text-primary">{s.name}</h2>
