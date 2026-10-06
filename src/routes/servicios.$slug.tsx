@@ -27,6 +27,12 @@ function transferFields(d: Record<string, string>): FormField[] {
   else list.push(f("recipient_first_name", "Recipient First Name"), f("recipient_last_name", "Last Name"), f("recipient_second_last_name", "Second Last Name"), f("recipient_country", "Country"), f("recipient_state", "State"), f("recipient_phone", "Recipient Phone Number", { type: "tel" }), f("destination_country", "Destination Country"), f("delivery_method", "Delivery Method"), f("payer", "Payer"), f("currency", "Currency"));
   return list;
 }
+function repairFields(d: Record<string, string>): FormField[] {
+  const list: FormField[] = [f("device_type", "Device Type", { options: ["Cell Phone", "Television", "Laptop", "Tablet", "Other"] })];
+  if (d["device_type"] === "Other") list.push(f("specify_device", "Specify Device"));
+  list.push(f("brand", "Brand"), f("model", "Model"), f("issue", "Problem / Issue Description", { type: "textarea" }));
+  return list;
+}
 function topUpFields(d: Record<string, string>): FormField[] {
   const list: FormField[] = [f("topup_kind", "Top-Up", { options: ["International Top-Up", "U.S. Local Top-Up"] })];
   if (d["topup_kind"] === "International Top-Up") list.push(f("country", "Country"), f("number", "Phone Number", { type: "tel" }), f("carrier", "Carrier", { options: ["Tigo", "Claro", "Movistar", "Digicel"] }), f("topup_type", "Top-Up Type", { options: ["Regular Top-Up", "Super Package"] }));
