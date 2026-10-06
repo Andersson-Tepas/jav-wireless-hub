@@ -100,6 +100,7 @@ export async function createServiceRequestCore(data: ServiceInput) {
     if (carrierFee === undefined) throw new Error("Select a valid company");
     fee = carrierFee;
   }
+  if (svc.slug === "pago-de-utilidades") fee = 2.5;
   const customerAmount = svc.amount_field ? Math.max(0, Number(data.amount ?? 0) - fee) : 0;
   const total = Math.round((fee + customerAmount) * 100) / 100;
   const isPaypal = data.payment_method === "paypal";
