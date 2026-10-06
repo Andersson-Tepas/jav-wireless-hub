@@ -115,7 +115,7 @@ function ServiceDetail() {
     } catch (e) { console.error(e); setFileError("We couldn’t upload the images. Try again."); }
     finally { setUploading(false); }
   }
-  const fields: FormField[] = isTrafficTicket ? [{ name: "ticket_images", label: "Upload Ticket Images", type: "file" }] : isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
+    const fields: FormField[] = isTrafficTicket ? [{ name: "ticket_images", label: "Upload Ticket Images", type: "file" }] : isRepair ? repairFields(details) : isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
   const fee = isBill ? billCarrierFees[details["carrier"] ?? ""] ?? 0 : isUtility ? 2.5 : service.fee ?? 0;
   const amountLabel = isBill || isUtility ? "Bill Amount" : isTopUp ? "Amount" : isTransfer && details["platform"] === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
   const amountNum = amount ? Number(amount) : 0;
