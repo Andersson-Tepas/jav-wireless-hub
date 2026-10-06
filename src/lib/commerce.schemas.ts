@@ -34,3 +34,9 @@ export const serviceLookupSchema = z.object({ reference: z.string().trim().min(3
 
 export type OrderInput = z.infer<typeof orderSchema>;
 export type ServiceInput = z.infer<typeof serviceSchema>;
+
+// Bill Payments: company fee is fixed per carrier and always computed (never entered by the customer).
+export const billCarrierFees: Record<string, number> = {
+  "T-Mobile": 3, "Ultra Mobile": 3, "Lycamobile": 3, "GenMobile": 3, "AT&T Prepaid": 3, "Verizon Prepaid": 3,
+  "Page Plus": 3, "Simple Mobile": 3, "Net-10": 3, "H2O": 3, "Boost Mobile": 4, "Cricket": 5, "Metro PCS": 5,
+};

@@ -5,7 +5,7 @@ async function notifyStaff(formName: string, reference: string, fields: { label:
     await sendTemplateEmail("form-submission", "javwireless5@gmail.com", { templateData: { formName, reference, fields }, idempotencyKey: `form-${reference}` });
   } catch (e) { console.error("Form notification email failed", e); }
 }
-import type { OrderInput, ServiceInput } from "./commerce.schemas";
+import { billCarrierFees, type OrderInput, type ServiceInput } from "./commerce.schemas";
 
 const digits = (s: string) => s.replace(/\D/g, "");
 const matchesContact = (email: string, phone: string, contact: string) => {
@@ -94,7 +94,12 @@ export async function createServiceRequestCore(data: ServiceInput) {
   if (!svc || !svc.active) throw new Error("This service is not available");
   const isCard = data.payment_method === "card";
   // Server-side total: DB fee plus the customer-entered amount only when the service allows one.
-  const fee = Number(svc.fee ?? 0);
+  let fee = Number(svc.fee ?? 0);
+  if (svc.slug === "pago-de-bills") {
+    const carrierFee = billCarrierFees[data.details?.["carrier"] ?? ""];
+    if (carrierFee === undefined) throw new Error("Select a valid company");
+    fee = carrierFee;
+  }
   const customerAmount = svc.amount_field ? Math.max(0, Number(data.amount ?? 0) - fee) : 0;
   const total = Math.round((fee + customerAmount) * 100) / 100;
   const isPaypal = data.payment_method === "paypal";
