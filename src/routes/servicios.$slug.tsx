@@ -85,7 +85,27 @@ function ServiceDetail() {
     } catch (e) { console.error(e); setFileError("We couldn’t upload the image. Try again."); }
     finally { setUploading(false); }
   }
-  const fields: FormField[] = isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
+    async function pickTrafficTickets(files: FileList | null) {
+    setFileError("");
+    if (!files?.length) return;
+    const selected = Array.from(files);
+    if (selected.some((file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type))) { setFileError("Use JPG, PNG or WebP images."); return; }
+    if (selected.some((file) => file.size > 5 * 1024 * 1024)) { setFileError("Each image must be 5 MB or smaller."); return; }
+    setUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of selected) {
+        const buf = new Uint8Array(await file.arrayBuffer()); let bin = "";
+        for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+        const r = await uploadTicket({ data: { contentType: file.type as "image/png", base64: btoa(bin) } });
+        urls.push(r.url);
+      }
+      setDetails((d) => ({ ...d, ticket_images: JSON.stringify(urls) }));
+      setTicketImageNames(selected.map((file) => file.name));
+    } catch (e) { console.error(e); setFileError("We couldn’t upload the images. Try again."); }
+    finally { setUploading(false); }
+  }
+  const fields: FormField[] = isTrafficTicket ? [{ name: "ticket_images", label: "Upload Ticket Images", type: "file" }] : isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
   const fee = isBill ? billCarrierFees[details["carrier"] ?? ""] ?? 0 : isUtility ? 2.5 : service.fee ?? 0;
   const amountLabel = isBill || isUtility ? "Bill Amount" : isTopUp ? "Amount" : isTransfer && details["platform"] === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
   const amountNum = amount ? Number(amount) : 0;
