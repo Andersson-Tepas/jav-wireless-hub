@@ -67,8 +67,11 @@ function ServiceDetail() {
   const isTransfer = service.slug === "envios-de-dinero";
   const isBill = service.slug === "pago-de-bills";
   const isTopUp = service.slug === "recargas";
-  const isUtility = service.slug === "pago-de-utilidades";
+    const isUtility = service.slug === "pago-de-utilidades";
+  const isTrafficTicket = service.slug === "tickets-de-transito";
   const upload = useServerFn(uploadBillImage);
+  const uploadTicket = useServerFn(uploadTrafficTicketImage);
+  const [ticketImageNames, setTicketImageNames] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState("");
   async function pickBill(file?: File) {
