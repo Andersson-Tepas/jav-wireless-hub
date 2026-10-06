@@ -74,7 +74,8 @@ function ServiceDetail() {
   const isBill = service.slug === "pago-de-bills";
   const isTopUp = service.slug === "recargas";
     const isUtility = service.slug === "pago-de-utilidades";
-  const isTrafficTicket = service.slug === "tickets-de-transito";
+    const isTrafficTicket = service.slug === "tickets-de-transito";
+  const isRepair = service.slug === "reparaciones";
   const upload = useServerFn(uploadBillImage);
   const uploadTicket = useServerFn(uploadTrafficTicketImage);
   const [ticketImageNames, setTicketImageNames] = useState<string[]>([]);
