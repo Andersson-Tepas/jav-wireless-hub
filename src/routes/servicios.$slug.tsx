@@ -4,7 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PaymentPicker } from "@/components/payment-picker";
-import { createServiceRequest } from "@/lib/commerce.functions";
+import { createServiceRequest, uploadBillImage } from "@/lib/commerce.functions";
 import { money } from "@/lib/cart";
 import { paymentLabels } from "@/lib/site-data";
 import { servicesQuery } from "@/lib/catalog";
@@ -27,6 +27,13 @@ function transferFields(d: Record<string, string>): FormField[] {
   else list.push(f("recipient_first_name", "Recipient First Name"), f("recipient_last_name", "Last Name"), f("recipient_second_last_name", "Second Last Name"), f("recipient_country", "Country"), f("recipient_state", "State"), f("recipient_phone", "Recipient Phone Number", { type: "tel" }), f("destination_country", "Destination Country"), f("delivery_method", "Delivery Method"), f("payer", "Payer"), f("currency", "Currency"));
   return list;
 }
+function topUpFields(d: Record<string, string>): FormField[] {
+  const list: FormField[] = [f("topup_kind", "Top-Up", { options: ["International Top-Up", "U.S. Local Top-Up"] })];
+  if (d["topup_kind"] === "International Top-Up") list.push(f("country", "Country"), f("number", "Phone Number", { type: "tel" }), f("carrier", "Carrier", { options: ["Tigo", "Claro", "Movistar", "Digicel"] }), f("topup_type", "Top-Up Type", { options: ["Regular Top-Up", "Super Package"] }));
+  else if (d["topup_kind"] === "U.S. Local Top-Up") list.push(f("number", "Phone Number", { type: "tel" }));
+  return list;
+}
+const utilityFields: FormField[] = [f("bill_image", "Upload Bill Image", { type: "file" }), f("po_box", "Company P.O. Box"), f("account", "Customer Account Number")];
 const billFields: FormField[] = [f("carrier", "Company / Carrier", { options: Object.keys(billCarrierFees) })];
 
 export const Route = createFileRoute("/servicios/$slug")({
@@ -59,9 +66,28 @@ function ServiceDetail() {
 
   const isTransfer = service.slug === "envios-de-dinero";
   const isBill = service.slug === "pago-de-bills";
-  const fields: FormField[] = isTransfer ? transferFields(details) : isBill ? billFields : service.fields;
-  const fee = isBill ? billCarrierFees[details["carrier"] ?? ""] ?? 0 : service.fee ?? 0;
-  const amountLabel = isBill ? "Bill Amount" : isTransfer && details["platform"] === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
+  const isTopUp = service.slug === "recargas";
+  const isUtility = service.slug === "pago-de-utilidades";
+  const upload = useServerFn(uploadBillImage);
+  const [uploading, setUploading] = useState(false);
+  const [fileError, setFileError] = useState("");
+  async function pickBill(file?: File) {
+    setFileError("");
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setFileError("Use a JPG, PNG or WebP image."); return; }
+    if (file.size > 5 * 1024 * 1024) { setFileError("The image must be 5 MB or smaller."); return; }
+    setUploading(true);
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer()); let bin = "";
+      for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+      const r = await upload({ data: { contentType: file.type as "image/png", base64: btoa(bin) } });
+      setDetails((d) => ({ ...d, bill_image: r.url, bill_image_name: file.name }));
+    } catch (e) { console.error(e); setFileError("We couldn’t upload the image. Try again."); }
+    finally { setUploading(false); }
+  }
+  const fields: FormField[] = isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
+  const fee = isBill ? billCarrierFees[details["carrier"] ?? ""] ?? 0 : isUtility ? 2.5 : service.fee ?? 0;
+  const amountLabel = isBill || isUtility ? "Bill Amount" : isTopUp ? "Amount" : isTransfer && details["platform"] === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
   const amountNum = amount ? Number(amount) : 0;
   const total = service.amountField || service.fee ? amountNum + fee : null;
   const sentDetails = Object.fromEntries(fields.map((x) => [x.name, details[x.name] ?? ""]));
@@ -105,13 +131,14 @@ function ServiceDetail() {
             <Field label="Email address"><input required type="email" maxLength={255} className="field" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} /></Field>
             {fields.map((f) => (
               <Field key={f.name} label={f.label}>
-                {f.options ? <select required className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })}><option value="" disabled>Select…</option>{f.options.map((o) => <option key={o} value={o}>{o}{isBill ? ` (+${money(billCarrierFees[o]!)} fee)` : ""}</option>)}</select>
+                {f.type === "file" ? <div><input type="file" accept="image/jpeg,image/png,image/webp" required={!details[f.name]} className="field py-2" onChange={(e) => void pickBill(e.target.files?.[0])} />{uploading && <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>}{details["bill_image_name"] && !uploading && <p className="mt-1 text-xs text-success">Uploaded: {details["bill_image_name"]}</p>}{fileError && <p className="mt-1 text-xs text-destructive">{fileError}</p>}</div>
+                  : f.options ? <select required className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })}><option value="" disabled>Select…</option>{f.options.map((o) => <option key={o} value={o}>{o}{isBill ? ` (+${money(billCarrierFees[o]!)} fee)` : ""}</option>)}</select>
                   : f.type === "textarea" ? <textarea required maxLength={1000} className="field h-28 py-2" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />
                   : <input required={!/(optional|opcional)/i.test(f.label)} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
               </Field>
             ))}
             {service.amountField && <Field label={amountLabel}><input required type="number" min={1} max={100000} step="0.01" className="field" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>}
-            <Button type="submit" className="w-full">Continue to review</Button>
+            <Button type="submit" className="w-full" disabled={uploading}>Continue to review</Button>
           </form>
         )}
 
@@ -120,7 +147,7 @@ function ServiceDetail() {
             <h2 className="font-display text-2xl font-bold text-primary">Review your information</h2>
             <dl className="mt-4 divide-y divide-border text-sm">
               <Row k="Name" v={contact.customer_name} /><Row k="Phone" v={contact.phone} /><Row k="Email" v={contact.email} />
-              {fields.map((f) => <Row key={f.name} k={f.label} v={details[f.name] || "—"} />)}
+              {fields.map((f) => <Row key={f.name} k={f.label} v={f.type === "file" ? details["bill_image_name"] || "—" : details[f.name] || "—"} />)}
               {service.amountField && <Row k={amountLabel} v={money(amountNum)} />}
               {fee ? <Row k={isBill ? "Company fee" : "Service fee"} v={money(fee)} /> : null}
               {total !== null && <Row k="Total" v={money(total)} strong />}
