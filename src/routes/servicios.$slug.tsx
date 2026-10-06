@@ -4,7 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PaymentPicker } from "@/components/payment-picker";
-import { createServiceRequest, uploadBillImage } from "@/lib/commerce.functions";
+import { createServiceRequest, uploadBillImage, uploadTrafficTicketImage } from "@/lib/commerce.functions";
 import { money } from "@/lib/cart";
 import { paymentLabels } from "@/lib/site-data";
 import { servicesQuery } from "@/lib/catalog";
