@@ -35,10 +35,11 @@ function repairFields(d: Record<string, string>): FormField[] {
 }
 function topUpFields(d: Record<string, string>): FormField[] {
   const list: FormField[] = [f("topup_kind", "Top-Up", { options: ["International Top-Up", "U.S. Local Top-Up"] })];
-  if (d["topup_kind"] === "International Top-Up") list.push(f("country", "Country"), f("number", "Phone Number", { type: "tel" }), f("carrier", "Carrier", { options: ["Tigo", "Claro", "Movistar", "Digicel", "Other"] }));
+  if (d["topup_kind"] === "International Top-Up") {
+    list.push(f("country", "Country"), f("number", "Phone Number", { type: "tel" }), f("carrier", "Carrier", { options: ["Tigo", "Claro", "Movistar", "Digicel", "Other"] }));
     if (d["carrier"] === "Other") list.push(f("specify_carrier", "Specify Carrier"));
     list.push(f("topup_type", "Top-Up Type", { options: ["Regular Top-Up", "Super Package"] }));
-  else if (d["topup_kind"] === "U.S. Local Top-Up") list.push(f("number", "Phone Number", { type: "tel" }));
+  } else if (d["topup_kind"] === "U.S. Local Top-Up") list.push(f("number", "Phone Number", { type: "tel" }));
   return list;
 }
 const utilityFields: FormField[] = [f("bill_front", "Front of Bill", { type: "file" }), f("bill_back", "Back of Bill", { type: "file" })];
