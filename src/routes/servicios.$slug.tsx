@@ -35,11 +35,14 @@ function repairFields(d: Record<string, string>): FormField[] {
 }
 function topUpFields(d: Record<string, string>): FormField[] {
   const list: FormField[] = [f("topup_kind", "Top-Up", { options: ["International Top-Up", "U.S. Local Top-Up"] })];
-  if (d["topup_kind"] === "International Top-Up") list.push(f("country", "Country"), f("number", "Phone Number", { type: "tel" }), f("carrier", "Carrier", { options: ["Tigo", "Claro", "Movistar", "Digicel"] }), f("topup_type", "Top-Up Type", { options: ["Regular Top-Up", "Super Package"] }));
-  else if (d["topup_kind"] === "U.S. Local Top-Up") list.push(f("number", "Phone Number", { type: "tel" }));
+  if (d["topup_kind"] === "International Top-Up") {
+    list.push(f("country", "Country"), f("number", "Phone Number", { type: "tel" }), f("carrier", "Carrier", { options: ["Tigo", "Claro", "Movistar", "Digicel", "Other"] }));
+    if (d["carrier"] === "Other") list.push(f("specify_carrier", "Specify Carrier"));
+    list.push(f("topup_type", "Top-Up Type", { options: ["Regular Top-Up", "Super Package"] }));
+  } else if (d["topup_kind"] === "U.S. Local Top-Up") list.push(f("number", "Phone Number", { type: "tel" }));
   return list;
 }
-const utilityFields: FormField[] = [f("bill_image", "Upload Bill Image", { type: "file" }), f("po_box", "Company P.O. Box"), f("account", "Customer Account Number")];
+const utilityFields: FormField[] = [f("bill_front", "Front of Bill", { type: "file" }), f("bill_back", "Back of Bill", { type: "file" })];
 const billFields: FormField[] = [f("carrier", "Company / Carrier", { options: Object.keys(billCarrierFees) })];
 
 export const Route = createFileRoute("/servicios/$slug")({
@@ -81,7 +84,7 @@ function ServiceDetail() {
   const [ticketImageNames, setTicketImageNames] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState("");
-  async function pickBill(file?: File) {
+  async function pickBill(name: string, file?: File) {
     setFileError("");
     if (!file) return;
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setFileError("Use a JPG, PNG or WebP image."); return; }
@@ -91,7 +94,7 @@ function ServiceDetail() {
       const buf = new Uint8Array(await file.arrayBuffer()); let bin = "";
       for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
       const r = await upload({ data: { contentType: file.type as "image/png", base64: btoa(bin) } });
-      setDetails((d) => ({ ...d, bill_image: r.url, bill_image_name: file.name }));
+      setDetails((d) => ({ ...d, [name]: r.url, [`${name}_name`]: file.name }));
     } catch (e) { console.error(e); setFileError("We couldn’t upload the image. Try again."); }
     finally { setUploading(false); }
   }
@@ -115,7 +118,7 @@ function ServiceDetail() {
     } catch (e) { console.error(e); setFileError("We couldn’t upload the images. Try again."); }
     finally { setUploading(false); }
   }
-    const fields: FormField[] = isTrafficTicket ? [{ name: "ticket_images", label: "Upload Ticket Images", type: "file" }] : isRepair ? repairFields(details) : isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
+    const fields: FormField[] = isTrafficTicket ? [{ name: "ticket_images", label: "Upload Ticket Images", type: "file" }, { name: "fine_amount", label: "Fine Amount", type: "number" }] : isRepair ? repairFields(details) : isTransfer ? transferFields(details) : isBill ? billFields : isTopUp ? topUpFields(details) : isUtility ? utilityFields : service.fields;
   const fee = isBill ? billCarrierFees[details["carrier"] ?? ""] ?? 0 : isUtility ? 2.5 : service.fee ?? 0;
   const amountLabel = isBill || isUtility ? "Bill Amount" : isTopUp ? "Amount" : isTransfer && details["platform"] === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
   const amountNum = amount ? Number(amount) : 0;
@@ -161,7 +164,7 @@ function ServiceDetail() {
             <Field label="Email address"><input required type="email" maxLength={255} className="field" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} /></Field>
             {fields.map((f) => (
               <Field key={f.name} label={f.label}>
-                {f.type === "file" ? <div><input type="file" accept="image/jpeg,image/png,image/webp" multiple={isTrafficTicket} required={!details[f.name]} className="field py-2" onChange={(e) => isTrafficTicket ? void pickTrafficTickets(e.target.files) : void pickBill(e.target.files?.[0])} />{uploading && <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>}{isTrafficTicket ? ticketImageNames.length > 0 && !uploading && <p className="mt-1 text-xs text-success">Uploaded: {ticketImageNames.join(", ")}</p> : details["bill_image_name"] && !uploading && <p className="mt-1 text-xs text-success">Uploaded: {details["bill_image_name"]}</p>}{fileError && <p className="mt-1 text-xs text-destructive">{fileError}</p>}</div>
+                {f.type === "file" ? <div><input type="file" accept="image/jpeg,image/png,image/webp" multiple={isTrafficTicket} required={!details[f.name]} className="field py-2" onChange={(e) => isTrafficTicket ? void pickTrafficTickets(e.target.files) : void pickBill(f.name, e.target.files?.[0])} />{uploading && <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>}{isTrafficTicket ? ticketImageNames.length > 0 && !uploading && <p className="mt-1 text-xs text-success">Uploaded: {ticketImageNames.join(", ")}</p> : details[`${f.name}_name`] && !uploading && <p className="mt-1 text-xs text-success">Uploaded: {details[`${f.name}_name`]}</p>}{fileError && <p className="mt-1 text-xs text-destructive">{fileError}</p>}</div>
                   : f.options ? <select required className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })}><option value="" disabled>Select…</option>{f.options.map((o) => <option key={o} value={o}>{o}{isBill ? ` (+${money(billCarrierFees[o]!)} fee)` : ""}</option>)}</select>
                   : f.type === "textarea" ? <textarea required maxLength={1000} className="field h-28 py-2" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />
                   : <input required={!/(optional|opcional)/i.test(f.label)} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
@@ -177,7 +180,7 @@ function ServiceDetail() {
             <h2 className="font-display text-2xl font-bold text-primary">Review your information</h2>
             <dl className="mt-4 divide-y divide-border text-sm">
               <Row k="Name" v={contact.customer_name} /><Row k="Phone" v={contact.phone} /><Row k="Email" v={contact.email} />
-              {fields.map((f) => <Row key={f.name} k={f.label} v={isTrafficTicket && f.name === "ticket_images" ? ticketImageNames.join(", ") || "—" : f.type === "file" ? details["bill_image_name"] || "—" : details[f.name] || "—"} />)}
+              {fields.map((f) => <Row key={f.name} k={f.label} v={isTrafficTicket && f.name === "ticket_images" ? ticketImageNames.join(", ") || "—" : f.type === "file" ? details[`${f.name}_name`] || "—" : details[f.name] || "—"} />)}
               {service.amountField && <Row k={amountLabel} v={money(amountNum)} />}
               {fee ? <Row k={isBill ? "Company fee" : "Service fee"} v={money(fee)} /> : null}
               {total !== null && <Row k="Total" v={money(total)} strong />}

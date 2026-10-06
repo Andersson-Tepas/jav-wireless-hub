@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { money } from "@/lib/cart";
+import { isServiceEdited } from "@/lib/catalog";
 import { paymentLabels, serviceCopy, serviceStatusLabels } from "@/lib/site-data";
 import { Field, fmt, paymentStatusLabels, slugify, useAdminCategories, useAdminProducts, useAdminRequests, useInvalidate } from "./shared";
 
@@ -50,7 +51,7 @@ export function Categories() {
 
 // ---------------- Services ----------------
 type ServiceRow = Tables<"services">;
-type Fld = { name: string; label: string; type?: "text" | "number" | "textarea" | "date" };
+type Fld = { name: string; label: string; type?: "text" | "number" | "textarea" | "date" | "file" };
 
 export function ServicesAdmin() {
   const invalidate = useInvalidate();
@@ -64,7 +65,7 @@ export function ServicesAdmin() {
     <div className="space-y-3">
       <Button onClick={() => setEditing("new")}><Plus /> New service</Button>
       <div className="grid gap-3 md:grid-cols-2">{data.map((s) => {
-        const copy = serviceCopy[s.slug];
+        const copy = isServiceEdited(s) ? undefined : serviceCopy[s.slug];
         return (
         <div key={s.slug} className={`card-soft flex items-start justify-between gap-3 p-4 ${s.active ? "" : "opacity-60"}`}>
           <div><p className="font-bold text-primary">{copy?.name ?? s.name}</p><p className="text-sm text-muted-foreground">{copy?.cost ?? s.cost}</p><p className="mt-1 text-xs text-muted-foreground">{(s.fields as unknown as Fld[]).length} fields · {s.requirements.length} requirements</p></div>
@@ -76,26 +77,25 @@ export function ServicesAdmin() {
 }
 
 function ServiceEditor({ s, nextSort, onClose, onSaved }: { s?: ServiceRow | undefined; nextSort: number; onClose: () => void; onSaved: () => void }) {
-  const copy = s ? serviceCopy[s.slug] : undefined;
+  const copy = s && !isServiceEdited(s) ? serviceCopy[s.slug] : undefined;
   const [d, setD] = useState({ name: copy?.name ?? s?.name ?? "", short: copy?.short ?? s?.short ?? "", description: copy?.description ?? s?.description ?? "", requirements: copy?.requirements.join("\n") ?? s?.requirements.join("\n") ?? "", cost: copy?.cost ?? s?.cost ?? "", fee: s?.fee != null ? String(s.fee) : "", amount_field: s?.amount_field ?? false, active: s?.active ?? true });
   const [fields, setFields] = useState<Fld[]>(copy?.fields ?? (s ? (s.fields as unknown as Fld[]) : []));
   const [busy, setBusy] = useState(false);
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
-    const localizedInitial = copy ? { name: copy.name, short: copy.short, description: copy.description, requirements: copy.requirements.join("\n"), cost: copy.cost, fields: copy.fields } : undefined;
     const body = {
-      name: s && localizedInitial && d.name === localizedInitial.name ? s.name : d.name.trim(),
-      short: s && localizedInitial && d.short === localizedInitial.short ? s.short : d.short.trim(),
-      description: s && localizedInitial && d.description === localizedInitial.description ? s.description : d.description.trim(),
-      requirements: s && localizedInitial && d.requirements === localizedInitial.requirements ? s.requirements : d.requirements.split("\n").map((x) => x.trim()).filter(Boolean),
-      cost: s && localizedInitial && d.cost === localizedInitial.cost ? s.cost : d.cost.trim(),
+      name: d.name.trim(),
+      short: d.short.trim(),
+      description: d.description.trim(),
+      requirements: d.requirements.split("\n").map((x) => x.trim()).filter(Boolean),
+      cost: d.cost.trim(),
       fee: d.fee ? Number(d.fee) : null,
       amount_field: d.amount_field,
       active: d.active,
-      fields: s && localizedInitial && JSON.stringify(fields) === JSON.stringify(localizedInitial.fields) ? s.fields : fields.filter((f) => f.label.trim()).map((f) => ({ ...f, name: f.name || slugify(f.label).replace(/-/g, "_") })),
+      fields: fields.filter((f) => f.label.trim()).map((f) => ({ ...f, name: f.name || slugify(f.label).replace(/-/g, "_") })),
       updated_at: new Date().toISOString(),
     };
-    const { error } = s ? await supabase.from("services").update(body).eq("slug", s.slug) : await supabase.from("services").insert({ ...body, slug: slugify(d.name), sort: nextSort });
+    const { error } = s ? await supabase.from("services").update(body).eq("slug", s.slug).select("slug").single() : await supabase.from("services").insert({ ...body, slug: slugify(d.name), sort: nextSort });
     setBusy(false);
     if (error) { toast.error("Could not save the service"); return; }
     toast.success("Service saved"); onSaved();

@@ -41,7 +41,12 @@ export const categoriesQuery = queryOptions({
   },
 });
 
-export const toService = (r: ServiceRow): Service => serviceCopy[r.slug] ?? ({
+// Rows saved from the admin editor after the seed use their DB values; untouched seed rows use the English display copy.
+export const isServiceEdited = (r: { updated_at: string }) => new Date(r.updated_at).getTime() > Date.parse("2026-10-06T17:00:00Z");
+export const toService = (r: ServiceRow): Service => (isServiceEdited(r) && serviceCopy[r.slug] ? {
+  ...serviceCopy[r.slug]!, name: r.name, short: r.short, description: r.description, requirements: r.requirements, cost: r.cost,
+  ...(r.fee !== null ? { fee: Number(r.fee) } : {}), amountField: r.amount_field,
+} : serviceCopy[r.slug]) ?? ({
   slug: r.slug, name: r.name, short: r.short, description: r.description, requirements: r.requirements, cost: r.cost,
   ...(r.fee !== null ? { fee: Number(r.fee) } : {}), amountField: r.amount_field,
   fields: Array.isArray(r.fields) ? (r.fields as unknown as ServiceField[]) : [],

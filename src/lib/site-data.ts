@@ -95,7 +95,7 @@ export const allStatusesFor = (delivery: string) => ["received", "payment_pendin
 
 export const serviceStatusLabels: Record<string, string> = { received: "Request received", in_review: "Under review", processing: "In progress", completed: "Completed", cancelled: "Cancelled" };
 
-export type ServiceField = { name: string; label: string; type?: "text" | "number" | "textarea" | "date"; placeholder?: string };
+export type ServiceField = { name: string; label: string; type?: "text" | "number" | "textarea" | "date" | "file"; placeholder?: string };
 export type Service = { slug: string; name: string; short: string; description: string; requirements: string[]; cost: string; fee?: number; amountField?: boolean; fields: ServiceField[] };
 
 /** Seed reference only — live services are read from the database (servicesQuery). */
