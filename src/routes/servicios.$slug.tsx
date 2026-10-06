@@ -8,6 +8,26 @@ import { createServiceRequest } from "@/lib/commerce.functions";
 import { money } from "@/lib/cart";
 import { paymentLabels } from "@/lib/site-data";
 import { servicesQuery } from "@/lib/catalog";
+import { billCarrierFees } from "@/lib/commerce.schemas";
+
+type FormField = { name: string; label: string; type?: string; options?: string[] };
+const f = (name: string, label: string, extra: Partial<FormField> = {}): FormField => ({ name, label, ...extra });
+
+function transferFields(d: Record<string, string>): FormField[] {
+  const list: FormField[] = [
+    f("first_time", "Is this your first time sending money with us?", { options: ["Yes", "No"] }),
+    f("platform", "Platform", { options: ["Barri", "Western Union / Vigo"] }),
+  ];
+  const wu = d.platform === "Western Union / Vigo";
+  if (!d.first_time || !d.platform) return list;
+  if (d.first_time === "No") list.push(f("sender_phone", "Registered Phone Number", { type: "tel" }), f("sender_name", "Sender Name"));
+  else if (wu) list.push(f("sender_phone", "Phone Number", { type: "tel" }), f("sender_full_name", "Full Name"), f("sender_dob", "Date of Birth", { type: "date" }), f("sender_country", "Country of Residence"), f("sender_street", "Street and Number"), f("sender_zip", "ZIP Code"), f("sender_state", "State"), f("sender_city", "City"));
+  else list.push(f("sender_phone", "Phone Number", { type: "tel" }), f("sender_first_name", "First Name"), f("sender_last_name", "Last Name"), f("sender_city", "City"), f("sender_zip", "ZIP Code"), f("sender_address", "Valid Address (street number + street name)"));
+  if (wu) list.push(f("destination_country", "Destination Country"), f("destination_city", "Destination State / City"), f("recipient_first_name", "Recipient First Name"), f("recipient_second_name", "Recipient Second Name (optional)"), f("recipient_paternal_last_name", "Paternal Last Name"), f("recipient_maternal_last_name", "Maternal Last Name"), f("recipient_phone_code", "Recipient Phone Country Code"), f("recipient_phone", "Recipient Phone Number", { type: "tel" }), f("delivery_type", "Delivery / Service Type (optional, when applicable)"));
+  else list.push(f("recipient_first_name", "Recipient First Name"), f("recipient_last_name", "Last Name"), f("recipient_second_last_name", "Second Last Name"), f("recipient_country", "Country"), f("recipient_state", "State"), f("recipient_phone", "Recipient Phone Number", { type: "tel" }), f("destination_country", "Destination Country"), f("delivery_method", "Delivery Method"), f("payer", "Payer"), f("currency", "Currency"));
+  return list;
+}
+const billFields: FormField[] = [f("carrier", "Company / Carrier", { options: Object.keys(billCarrierFees) })];
 
 export const Route = createFileRoute("/servicios/$slug")({
   loader: async ({ params, context }) => {
@@ -37,15 +57,21 @@ function ServiceDetail() {
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
 
+  const isTransfer = service.slug === "envios-de-dinero";
+  const isBill = service.slug === "pago-de-bills";
+  const fields: FormField[] = isTransfer ? transferFields(details) : isBill ? billFields : service.fields;
+  const fee = isBill ? billCarrierFees[details.carrier ?? ""] ?? 0 : service.fee ?? 0;
+  const amountLabel = isBill ? "Bill Amount" : isTransfer && details.platform === "Western Union / Vigo" ? "Amount to Send" : "Amount (USD)";
   const amountNum = amount ? Number(amount) : 0;
-  const total = service.amountField || service.fee ? amountNum + (service.fee ?? 0) : null;
+  const total = service.amountField || service.fee ? amountNum + fee : null;
+  const sentDetails = Object.fromEntries(fields.map((x) => [x.name, details[x.name] ?? ""]));
 
   async function send() {
     setError("");
     if (payment === "zelle" && reference.trim().length < 3) { setError("Enter your Zelle confirmation number to continue."); return; }
     setSending(true);
     try {
-      const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details, amount: total, payment_method: payment as "card", payment_reference: payment === "zelle" ? reference.trim() || undefined : undefined, return_origin: window.location.origin } });
+      const r = await submit({ data: { ...contact, service_slug: service.slug, service_name: service.name, details: sentDetails, amount: total, payment_method: payment as "card", payment_reference: payment === "zelle" ? reference.trim() || undefined : undefined, return_origin: window.location.origin } });
       if (r.checkout_url) { window.location.assign(r.checkout_url); return; }
       setResult(r.reference); setStep("done");
     } catch (e) { setError(payment === "card" || payment === "paypal" ? "Online payment isn’t available for this request. Choose Zelle or Pay in store." : "We couldn’t submit your request. Check your information and try again."); console.error(e); }
@@ -77,13 +103,14 @@ function ServiceDetail() {
               <Field label="Phone"><input required minLength={7} maxLength={30} type="tel" className="field" value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} /></Field>
             </div>
             <Field label="Email address"><input required type="email" maxLength={255} className="field" value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} /></Field>
-            {service.fields.map((f) => (
+            {fields.map((f) => (
               <Field key={f.name} label={f.label}>
-                {f.type === "textarea" ? <textarea required maxLength={1000} className="field h-28 py-2" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />
+                {f.options ? <select required className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })}><option value="" disabled>Select…</option>{f.options.map((o) => <option key={o} value={o}>{o}{isBill ? ` (+${money(billCarrierFees[o]!)} fee)` : ""}</option>)}</select>
+                  : f.type === "textarea" ? <textarea required maxLength={1000} className="field h-28 py-2" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />
                   : <input required={!/(optional|opcional)/i.test(f.label)} type={f.type ?? "text"} maxLength={200} className="field" value={details[f.name] ?? ""} onChange={(e) => setDetails({ ...details, [f.name]: e.target.value })} />}
               </Field>
             ))}
-            {service.amountField && <Field label="Amount (USD)"><input required type="number" min={1} max={100000} step="0.01" className="field" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>}
+            {service.amountField && <Field label={amountLabel}><input required type="number" min={1} max={100000} step="0.01" className="field" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>}
             <Button type="submit" className="w-full">Continue to review</Button>
           </form>
         )}
@@ -93,9 +120,9 @@ function ServiceDetail() {
             <h2 className="font-display text-2xl font-bold text-primary">Review your information</h2>
             <dl className="mt-4 divide-y divide-border text-sm">
               <Row k="Name" v={contact.customer_name} /><Row k="Phone" v={contact.phone} /><Row k="Email" v={contact.email} />
-              {service.fields.map((f) => <Row key={f.name} k={f.label} v={details[f.name] || "—"} />)}
-              {service.amountField && <Row k="Amount" v={money(amountNum)} />}
-              {service.fee ? <Row k="Service fee" v={money(service.fee)} /> : null}
+              {fields.map((f) => <Row key={f.name} k={f.label} v={details[f.name] || "—"} />)}
+              {service.amountField && <Row k={amountLabel} v={money(amountNum)} />}
+              {fee ? <Row k={isBill ? "Company fee" : "Service fee"} v={money(fee)} /> : null}
               {total !== null && <Row k="Total" v={money(total)} strong />}
             </dl>
             <div className="mt-6 flex gap-2"><Button variant="outline" onClick={() => setStep("form")}>Edit</Button><Button className="flex-1" onClick={() => setStep("payment")}>Continue to payment</Button></div>
