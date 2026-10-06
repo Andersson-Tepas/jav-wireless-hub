@@ -51,7 +51,7 @@ export function Categories() {
 
 // ---------------- Services ----------------
 type ServiceRow = Tables<"services">;
-type Fld = { name: string; label: string; type?: "text" | "number" | "textarea" | "date" };
+type Fld = { name: string; label: string; type?: "text" | "number" | "textarea" | "date" | "file" };
 
 export function ServicesAdmin() {
   const invalidate = useInvalidate();
