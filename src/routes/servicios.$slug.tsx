@@ -170,7 +170,7 @@ function ServiceDetail() {
             <h2 className="font-display text-2xl font-bold text-primary">Review your information</h2>
             <dl className="mt-4 divide-y divide-border text-sm">
               <Row k="Name" v={contact.customer_name} /><Row k="Phone" v={contact.phone} /><Row k="Email" v={contact.email} />
-              {fields.map((f) => <Row key={f.name} k={f.label} v={f.type === "file" ? details["bill_image_name"] || "—" : details[f.name] || "—"} />)}
+              {fields.map((f) => <Row key={f.name} k={f.label} v={isTrafficTicket && f.name === "ticket_images" ? ticketImageNames.join(", ") || "—" : f.type === "file" ? details["bill_image_name"] || "—" : details[f.name] || "—"} />)}
               {service.amountField && <Row k={amountLabel} v={money(amountNum)} />}
               {fee ? <Row k={isBill ? "Company fee" : "Service fee"} v={money(fee)} /> : null}
               {total !== null && <Row k="Total" v={money(total)} strong />}
