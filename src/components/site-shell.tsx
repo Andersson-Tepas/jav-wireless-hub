@@ -38,7 +38,7 @@ function Brand({ light }: { light?: boolean }) {
       aria-label="JAV Wireless, home"
     >
       <img
-        src="/jav-logo.png"
+        src={light ? "/jav-logo-footer.png" : "/jav-logo.png"}
         alt="JAV Wireless"
         className="h-14 w-14 shrink-0 object-contain"
       />
@@ -80,7 +80,6 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
-      {/* Carrusel superior */}
       <div className="jav-topbar bg-primary text-primary-foreground">
         <div className="jav-carousel-window">
           <span className="jav-carousel-item jav-carousel-item-1">
@@ -117,7 +116,6 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Header principal */}
       <div className="container-page flex h-16 items-center gap-3">
         <Brand />
 
@@ -153,7 +151,6 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Menú móvil */}
       {open && (
         <nav
           className="grid gap-1 border-t border-border bg-background p-4 xl:hidden"
