@@ -3,7 +3,7 @@ let cached: { base: string; token: string; exp: number } | null = null;
 
 async function auth() {
   if (cached && cached.exp > Date.now()) return cached;
-  const id = process.env["PAYPAL_CLIENT_ID"], secret = process.env["PAYPAL_CLIENT_SECRET"];
+  const id = process.env["AQXgFUXlFiIjO0u_3m3xwYS7LSNg8u7QGGQ5vqjgyWMeHNhHDOfErLqiTA9IEQxXJ2vjfqZmEH2DgSMW"], secret = process.env["EH6eOftDH5qljfdmyOo7O0vXXLZzG1FkPLVzKfUH5ivqc1n9ieqyKrDV5fl0aiFJC8RI2q1jndt41R87"];
   if (!id || !secret) throw new Error("PayPal payments are not configured yet");
   const basic = btoa(`${id}:${secret}`);
   for (const base of ["https://api-m.paypal.com", "https://api-m.sandbox.paypal.com"]) {
