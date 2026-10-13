@@ -49,3 +49,36 @@ export const uploadTrafficTicketImage = createServerFn({ method: "POST" })
     if (signed.error || !signed.data) throw new Error("Could not generate the link");
     return { url: signed.data.signedUrl };
   });
+
+  export const uploadZelleReceipt = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z.object({
+      contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+      base64: z.string().min(10).max(7_000_000),
+    }).parse(d)
+  )
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const path = `zelle-receipts/${crypto.randomUUID()}.${data.contentType.split("/")[1]}`;
+
+    const bytes = Uint8Array.from(
+      atob(data.base64),
+      (c) => c.charCodeAt(0)
+    );
+
+    const up = await supabaseAdmin.storage
+      .from("bill-images")
+      .upload(path, bytes, { contentType: data.contentType });
+
+    if (up.error) throw new Error("Could not upload the Zelle receipt");
+
+    const signed = await supabaseAdmin.storage
+      .from("bill-images")
+      .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+
+    if (signed.error || !signed.data)
+      throw new Error("Could not generate the receipt link");
+
+    return { url: signed.data.signedUrl };
+  });
