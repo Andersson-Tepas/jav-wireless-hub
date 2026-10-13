@@ -105,7 +105,7 @@ export function HomePage() {
                 alt={heroProduct.name}
                 width={1024}
                 height={1024}
-                className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                className="aspect-[4/3] w-full object-contain p-6 sm:p-8 transition duration-500 group-hover:scale-[1.03]"
               />
               {/* Degradado para lectura */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
@@ -113,41 +113,14 @@ export function HomePage() {
               <span className="absolute left-4 top-4 rounded-full bg-accent px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-foreground shadow-soft">
                 {heroBadge}
               </span>
-              {/* Product information */}
+             {/* Product information */}
               <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 sm:p-6">
                 <div className="min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-white/70">
-                    {heroProduct.brand}
-                  </p>
-                  <h2 className="mt-1 truncate font-display text-2xl font-bold text-white sm:text-3xl">
+                  <h2 className="truncate font-display text-2xl font-bold text-white sm:text-3xl">
                     {heroProduct.name}
                   </h2>
-                  <div className="mt-2 flex flex-wrap items-baseline gap-2">
-                    <span className="text-2xl font-extrabold text-white">
-                      {money(Number(heroProduct.price))}
-                    </span>
-                    {heroProduct.old_price && (
-                      <span className="text-sm text-white/60 line-through">
-                        {money(Number(heroProduct.old_price))}
-                      </span>
-                    )}
-                  </div>
-                  <p
-                    className={`mt-2 text-xs font-semibold ${
-                      heroProduct.stock > 5
-                        ? "text-green-300"
-                        : heroProduct.stock > 0
-                          ? "text-yellow-300"
-                          : "text-red-300"
-                    }`}
-                  >
-                    {heroProduct.stock > 5
-                      ? "In stock"
-                      : heroProduct.stock > 0
-                        ? `Only ${heroProduct.stock} left`
-                        : "Out of stock"}
-                  </p>
                 </div>
+
                 <span className="inline-flex shrink-0 items-center gap-2 rounded-md bg-white px-4 py-2.5 text-sm font-bold text-primary transition group-hover:bg-accent group-hover:text-accent-foreground">
                   Shop
                   <ArrowRight className="size-4" />
@@ -278,22 +251,61 @@ function HomeRow({ eyebrow, title, items }: { eyebrow: string; title: string; it
 }
 export function ServicesPage() {
   const { data: services = [] } = useServicesQuery(servicesQuery);
-  const publicServiceSlugs = new Set(["envios-de-dinero", "pago-de-bills", "pago-de-utilidades", "recargas", "tickets-de-transito", "financiamiento", "reparaciones", "vuelos"]);
-  const visibleServices = services.filter((s) => publicServiceSlugs.has(s.slug));
+
+  const publicServiceSlugs = new Set([
+    "envios-de-dinero",
+    "pago-de-bills",
+    "pago-de-utilidades",
+    "recargas",
+    "tickets-de-transito",
+    "financiamiento",
+    "reparaciones",
+    "vuelos",
+  ]);
+
+  const visibleServices = services.filter((service) =>
+    publicServiceSlugs.has(service.slug),
+  );
+
   return (
     <>
-      <PageIntro eyebrow="Services" title="JAV Wireless Services" description="Choose a service, complete the form, select a payment method, and receive your reference number." />
-      <section className="section-pad"><div className="container-page grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {visibleServices.map((s) => (
-          <Link key={s.slug} to="/servicios/$slug" params={{ slug: s.slug }} className="card-soft group flex flex-col p-6 transition hover:border-primary hover:shadow-lift">
-            {s.slug === "envios-de-dinero" && <span className="mb-3 w-fit rounded bg-accent/10 px-2 py-1 text-xs font-bold text-accent">Money transfer</span>}
-            <h2 className="text-xl font-bold text-primary">{s.name}</h2>
-            <p className="mt-2 flex-1 text-sm text-muted-foreground">{s.short}</p>
-            <p className="mt-4 text-sm font-semibold text-foreground">{s.cost}</p>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:text-accent">Request service <ArrowRight className="size-4" /></span>
-          </Link>
-        ))}
-      </div></section>
+      <PageIntro
+        eyebrow="Services"
+        title="JAV Wireless Services"
+        description="Choose a service, complete the form, select a payment method, and receive your reference number."
+      />
+
+      <section className="section-pad">
+        <div className="container-page grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {visibleServices.map((service) => (
+            <Link
+              key={service.slug}
+              to="/servicios/$slug"
+              params={{ slug: service.slug }}
+              className="card-soft group flex flex-col p-6 transition hover:border-primary hover:shadow-lift"
+            >
+              {service.slug === "envios-de-dinero" && (
+                <span className="mb-3 w-fit rounded bg-accent/10 px-2 py-1 text-xs font-bold text-accent">
+                  Money transfer
+                </span>
+              )}
+
+              <h2 className="text-xl font-bold text-primary">
+                {service.name}
+              </h2>
+
+              <p className="mt-2 flex-1 text-sm text-muted-foreground">
+                {service.short}
+              </p>
+
+              <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary group-hover:text-accent">
+                Request service
+                <ArrowRight className="size-4" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </>
   );
 }
