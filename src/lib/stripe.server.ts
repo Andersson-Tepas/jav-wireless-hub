@@ -17,13 +17,20 @@ export async function createCheckoutSession(opts: {
 }) {
   const key = process.env["STRIPE_SECRET_KEY"]?.trim();
 
+  // Make configuration errors explicit without exposing the actual key.
   if (!key) {
-    const stripeVars = Object.keys(process.env)
-      .filter((name) => name.startsWith("STRIPE_"))
-      .join(", ");
+    throw new Error("STRIPE_SECRET_KEY is missing");
+  }
 
+  if (key.startsWith("pk_")) {
     throw new Error(
-      `Stripe secret unavailable. Detected Stripe vars: ${stripeVars || "none"}`
+      "Wrong Stripe key: STRIPE_SECRET_KEY currently contains a pk_ publishable key",
+    );
+  }
+
+  if (!key.startsWith("rk_") && !key.startsWith("sk_")) {
+    throw new Error(
+      "Wrong Stripe key: STRIPE_SECRET_KEY must contain an rk_ or sk_ secret key",
     );
   }
 
@@ -45,16 +52,25 @@ export async function createCheckoutSession(opts: {
     p.set(`payment_intent_data[metadata][${k}]`, v);
   }
 
-  opts.lines.forEach((l, i) => {
-    p.set(`line_items[${i}][quantity]`, String(l.quantity));
-    p.set(`line_items[${i}][price_data][currency]`, "usd");
+  opts.lines.forEach((line, index) => {
     p.set(
-      `line_items[${i}][price_data][unit_amount]`,
-      String(Math.round(l.amount * 100)),
+      `line_items[${index}][quantity]`,
+      String(line.quantity),
     );
+
     p.set(
-      `line_items[${i}][price_data][product_data][name]`,
-      l.name.slice(0, 250),
+      `line_items[${index}][price_data][currency]`,
+      "usd",
+    );
+
+    p.set(
+      `line_items[${index}][price_data][unit_amount]`,
+      String(Math.round(line.amount * 100)),
+    );
+
+    p.set(
+      `line_items[${index}][price_data][product_data][name]`,
+      line.name.slice(0, 250),
     );
   });
 
@@ -71,11 +87,13 @@ export async function createCheckoutSession(opts: {
     },
   );
 
-  const json = (await res.json()) as {
+  const json = (await res.json().catch(() => ({}))) as {
     id?: string;
     url?: string;
     error?: {
       message?: string;
+      type?: string;
+      code?: string;
     };
   };
 
@@ -104,19 +122,25 @@ export function verifyStripeSignature(
 
   const parts = header
     .split(",")
-    .map((s) => s.split("="));
+    .map((part) => part.split("="));
 
-  const t = parts.find(([k]) => k === "t")?.[1];
+  const timestampValue = parts.find(
+    ([key]) => key === "t",
+  )?.[1];
 
-  const sigs = parts
-    .filter(([k]) => k === "v1")
-    .map(([, v]) => v ?? "");
+  const signatures = parts
+    .filter(([key]) => key === "v1")
+    .map(([, value]) => value ?? "");
 
-  if (!t || !sigs.length) return false;
+  if (!timestampValue || !signatures.length) {
+    return false;
+  }
 
-  const timestamp = Number(t);
+  const timestamp = Number(timestampValue);
 
-  if (!Number.isFinite(timestamp)) return false;
+  if (!Number.isFinite(timestamp)) {
+    return false;
+  }
 
   if (
     Math.abs(Date.now() / 1000 - timestamp) >
@@ -125,31 +149,36 @@ export function verifyStripeSignature(
     return false;
   }
 
-  const expected = Buffer.from(
+  const expectedSignature = Buffer.from(
     createHmac("sha256", secret)
-      .update(`${t}.${body}`)
+      .update(`${timestampValue}.${body}`)
       .digest("hex"),
   );
 
-  return sigs.some((s) => {
-    const b = Buffer.from(s);
+  return signatures.some((signature) => {
+    const receivedSignature = Buffer.from(signature);
 
     return (
-      b.length === expected.length &&
-      timingSafeEqual(b, expected)
+      receivedSignature.length === expectedSignature.length &&
+      timingSafeEqual(
+        receivedSignature,
+        expectedSignature,
+      )
     );
   });
 }
 
 export function safeOrigin(origin: string) {
-  const u = new URL(origin);
+  const url = new URL(origin);
 
-  if (
-    u.protocol !== "https:" &&
-    u.hostname !== "localhost"
-  ) {
+  const isHttps = url.protocol === "https:";
+  const isLocalhost =
+    url.hostname === "localhost" ||
+    url.hostname === "127.0.0.1";
+
+  if (!isHttps && !isLocalhost) {
     throw new Error("Invalid origin");
   }
 
-  return u.origin;
+  return url.origin;
 }
