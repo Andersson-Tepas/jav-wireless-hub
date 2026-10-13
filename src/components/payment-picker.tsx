@@ -20,8 +20,8 @@ type PaymentPickerProps = {
   onChange: (v: string) => void;
   reference: string;
   onReference: (v: string) => void;
-  allowStore?: boolean;
-  amount?: string;
+  allowStore?: boolean | undefined;
+  amount?: string | undefined;
 };
 
 export function PaymentPicker({

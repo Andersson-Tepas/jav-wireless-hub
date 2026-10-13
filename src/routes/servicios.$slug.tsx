@@ -2,7 +2,6 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
-
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PaymentPicker } from "@/components/payment-picker";
 import {
@@ -14,20 +13,17 @@ import { money } from "@/lib/cart";
 import { paymentLabels } from "@/lib/site-data";
 import { servicesQuery } from "@/lib/catalog";
 import { billCarrierFees } from "@/lib/commerce.schemas";
-
 type FormField = {
   name: string;
   label: string;
   type?: string;
   options?: string[];
 };
-
 const f = (
   name: string,
   label: string,
   extra: Partial<FormField> = {},
 ): FormField => ({ name, label, ...extra });
-
 function transferFields(d: Record<string, string>): FormField[] {
   const list: FormField[] = [
     f("first_time", "Is this your first time sending money with us?", {
@@ -37,11 +33,8 @@ function transferFields(d: Record<string, string>): FormField[] {
       options: ["Barri", "Western Union / Vigo"],
     }),
   ];
-
   const wu = d["platform"] === "Western Union / Vigo";
-
   if (!d["first_time"] || !d["platform"]) return list;
-
   if (d["first_time"] === "No") {
     list.push(
       f("sender_phone", "Registered Phone Number", { type: "tel" }),
@@ -68,7 +61,6 @@ function transferFields(d: Record<string, string>): FormField[] {
       f("sender_address", "Valid Address (street number + street name)"),
     );
   }
-
   if (wu) {
     list.push(
       f("destination_country", "Destination Country"),
@@ -95,10 +87,8 @@ function transferFields(d: Record<string, string>): FormField[] {
       f("currency", "Currency"),
     );
   }
-
   return list;
 }
-
 function repairFields(d: Record<string, string>): FormField[] {
   const list: FormField[] = [
     f("device_type", "Device Type", {
@@ -111,20 +101,16 @@ function repairFields(d: Record<string, string>): FormField[] {
       ],
     }),
   ];
-
   if (d["device_type"] === "Other") {
     list.push(f("specify_device", "Specify Device"));
   }
-
   list.push(
     f("brand", "Brand"),
     f("model", "Model"),
     f("issue", "Problem / Issue Description", { type: "textarea" }),
   );
-
   return list;
 }
-
 function repairDiagnosticFee(deviceType: string): number | null {
   if (deviceType === "Television") return 30;
   if (deviceType === "Computer / Laptop") return 20;
@@ -132,7 +118,6 @@ function repairDiagnosticFee(deviceType: string): number | null {
   if (deviceType === "Tablet") return 0;
   return null;
 }
-
 function repairOptionLabel(deviceType: string) {
   if (deviceType === "Television") {
     return "Television (+$30.00 diagnostic fee)";
@@ -151,14 +136,12 @@ function repairOptionLabel(deviceType: string) {
   }
   return deviceType;
 }
-
 function topUpFields(d: Record<string, string>): FormField[] {
   const list: FormField[] = [
     f("topup_kind", "Top-Up", {
       options: ["International Top-Up", "U.S. Local Top-Up"],
     }),
   ];
-
   if (d["topup_kind"] === "International Top-Up") {
     list.push(
       f("country", "Country"),
@@ -167,11 +150,9 @@ function topUpFields(d: Record<string, string>): FormField[] {
         options: ["Tigo", "Claro", "Movistar", "Digicel", "Other"],
       }),
     );
-
     if (d["carrier"] === "Other") {
       list.push(f("specify_carrier", "Specify Carrier"));
     }
-
     list.push(
       f("topup_type", "Top-Up Type", {
         options: ["Regular Top-Up", "Super Package"],
@@ -180,21 +161,17 @@ function topUpFields(d: Record<string, string>): FormField[] {
   } else if (d["topup_kind"] === "U.S. Local Top-Up") {
     list.push(f("number", "Phone Number", { type: "tel" }));
   }
-
   return list;
 }
-
 const utilityFields: FormField[] = [
   f("bill_front", "Front of Bill", { type: "file" }),
   f("bill_back", "Back of Bill", { type: "file" }),
 ];
-
 const billFields: FormField[] = [
   f("carrier", "Company / Carrier", {
     options: Object.keys(billCarrierFees),
   }),
 ];
-
 export const Route = createFileRoute("/servicios/$slug")({
   loader: async ({ params, context }) => {
     const services = await context.queryClient.ensureQueryData(servicesQuery);
@@ -202,7 +179,6 @@ export const Route = createFileRoute("/servicios/$slug")({
     if (!service) throw notFound();
     return { service };
   },
-
   head: ({ loaderData }) =>
     loaderData
       ? {
@@ -221,7 +197,6 @@ export const Route = createFileRoute("/servicios/$slug")({
             { name: "robots", content: "noindex" },
           ],
         },
-
   errorComponent: () => (
     <div className="container-page py-20 text-center">
       <h1 className="font-display text-3xl font-bold text-primary">
@@ -232,7 +207,6 @@ export const Route = createFileRoute("/servicios/$slug")({
       </Link>
     </div>
   ),
-
   notFoundComponent: () => (
     <div className="container-page py-20 text-center">
       <h1 className="font-display text-3xl font-bold text-primary">
@@ -243,16 +217,12 @@ export const Route = createFileRoute("/servicios/$slug")({
       </Link>
     </div>
   ),
-
   component: ServiceDetail,
 });
-
 type Step = "form" | "review" | "payment" | "done";
-
 function ServiceDetail() {
   const { service } = Route.useLoaderData();
   const submit = useServerFn(createServiceRequest);
-
   const [step, setStep] = useState<Step>("form");
   const [contact, setContact] = useState({
     customer_name: "",
@@ -268,34 +238,28 @@ function ServiceDetail() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState("");
-
   const isTransfer = service.slug === "envios-de-dinero";
   const isBill = service.slug === "pago-de-bills";
   const isTopUp = service.slug === "recargas";
   const isUtility = service.slug === "pago-de-utilidades";
   const isTrafficTicket = service.slug === "tickets-de-transito";
   const isRepair = service.slug === "reparaciones";
-
   const upload = useServerFn(uploadBillImage);
   const uploadTicket = useServerFn(uploadTrafficTicketImage);
   const [ticketImageNames, setTicketImageNames] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState("");
-
   async function pickBill(name: string, file?: File) {
     setFileError("");
     if (!file) return;
-
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       setFileError("Use a JPG, PNG or WebP image.");
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
       setFileError("The image must be 5 MB or smaller.");
       return;
     }
-
     setUploading(true);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
@@ -321,13 +285,10 @@ function ServiceDetail() {
       setUploading(false);
     }
   }
-
   async function pickTrafficTickets(files: FileList | null) {
     setFileError("");
     if (!files?.length) return;
-
     const selected = Array.from(files);
-
     if (
       selected.some(
         (file) => !["image/jpeg", "image/png", "image/webp"].includes(file.type),
@@ -336,12 +297,10 @@ function ServiceDetail() {
       setFileError("Use JPG, PNG or WebP images.");
       return;
     }
-
     if (selected.some((file) => file.size > 5 * 1024 * 1024)) {
       setFileError("Each image must be 5 MB or smaller.");
       return;
     }
-
     setUploading(true);
     try {
       const urls: string[] = [];
@@ -359,7 +318,6 @@ function ServiceDetail() {
         });
         urls.push(r.url);
       }
-
       setDetails((d) => ({ ...d, ticket_images: JSON.stringify(urls) }));
       setTicketImageNames(selected.map((file) => file.name));
     } catch (e) {
@@ -369,7 +327,6 @@ function ServiceDetail() {
       setUploading(false);
     }
   }
-
   const fields: FormField[] = isTrafficTicket
     ? [
         { name: "ticket_images", label: "Upload Ticket Images", type: "file" },
@@ -386,11 +343,9 @@ function ServiceDetail() {
             : isUtility
               ? utilityFields
               : service.fields;
-
   const repairFee = isRepair
     ? repairDiagnosticFee(details["device_type"] ?? "")
     : null;
-
   const fee = isBill
     ? billCarrierFees[details["carrier"] ?? ""] ?? 0
     : isUtility
@@ -398,7 +353,6 @@ function ServiceDetail() {
       : isRepair
         ? repairFee ?? 0
         : service.fee ?? 0;
-
   const amountLabel =
     isBill || isUtility
       ? "Bill Amount"
@@ -407,9 +361,7 @@ function ServiceDetail() {
         : isTransfer && details["platform"] === "Western Union / Vigo"
           ? "Amount to Send"
           : "Amount (USD)";
-
   const amountNum = amount ? Number(amount) : 0;
-
   // Repairs never ask the customer to type the diagnostic price.
   // The total is calculated automatically from the selected device type.
   const total = isRepair
@@ -417,22 +369,17 @@ function ServiceDetail() {
     : service.amountField || service.fee
       ? amountNum + fee
       : null;
-
   const effectivePayment =
     isRepair && (repairFee === null || repairFee === 0) ? "store" : payment;
-
   const sentDetails = Object.fromEntries(
     fields.map((field) => [field.name, details[field.name] ?? ""]),
   );
-
   async function send() {
     setError("");
-
-    if (effectivePayment === "zelle" && reference.trim().length < 3) {
-      setError("Enter your Zelle confirmation number to continue.");
+    if (effectivePayment === "zelle" && reference.trim().length < 10) {
+      setError("Upload your Zelle payment receipt to continue.");
       return;
     }
-
     setSending(true);
     try {
       const r = await submit({
@@ -448,12 +395,10 @@ function ServiceDetail() {
           return_origin: window.location.origin,
         },
       });
-
       if (r.checkout_url) {
         window.location.assign(r.checkout_url);
         return;
       }
-
       setResult(r.reference);
       setStep("done");
     } catch (e) {
@@ -467,16 +412,13 @@ function ServiceDetail() {
       setSending(false);
     }
   }
-
   const steps: { id: Step; label: string }[] = [
     { id: "form", label: "Form" },
     { id: "review", label: "Review" },
     { id: "payment", label: "Payment" },
     { id: "done", label: "Confirmation" },
   ];
-
   const idx = steps.findIndex((s) => s.id === step);
-
   return (
     <section className="section-pad">
       <div className="container-page grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
@@ -487,18 +429,15 @@ function ServiceDetail() {
           >
             ← All services
           </Link>
-
           {service.slug === "envios-de-dinero" && (
             <p className="mt-4 w-fit rounded bg-accent/10 px-2 py-1 text-xs font-bold text-accent">
               Money transfer · not product shipping
             </p>
           )}
-
           <h1 className="mt-3 font-display text-4xl font-bold text-primary">
             {service.name}
           </h1>
           <p className="mt-4 text-muted-foreground">{service.description}</p>
-
           <h2 className="mt-8 font-bold text-primary">Requirements</h2>
           <ul className="mt-3 space-y-2">
             {service.requirements.map((r) => (
@@ -508,7 +447,6 @@ function ServiceDetail() {
               </li>
             ))}
           </ul>
-
           {!isUtility && !isRepair && (
             <div className="mt-8 rounded-lg border border-border bg-surface p-4">
               <p className="text-sm text-muted-foreground">Cost</p>
@@ -516,7 +454,6 @@ function ServiceDetail() {
             </div>
           )}
         </aside>
-
         <div className="card-soft p-6 sm:p-8">
           <ol className="mb-8 grid grid-cols-4 gap-2 text-xs font-semibold">
             {steps.map((s, i) => (
@@ -532,7 +469,6 @@ function ServiceDetail() {
               </li>
             ))}
           </ol>
-
           {step === "form" && (
             <form
               className="space-y-4"
@@ -554,7 +490,6 @@ function ServiceDetail() {
                     }
                   />
                 </Field>
-
                 <Field label="Phone">
                   <input
                     required
@@ -567,7 +502,6 @@ function ServiceDetail() {
                   />
                 </Field>
               </div>
-
               <Field label="Email address">
                 <input
                   required
@@ -578,7 +512,6 @@ function ServiceDetail() {
                   onChange={(e) => setContact({ ...contact, email: e.target.value })}
                 />
               </Field>
-
               {fields.map((field) => (
                 <Field key={field.name} label={field.label}>
                   {field.type === "file" ? (
@@ -595,11 +528,9 @@ function ServiceDetail() {
                             : void pickBill(field.name, e.target.files?.[0])
                         }
                       />
-
                       {uploading && (
                         <p className="mt-1 text-xs text-muted-foreground">Uploading…</p>
                       )}
-
                       {isTrafficTicket
                         ? ticketImageNames.length > 0 &&
                           !uploading && (
@@ -613,7 +544,6 @@ function ServiceDetail() {
                               Uploaded: {details[`${field.name}_name`]}
                             </p>
                           )}
-
                       {fileError && (
                         <p className="mt-1 text-xs text-destructive">{fileError}</p>
                       )}
@@ -630,7 +560,6 @@ function ServiceDetail() {
                       <option value="" disabled>
                         Select…
                       </option>
-
                       {field.options.map((option) => (
                         <option key={option} value={option}>
                           {isBill
@@ -665,7 +594,6 @@ function ServiceDetail() {
                   )}
                 </Field>
               ))}
-
               {service.amountField && !isRepair && (
                 <Field label={amountLabel}>
                   <input
@@ -680,7 +608,6 @@ function ServiceDetail() {
                   />
                 </Field>
               )}
-
               {isRepair && details["device_type"] && (
                 <div className="rounded-lg border border-border bg-surface p-4">
                   <div className="flex items-center justify-between gap-4">
@@ -696,24 +623,20 @@ function ServiceDetail() {
                   </p>
                 </div>
               )}
-
               <Button type="submit" className="w-full" disabled={uploading}>
                 Continue to review
               </Button>
             </form>
           )}
-
           {step === "review" && (
             <div>
               <h2 className="font-display text-2xl font-bold text-primary">
                 Review your information
               </h2>
-
               <dl className="mt-4 divide-y divide-border text-sm">
                 <Row k="Name" v={contact.customer_name} />
                 <Row k="Phone" v={contact.phone} />
                 <Row k="Email" v={contact.email} />
-
                 {fields.map((field) => (
                   <Row
                     key={field.name}
@@ -727,11 +650,9 @@ function ServiceDetail() {
                     }
                   />
                 ))}
-
                 {service.amountField && !isRepair && (
                   <Row k={amountLabel} v={money(amountNum)} />
                 )}
-
                 {isRepair ? (
                   <Row
                     k="Diagnostic fee"
@@ -740,10 +661,8 @@ function ServiceDetail() {
                 ) : fee ? (
                   <Row k={isBill ? "Company fee" : "Service fee"} v={money(fee)} />
                 ) : null}
-
                 {total !== null && <Row k="Total" v={money(total)} strong />}
               </dl>
-
               <div className="mt-6 flex gap-2">
                 <Button variant="outline" onClick={() => setStep("form")}>
                   Edit
@@ -754,7 +673,6 @@ function ServiceDetail() {
               </div>
             </div>
           )}
-
           {step === "payment" && (
             <form
               onSubmit={(e) => {
@@ -765,13 +683,11 @@ function ServiceDetail() {
               <h2 className="font-display text-2xl font-bold text-primary">
                 Payment method
               </h2>
-
               {total !== null && (
                 <p className="mt-1 text-muted-foreground">
                   Total due: <strong className="text-foreground">{money(total)}</strong>
                 </p>
               )}
-
               <div className="mt-4">
                 {isRepair && repairFee === null ? (
                   <div className="rounded-lg border border-border bg-surface p-4">
@@ -805,11 +721,9 @@ function ServiceDetail() {
                   />
                 )}
               </div>
-
               {error && (
                 <p className="mt-4 text-sm font-semibold text-destructive">{error}</p>
               )}
-
               <div className="mt-6 flex gap-2">
                 <Button type="button" variant="outline" onClick={() => setStep("review")}>
                   Back
@@ -825,7 +739,6 @@ function ServiceDetail() {
               </div>
             </form>
           )}
-
           {step === "done" && (
             <div className="text-center">
               <CheckCircle2 className="mx-auto size-14 text-success" />
@@ -849,7 +762,6 @@ function ServiceDetail() {
     </section>
   );
 }
-
 function Field({
   label,
   children,
@@ -864,7 +776,6 @@ function Field({
     </label>
   );
 }
-
 function Row({
   k,
   v,
