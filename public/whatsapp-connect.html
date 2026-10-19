@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>WhatsApp Coexistencia - JAV Wireless</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: 80px auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    #status {
+      margin-top: 25px;
+      white-space: pre-wrap;
+      text-align: left;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>JAV Wireless</h1>
+
+  <p>Prueba de conexión WhatsApp Business + Cloud API</p>
+
+  <button onclick="launchWhatsAppSignup()">
+    Conectar WhatsApp Business
+  </button>
+
+  <div id="status"></div>
+
+  <script>
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: '2594207364345567',
+        cookie: true,
+        xfbml: true,
+        version: 'v26.0'
+      });
+    };
+
+    (function (d, s, id) {
+      let js;
+      const fjs = d.getElementsByTagName(s)[0];
+
+      if (d.getElementById(id)) return;
+
+      js = d.createElement(s);
+      js.id = id;
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+
+      fjs.parentNode.insertBefore(js, fjs);
+    })(document, 'script', 'facebook-jssdk');
+
+
+    function launchWhatsAppSignup() {
+
+      document.getElementById('status').innerText =
+        'Abriendo Meta Embedded Signup...';
+
+      FB.login(
+        function (response) {
+
+          console.log('Login response:', response);
+
+          if (response.authResponse) {
+
+            document.getElementById('status').innerText =
+              'Autorización completada.\n\n' +
+              JSON.stringify(response, null, 2);
+
+          } else {
+
+            document.getElementById('status').innerText =
+              'El proceso fue cancelado o no se completó.';
+          }
+        },
+
+        {
+          config_id: '1391249322776830',
+
+          response_type: 'code',
+
+          override_default_response_type: true,
+
+          extras: {
+            setup: {},
+            featureType: 'whatsapp_business_app_onboarding',
+            sessionInfoVersion: 3
+          }
+        }
+      );
+    }
+
+
+    window.addEventListener('message', function (event) {
+
+      if (
+        event.origin !== 'https://www.facebook.com' &&
+        event.origin !== 'https://web.facebook.com'
+      ) {
+        return;
+      }
+
+      try {
+
+        const data =
+          typeof event.data === 'string'
+            ? JSON.parse(event.data)
+            : event.data;
+
+        console.log('Evento Meta:', data);
+
+        if (data.type === 'WA_EMBEDDED_SIGNUP') {
+
+          document.getElementById('status').innerText =
+            'Evento recibido de WhatsApp:\n\n' +
+            JSON.stringify(data, null, 2);
+        }
+
+      } catch (error) {
+
+        console.log('Evento no JSON:', event.data);
+      }
+    });
+
+  </script>
+
+</body>
+</html>
