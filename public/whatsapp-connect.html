@@ -1,142 +1,292 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
 
-  <title>WhatsApp Coexistencia - JAV Wireless</title>
+  <title>JAV Wireless | WhatsApp Coexistencia</title>
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 80px auto;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       padding: 20px;
+      background: #f1f5f9;
+      font-family: Arial, sans-serif;
+      color: #0f172a;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      padding: 35px;
+      border-radius: 18px;
+      background: white;
+      box-shadow: 0 8px 35px #00000012;
       text-align: center;
     }
 
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    h2 { font-size: 20px; }
+
+    .number {
+      background: #f1f5f9;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 22px 0;
+      font-weight: bold;
+    }
+
+    .notice {
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 13px;
+      text-align: left;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
+    .ack {
+      display: flex;
+      gap: 9px;
+      text-align: left;
+      font-size: 13px;
+      margin-bottom: 18px;
+      line-height: 1.5;
+    }
+
     button {
-      padding: 15px 25px;
-      font-size: 18px;
+      width: 100%;
+      border: none;
+      padding: 15px;
+      border-radius: 9px;
+      color: white;
+      background: #16a34a;
+      font-size: 16px;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    #status {
+    button:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    #estado {
+      margin-top: 20px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: #64748b;
       margin-top: 25px;
-      white-space: pre-wrap;
-      text-align: left;
     }
   </style>
 </head>
 
 <body>
+  <main class="card">
+    <div class="logo">JAV Wireless</div>
 
-  <h1>JAV Wireless</h1>
+    <h2>WhatsApp Coexistencia</h2>
+    <p>Integración oficial con Meta Business</p>
 
-  <p>Prueba de conexión WhatsApp Business + Cloud API</p>
+    <div class="number">
+      +1 631-278-6822
+    </div>
 
-  <button onclick="launchWhatsAppSignup()">
-    Conectar WhatsApp Business
-  </button>
+    <div class="notice">
+      <strong>Modo de preparación</strong>
+      <p>
+        Este número todavía funciona exclusivamente
+        en Cloud API. La conexión real requiere
+        verificar su elegibilidad en WhatsApp Business.
+      </p>
+      <p>
+        No completes ningún registro, migración
+        ni confirmación del número durante esta prueba.
+      </p>
+    </div>
 
-  <div id="status"></div>
+    <label class="ack">
+      <input type="checkbox" id="confirmacion">
+      <span>
+        Entiendo que esta prueba abre el registro
+        oficial de Meta y que no debo completar
+        la conexión todavía.
+      </span>
+    </label>
+
+    <button id="btnConnect" disabled>
+      Abrir Embedded Signup de Meta
+    </button>
+
+    <div id="estado" role="status">
+      Cargando SDK de Meta...
+    </div>
+
+    <div class="footer">
+      JAV Wireless n8n | Preparación de coexistencia
+    </div>
+  </main>
 
   <script>
-    window.fbAsyncInit = function () {
-      FB.init({
-        appId: '2594207364345567',
-        cookie: true,
-        xfbml: true,
-        version: 'v26.0'
-      });
-    };
+    const APP_ID = "2594207364345567";
+    const CONFIG_ID = "1391249322776830";
 
-    (function (d, s, id) {
-      let js;
-      const fjs = d.getElementsByTagName(s)[0];
+    let sdkReady = false;
 
-      if (d.getElementById(id)) return;
+    const boton = document.getElementById("btnConnect");
+    const estado = document.getElementById("estado");
+    const confirmacion =
+      document.getElementById("confirmacion");
 
-      js = d.createElement(s);
-      js.id = id;
-      js.src = 'https://connect.facebook.net/en_US/sdk.js';
-
-      fjs.parentNode.insertBefore(js, fjs);
-    })(document, 'script', 'facebook-jssdk');
-
-
-    function launchWhatsAppSignup() {
-
-      document.getElementById('status').innerText =
-        'Abriendo Meta Embedded Signup...';
-
-      FB.login(
-        function (response) {
-
-          console.log('Login response:', response);
-
-          if (response.authResponse) {
-
-            document.getElementById('status').innerText =
-              'Autorización completada.\n\n' +
-              JSON.stringify(response, null, 2);
-
-          } else {
-
-            document.getElementById('status').innerText =
-              'El proceso fue cancelado o no se completó.';
-          }
-        },
-
-        {
-          config_id: '1391249322776830',
-
-          response_type: 'code',
-
-          override_default_response_type: true,
-
-          extras: {
-            setup: {},
-            featureType: 'whatsapp_business_app_onboarding',
-            sessionInfoVersion: 3
-          }
-        }
-      );
+    function actualizarBoton() {
+      boton.disabled =
+        !sdkReady || !confirmacion.checked;
     }
 
+    confirmacion.addEventListener(
+      "change",
+      actualizarBoton
+    );
 
-    window.addEventListener('message', function (event) {
+    function mostrarEstado(mensaje) {
+      estado.textContent = mensaje;
+    }
+
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: APP_ID,
+        cookie: true,
+        xfbml: false,
+        version: "v26.0"
+      });
+
+      sdkReady = true;
+      actualizarBoton();
+
+      mostrarEstado(
+        "SDK de Meta cargado. " +
+        "Listo para abrir la prueba."
+      );
+    };
+
+    // Recibir eventos oficiales de Embedded Signup.
+    window.addEventListener("message", (event) => {
+      const origins = [
+        "https://www.facebook.com",
+        "https://web.facebook.com"
+      ];
+
+      if (!origins.includes(event.origin)) return;
+
+      let datos = event.data;
+
+      if (typeof datos === "string") {
+        try {
+          datos = JSON.parse(datos);
+        } catch {
+          return;
+        }
+      }
 
       if (
-        event.origin !== 'https://www.facebook.com' &&
-        event.origin !== 'https://web.facebook.com'
+        !datos ||
+        datos.type !== "WA_EMBEDDED_SIGNUP"
+      ) return;
+
+      if (
+        datos.event ===
+        "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING"
       ) {
+        mostrarEstado(
+          "Meta informó que terminó el registro. " +
+          "Falta validar y procesar el resultado " +
+          "en nuestro backend."
+        );
+      } else if (
+        datos.event === "CANCEL" ||
+        datos.event === "CANCELLED"
+      ) {
+        mostrarEstado("Proceso cancelado.");
+      } else {
+        mostrarEstado(
+          "Evento recibido de Meta: " +
+          String(datos.event || "Sin nombre")
+            .slice(0, 100)
+        );
+      }
+    });
+
+    boton.addEventListener("click", function () {
+      if (!sdkReady || !confirmacion.checked) {
         return;
       }
 
-      try {
+      const aceptado = window.confirm(
+        "Esta ventana abre el flujo real de Meta. " +
+        "Solo revisaremos las opciones. " +
+        "NO completes la conexión del 6822. " +
+        "¿Quieres continuar?"
+      );
 
-        const data =
-          typeof event.data === 'string'
-            ? JSON.parse(event.data)
-            : event.data;
+      if (!aceptado) return;
 
-        console.log('Evento Meta:', data);
+      mostrarEstado(
+        "Abriendo registro oficial de Meta..."
+      );
 
-        if (data.type === 'WA_EMBEDDED_SIGNUP') {
-
-          document.getElementById('status').innerText =
-            'Evento recibido de WhatsApp:\n\n' +
-            JSON.stringify(data, null, 2);
+      FB.login(function (respuesta) {
+        if (respuesta.authResponse?.code) {
+          // El código debe intercambiarse
+          // únicamente en un backend seguro.
+          // Esta prueba no lo guarda ni lo envía.
+          mostrarEstado(
+            "Meta devolvió una autorización. " +
+            "Esta página aún no dispone del " +
+            "backend para procesarla."
+          );
+        } else {
+          mostrarEstado(
+            "Registro cancelado o no completado."
+          );
         }
-
-      } catch (error) {
-
-        console.log('Evento no JSON:', event.data);
-      }
+      }, {
+        config_id: CONFIG_ID,
+        response_type: "code",
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          featureType:
+            "whatsapp_business_app_onboarding"
+        }
+      });
     });
 
   </script>
 
+  <script
+    async
+    defer
+    crossorigin="anonymous"
+    src="https://connect.facebook.net/es_LA/sdk.js">
+  </script>
 </body>
 </html>
