@@ -41,6 +41,7 @@ import { Route as ApiPublicProductsRouteImport } from './routes/api/public/produ
 import { Route as ApiPublicServiceRequestsRouteImport } from './routes/api/public/service-requests'
 import { Route as ApiPublicServicesRouteImport } from './routes/api/public/services'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as ApiPublicWhatsappMetaWebhookRouteImport } from './routes/api/public/whatsapp-meta-webhook'
 import { Route as ApiAdminCategoriesIdRouteImport } from './routes/api/admin/categories.$id'
 import { Route as ApiAdminProductsIdRouteImport } from './routes/api/admin/products.$id'
 import { Route as ApiAdminServicesIdRouteImport } from './routes/api/admin/services.$id'
@@ -210,6 +211,12 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWhatsappMetaWebhookRoute =
+  ApiPublicWhatsappMetaWebhookRouteImport.update({
+    id: '/api/public/whatsapp-meta-webhook',
+    path: '/api/public/whatsapp-meta-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAdminCategoriesIdRoute = ApiAdminCategoriesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -279,6 +286,7 @@ export interface FileRoutesByFullPath {
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/whatsapp-meta-webhook': typeof ApiPublicWhatsappMetaWebhookRoute
   '/panel/': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
@@ -318,6 +326,7 @@ export interface FileRoutesByTo {
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/whatsapp-meta-webhook': typeof ApiPublicWhatsappMetaWebhookRoute
   '/panel': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
@@ -360,6 +369,7 @@ export interface FileRoutesById {
   '/api/public/service-requests': typeof ApiPublicServiceRequestsRoute
   '/api/public/services': typeof ApiPublicServicesRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/whatsapp-meta-webhook': typeof ApiPublicWhatsappMetaWebhookRoute
   '/_authenticated/panel/': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
   '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
@@ -402,6 +412,7 @@ export interface FileRouteTypes {
     | '/api/public/service-requests'
     | '/api/public/services'
     | '/api/public/stripe-webhook'
+    | '/api/public/whatsapp-meta-webhook'
     | '/panel/'
     | '/api/admin/categories/$id'
     | '/api/admin/products/$id'
@@ -441,6 +452,7 @@ export interface FileRouteTypes {
     | '/api/public/service-requests'
     | '/api/public/services'
     | '/api/public/stripe-webhook'
+    | '/api/public/whatsapp-meta-webhook'
     | '/panel'
     | '/api/admin/categories/$id'
     | '/api/admin/products/$id'
@@ -482,6 +494,7 @@ export interface FileRouteTypes {
     | '/api/public/service-requests'
     | '/api/public/services'
     | '/api/public/stripe-webhook'
+    | '/api/public/whatsapp-meta-webhook'
     | '/_authenticated/panel/'
     | '/api/admin/categories/$id'
     | '/api/admin/products/$id'
@@ -520,6 +533,7 @@ export interface RootRouteChildren {
   ApiPublicServiceRequestsRoute: typeof ApiPublicServiceRequestsRoute
   ApiPublicServicesRoute: typeof ApiPublicServicesRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  ApiPublicWhatsappMetaWebhookRoute: typeof ApiPublicWhatsappMetaWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
@@ -749,6 +763,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/whatsapp-meta-webhook': {
+      id: '/api/public/whatsapp-meta-webhook'
+      path: '/api/public/whatsapp-meta-webhook'
+      fullPath: '/api/public/whatsapp-meta-webhook'
+      preLoaderRoute: typeof ApiPublicWhatsappMetaWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/categories/$id': {
       id: '/api/admin/categories/$id'
       path: '/$id'
@@ -925,6 +946,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicServiceRequestsRoute: ApiPublicServiceRequestsRoute,
   ApiPublicServicesRoute: ApiPublicServicesRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  ApiPublicWhatsappMetaWebhookRoute: ApiPublicWhatsappMetaWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
