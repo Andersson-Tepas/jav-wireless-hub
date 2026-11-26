@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { BrandCarousel } from "@/components/brand-carousel";
 import { PageIntro, SectionHeading } from "@/components/site-shell";
 import { ProductGrid, useProducts } from "@/components/product-catalog";
 import { categoriesQuery, type Product, servicesQuery } from "@/lib/catalog";
@@ -165,6 +166,8 @@ export function HomePage() {
           </span>
         </div>
       </section>
+
+      <BrandCarousel />
 
       <section className="section-pad">
         <div className="container-page">
