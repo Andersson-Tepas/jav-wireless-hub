@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Illustrative, editable display list only; not connected to stock or partnerships.
-// Plain brand-name wordmarks intentionally avoid unofficial or fabricated logos.
-export const homeBrands = [
-  "Apple", "Samsung", "Motorola", "Google", "Xiaomi", "JBL", "Sony", "LG",
-];
+export type HomeBrand = { name: string; logoPath?: string };
+
+// Add real brands here; logoPath is optional and can point to a bundled image.
+export const homeBrands: HomeBrand[] = [];
 
 export function BrandCarousel() {
+  // A full loop must exceed the viewport even with only one or two brands.
+  const repeatCount = homeBrands.length > 0 ? Math.max(1, Math.ceil(6 / homeBrands.length)) : 0;
+  const loopBrands = Array.from({ length: repeatCount }, () => homeBrands).flat();
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -19,7 +21,6 @@ export function BrandCarousel() {
   const drag = useRef<{ id: number; x: number; y: number; lastX: number; horizontal: boolean } | null>(null);
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
-  const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [interacting, setInteracting] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
@@ -28,18 +29,22 @@ export function BrandCarousel() {
 
   function paint(next: number) {
     const width = loopWidth.current;
-    if (!width || !trackRef.current) return;
+    if (!(width > 0) || !Number.isFinite(width) || !trackRef.current) return;
     offset.current = ((next % width) + width) % width;
     trackRef.current.style.transform = `translate3d(${-offset.current}px, 0, 0)`;
   }
 
   useEffect(() => {
+    if (homeBrands.length === 0) return;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => setReducedMotion(preference.matches);
+    const update = () => {
+      if (preference.matches) manualMove.current = null;
+      setReducedMotion(preference.matches);
+    };
     update();
     preference.addEventListener("change", update);
     return () => preference.removeEventListener("change", update);
-  }, []);
+  }, [homeBrands.length]);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -50,7 +55,7 @@ export function BrandCarousel() {
     const measure = () => {
       const first = track.children.item(0);
       const second = track.children.item(1);
-      const duplicate = track.children.item(homeBrands.length);
+      const duplicate = track.children.item(loopBrands.length);
       if (!first || !second || !duplicate) return;
       const oldWidth = loopWidth.current;
       // Measuring copy-to-copy includes every card and the final inter-card gap.
@@ -74,11 +79,11 @@ export function BrandCarousel() {
       intersection.disconnect();
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, []);
+  }, [loopBrands.length]);
 
   useEffect(() => {
-    if (!onScreen || !pageVisible || interacting) return;
-    const auto = !hovered && !focused && !paused && !reducedMotion;
+    if (homeBrands.length === 0 || !onScreen || !pageVisible || interacting) return;
+    const auto = !hovered && !focused && !reducedMotion;
     if (!auto && !manualMove.current) return;
     let frame = 0;
     let previous: number | null = null;
@@ -99,7 +104,7 @@ export function BrandCarousel() {
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [hovered, focused, paused, reducedMotion, interacting, onScreen, pageVisible, motionVersion]);
+  }, [hovered, focused, reducedMotion, interacting, onScreen, pageVisible, motionVersion, homeBrands.length]);
 
   function move(direction: number) {
     const distance = direction * cardStep.current;
@@ -120,6 +125,9 @@ export function BrandCarousel() {
     }
     setInteracting(false);
   }
+
+  // Keep every hook above this guard, including when brands are added later.
+  if (homeBrands.length === 0) return null;
 
   return (
     <section
@@ -189,16 +197,20 @@ export function BrandCarousel() {
             }}
           >
             <div ref={trackRef} className="relative flex gap-4 will-change-transform">
-              {[...homeBrands, ...homeBrands].map((brand, index) => (
+              {[...loopBrands, ...loopBrands].map((brand, index) => (
                 <div
-                  key={`${brand}-${index}`}
+                  key={`${brand.name}-${index}`}
                   className="flex h-28 min-w-0 shrink-0 grow-0 basis-[78%] items-center justify-center rounded-lg bg-surface px-4 text-foreground sm:basis-[38%] lg:basis-[21%]"
                   role="group"
                   aria-roledescription="slide"
                   aria-hidden={index >= homeBrands.length ? true : undefined}
-                  aria-label={index < homeBrands.length ? `${brand}, ${index + 1} of ${homeBrands.length}` : undefined}
+                  aria-label={index < homeBrands.length ? `${brand.name}, ${index + 1} of ${homeBrands.length}` : undefined}
                 >
-                  <span className="text-2xl font-bold sm:text-3xl">{brand}</span>
+                  {brand.logoPath ? (
+                    <img src={brand.logoPath} alt={brand.name} draggable={false} className="max-h-16 max-w-full object-contain" />
+                  ) : (
+                    <span className="max-w-full break-words text-center text-2xl font-bold sm:text-3xl">{brand.name}</span>
+                  )}
                 </div>
               ))}
             </div>
@@ -213,22 +225,6 @@ export function BrandCarousel() {
           >
             <ChevronRight aria-hidden="true" />
           </Button>
-        </div>
-        <div className="mt-5 flex items-center justify-center gap-3">
-          <p className="max-w-lg text-center text-xs leading-relaxed text-primary-foreground/75">
-            Brands shown for illustration only. Availability varies; no official partnership is implied.
-          </p>
-          {!reducedMotion && (
-            <Button
-              size="icon"
-              className="shrink-0 rounded-full border border-primary-foreground/40 focus-visible:ring-primary-foreground"
-              aria-label={paused ? "Resume brand auto-advance" : "Pause brand auto-advance"}
-              title={paused ? "Resume brand auto-advance" : "Pause brand auto-advance"}
-              onClick={() => setPaused((value) => !value)}
-            >
-              {paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
-            </Button>
-          )}
         </div>
       </div>
     </section>
