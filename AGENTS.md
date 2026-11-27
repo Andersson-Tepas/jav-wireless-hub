@@ -23,3 +23,4 @@
 - Panel is a sidebar layout (_authenticated/panel.tsx) with sections in panel.$seccion.tsx mapped to src/components/admin/*; panel writes go through the browser client and are enforced by admin-only RLS.
 - Product images upload to a private bucket via an admin-checked server function that returns a long-lived signed URL (public buckets are blocked).
 - Customer profiles (customer_profiles) are created by the auth.users signup trigger alongside the role row; admins never also get the user role, and Panel → Clientes lists profiles of non-admin accounts, matching orders/requests by email.
+- Bulk ZIP product imports parse and validate `products.json` (v1) + images client-side in `src/lib/zip-product-import.ts` (`fflate`), upload images via `uploadProductImage`, and insert inactive drafts (`active: false`, `is_new: true`) through existing admin-only RLS without modifying existing products.

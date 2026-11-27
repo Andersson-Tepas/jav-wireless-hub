@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { FileArchive, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { uploadProductImage } from "@/lib/admin.functions";
 import { money } from "@/lib/cart";
 import { productImage } from "@/lib/site-data";
 import { Field, fmt, lowStockFrom, useAdminCategories, useAdminProducts, useInvalidate, useLowStock } from "./shared";
+import { ZipProductImporter } from "./zip-product-importer";
 
 type Draft = {
   name: string; brand: string; model: string; category_id: string; price: string; old_price: string; stock: string;
@@ -43,8 +44,9 @@ export function Products() {
   const { data: cats = [] } = useAdminCategories();
   const invalidate = useInvalidate();
   const [editing, setEditing] = useState<Product | "new" | null>(null);
+  const [importingZip, setImportingZip] = useState(false);
   const [filter, setFilter] = useState("");
-  const refresh = () => invalidate("admin-products", "products");
+  const refresh = () => invalidate("admin-products", "products", "admin-inventory");
   const list = data.filter((p) => !filter || `${localizeProduct(p).name} ${p.brand} ${p.model}`.toLowerCase().includes(filter.toLowerCase()));
 
   async function remove(p: Product) {
@@ -61,7 +63,7 @@ export function Products() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2"><input className="field max-w-sm" placeholder="Search products..." value={filter} onChange={(e) => setFilter(e.target.value)} /><Button onClick={() => setEditing("new")}><Plus /> New product</Button></div>
+      <div className="flex flex-wrap gap-2"><input className="field max-w-sm" placeholder="Search products..." value={filter} onChange={(e) => setFilter(e.target.value)} /><Button onClick={() => setEditing("new")}><Plus /> New product</Button><Button variant="outline" onClick={() => setImportingZip(true)}><FileArchive /> Import products (ZIP)</Button></div>
       <div className="overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[820px] text-sm">
           <thead className="bg-surface text-left text-xs uppercase text-muted-foreground"><tr><th className="p-3">Product</th><th>Category</th><th>Price</th><th>Stock</th><th className="text-center">Featured</th><th className="text-center">Sale</th><th className="text-center">Active</th><th /></tr></thead>
@@ -77,6 +79,7 @@ export function Products() {
         </table>
       </div>
       {editing && <ProductEditor product={editing === "new" ? undefined : editing} cats={cats} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); refresh(); }} />}
+      {importingZip && <ZipProductImporter cats={cats} onClose={() => setImportingZip(false)} onImported={refresh} />}
     </div>
   );
 }
