@@ -3,6 +3,8 @@ import { act, renderHook } from "@testing-library/react";
 import { CartProvider, useCart } from "@/lib/cart";
 import {
   cartIdentity,
+  compareStorageCapacity,
+  compareVariantStorageThenColor,
   compatibleVariants,
   effectiveVariantPrice,
   hasVariants,
@@ -60,6 +62,41 @@ describe("variant rules", () => {
     expect(orderSchema.safeParse({ ...input, items: [{ ...input.items[0], variant_id: "invalid" }] }).success).toBe(false);
   });
   it("preserves immutable selection display", () => expect(selectionLabel({ color_snapshot: "Black", storage_snapshot: "128 GB" })).toBe("Black / 128 GB"));
+});
+
+describe("storage capacity ordering", () => {
+  it("sorts GB and TB numerically, converting TB to 1024 GB", () => {
+    const labels = ["1 TB", "256 GB", "2 TB", "16 GB", "512 GB", "32 GB", "640 GB", "128 GB", "64 GB"];
+    expect([...labels].sort(compareStorageCapacity)).toEqual([
+      "16 GB", "32 GB", "64 GB", "128 GB", "256 GB", "512 GB", "640 GB", "1 TB", "2 TB",
+    ]);
+  });
+
+  it("accepts decimals, case and descriptive suffixes without changing labels", () => {
+    const labels = ["2TB", "1.5 TB SSD", "1 TB (Pro)", "512gb", "256 GB SSD"];
+    expect([...labels].sort(compareStorageCapacity)).toEqual([
+      "256 GB SSD", "512gb", "1 TB (Pro)", "1.5 TB SSD", "2TB",
+    ]);
+  });
+
+  it("places custom, pending and unknown labels last with deterministic ties", () => {
+    const labels = ["Unknown", "Pending", "Custom", "128 GB", "1 TB"];
+    expect([...labels].sort(compareStorageCapacity)).toEqual(["128 GB", "1 TB", "Custom", "Pending", "Unknown"]);
+    expect([...labels].reverse().sort(compareStorageCapacity)).toEqual(["128 GB", "1 TB", "Custom", "Pending", "Unknown"]);
+  });
+
+  it("orders variant rows by storage first and color second", () => {
+    const rows = [
+      { color_name: "Black", storage: "1 TB" },
+      { color_name: "White", storage: "256 GB" },
+      { color_name: "Black", storage: "256 GB" },
+      { color_name: "Black", storage: "128 GB" },
+      { color_name: "Black", storage: "Pending" },
+    ];
+    expect([...rows].sort(compareVariantStorageThenColor)).toEqual([
+      rows[3], rows[2], rows[1], rows[0], rows[4],
+    ]);
+  });
 });
 
 describe("cart variants", () => {

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { normalizeOption, type Variant } from "@/lib/variants";
+import { compareStorageCapacity, normalizeOption, type Variant } from "@/lib/variants";
 
 export function ColorSwatch({ name, hex }: { name: string; hex?: string | null }) {
   const preset = /^(black|white|blue|red|pink|green|gray|grey|silver|gold|orange|purple|tan|graphite|yellow gold|rose gold)$/.test(normalizeOption(name));
@@ -11,7 +11,7 @@ export function VariantOptions({ variants, colorEnabled, storageEnabled, color, 
   onColor: (color: string | null) => void; onStorage: (storage: string | null) => void;
 }) {
   const colors = [...new Map(variants.filter(v => v.active && v.color_name).map(v => [normalizeOption(v.color_name), v])).values()];
-  const storages = [...new Map(variants.filter(v => v.active && v.storage).map(v => [normalizeOption(v.storage), v.storage])).values()];
+  const storages = [...new Map(variants.filter(v => v.active && v.storage).map(v => [normalizeOption(v.storage), v.storage!])).values()].sort(compareStorageCapacity);
   return <div className="mt-4 space-y-3">
     {colorEnabled && <fieldset><legend className="mb-2 text-sm font-semibold">Color{color ? `: ${color}` : " — select"}</legend><div className="flex flex-wrap gap-2">{colors.map(v => {
       const available = variants.some(x => x.active && normalizeOption(x.color_name) === normalizeOption(v.color_name) && (!storage || normalizeOption(x.storage) === normalizeOption(storage)) && x.stock > 0);

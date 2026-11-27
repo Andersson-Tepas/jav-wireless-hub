@@ -2,7 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ColorSwatch } from "@/components/variant-options";
-import { storagePresets, validateAllocation, type VariantDraft } from "@/lib/variants";
+import { compareStorageCapacity, compareVariantStorageThenColor, storagePresets, validateAllocation, type VariantDraft } from "@/lib/variants";
 import { canConfirmReviewRow, type VariantUpdateRow } from "@/lib/zip-variant-import";
 
 const COLOR_PRESETS = [
@@ -55,7 +55,10 @@ export function ZipVariantRowEditor({
   const colorListId = `zip-var-colors-${row.index}`;
   const storageListId = `zip-var-storage-${row.index}`;
   const allColorNames = Array.from(new Set([...row.entry.suggested_colors.map((c) => c.name), ...COLOR_PRESETS]));
-  const allStorageOptions = Array.from(new Set([...row.entry.suggested_storage, ...storagePresets]));
+  const allStorageOptions = Array.from(new Set([...row.entry.suggested_storage, ...storagePresets])).sort(compareStorageCapacity);
+  const sortedVariantEntries = variants
+    .map((variant, index) => ({ variant, index }))
+    .sort((a, b) => compareVariantStorageThenColor(a.variant, b.variant) || a.index - b.index);
 
   return (
     <div className="space-y-3 rounded-lg border border-border bg-surface/60 p-3 text-xs">
@@ -111,7 +114,7 @@ export function ZipVariantRowEditor({
                     + {sc.name}
                   </Button>
                 ))}
-                {storageEnabled && !colorEnabled && row.entry.suggested_storage.map((st) => (
+                {storageEnabled && !colorEnabled && [...row.entry.suggested_storage].sort(compareStorageCapacity).map((st) => (
                   <Button
                     key={`ss-${st}`}
                     type="button"
@@ -129,8 +132,8 @@ export function ZipVariantRowEditor({
           )}
 
           <div className="space-y-2">
-            {variants.map((v, idx) => (
-              <div key={idx} className="grid items-end gap-2 rounded border border-border bg-background p-2 sm:grid-cols-12">
+            {sortedVariantEntries.map(({ variant: v, index: idx }) => (
+              <div key={v.id ?? idx} className="grid items-end gap-2 rounded border border-border bg-background p-2 sm:grid-cols-12">
                 {colorEnabled && (
                   <>
                     <label className="grid gap-1 sm:col-span-3">

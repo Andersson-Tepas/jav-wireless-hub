@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ColorSwatch } from "@/components/variant-options";
 import { supabase } from "@/integrations/supabase/client";
 import { money } from "@/lib/cart";
-import { normalizePrice, selectionLabel } from "@/lib/variants";
+import { compareVariantStorageThenColor, normalizePrice, selectionLabel } from "@/lib/variants";
 import {
   buildVariantPriceTemplateZip,
   parseVariantPriceZip,
@@ -80,6 +80,11 @@ export function ZipVariantPriceUpdater({
   const conflictCount = rows.filter((r) => r.status === "conflict").length;
   const invalidCount = rows.filter((r) => r.status === "invalid").length;
   const failedCount = rows.filter((r) => r.status === "failed").length;
+  const sortedRows = [...rows].sort((a, b) =>
+    (a.matchedProduct?.name ?? a.entry.product_id).localeCompare(b.matchedProduct?.name ?? b.entry.product_id, "en", { numeric: true }) ||
+    compareVariantStorageThenColor(a.matchedVariant ?? {}, b.matchedVariant ?? {}) ||
+    a.index - b.index
+  );
 
   async function handleDownloadTemplate() {
     setDownloading(true);
@@ -291,7 +296,7 @@ export function ZipVariantPriceUpdater({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {rows.map((r) => {
+                {sortedRows.map((r) => {
                   const vLabel = r.matchedVariant
                     ? selectionLabel({ color_snapshot: r.matchedVariant.color_name, storage_snapshot: r.matchedVariant.storage })
                     : r.entry.variant_id.slice(0, 8) || "—";

@@ -14,6 +14,8 @@ import type { Product } from "@/lib/catalog";
 import { productImage } from "@/lib/site-data";
 import { variantsQuery } from "@/lib/variant-queries";
 import {
+  compareStorageCapacity,
+  compareVariantStorageThenColor,
   effectiveVariantPrice,
   hasVariants,
   normalizeOption,
@@ -86,7 +88,10 @@ function VariantEditorForm({ product, initial, onClose, onSaved }: { product: Pr
       setRows((prev) => prev.map((v, i) => (i === index ? { ...v, price_override: parsed.value } : v)));
     }
   };
-  const storageChoices = [...new Map(rows.filter((r) => r.storage).map((r) => [normalizeOption(r.storage), r.storage!])).values()];
+  const storageChoices = [...new Map(rows.filter((r) => r.storage).map((r) => [normalizeOption(r.storage), r.storage!])).values()].sort(compareStorageCapacity);
+  const sortedRowEntries = rows
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => compareVariantStorageThenColor(a.row, b.row) || a.index - b.index);
   const initialById = new Map(initial.map((v) => [v.id, v]));
   const priceOnlyChanges = rows
     .filter((r): r is VariantDraft & { id: string } => !!r.id && initialById.has(r.id))
@@ -195,7 +200,7 @@ function VariantEditorForm({ product, initial, onClose, onSaved }: { product: Pr
       </div>
     )}
     {(color || storage) && <><datalist id="variant-colors">{colorPresets.map(v => <option key={v} value={v} />)}</datalist><datalist id="variant-storage">{storagePresets.map(v => <option key={v} value={v} />)}</datalist>
-      <div className="space-y-4">{rows.map((v, index) => <fieldset key={v.id ?? index} disabled={busy} className="grid gap-3 border-b border-border pb-4 sm:grid-cols-2">
+      <div className="space-y-4">{sortedRowEntries.map(({ row: v, index }) => <fieldset key={v.id ?? index} disabled={busy} className="grid gap-3 border-b border-border pb-4 sm:grid-cols-2">
         <legend className="mb-2 text-sm font-semibold">Combination {index + 1}</legend>
         {color && !v.id && <div className="flex flex-wrap gap-1 sm:col-span-2">{colorPresets.map(name => <Button key={name} type="button" variant="ghost" size="icon" title={name} aria-label={`Use ${name}`} onClick={() => change(index, { color_name: name, color_hex: null })}><ColorSwatch name={name} /></Button>)}</div>}
         {color && <label className="grid gap-1 text-xs">Color / branded finish name<div className="flex items-center gap-2"><ColorSwatch name={v.color_name ?? ""} hex={v.color_hex} /><input className="field" list="variant-colors" maxLength={80} disabled={!!v.id} value={v.color_name ?? ""} onChange={e => change(index, { color_name: e.target.value || null })} /></div></label>}
@@ -243,7 +248,7 @@ export function VariantInventory({ product }: { product: Product }) {
     setBusy(false);
     if (error) toast.error(error.message); else invalidate("product-variants", "products", "admin-products", "admin-inventory");
   }
-  return <div className="space-y-2">{isError && <p className="text-destructive">Could not load variants</p>}{data.filter(v => v.active).map(v => <VariantStockRow key={v.id} label={selectionLabel({ color_snapshot: v.color_name, storage_snapshot: v.storage })} stock={v.stock} busy={busy} onAdjust={delta => void adjust(v.id, v.stock, delta)} />)}</div>;
+  return <div className="space-y-2">{isError && <p className="text-destructive">Could not load variants</p>}{data.filter(v => v.active).sort(compareVariantStorageThenColor).map(v => <VariantStockRow key={v.id} label={selectionLabel({ color_snapshot: v.color_name, storage_snapshot: v.storage })} stock={v.stock} busy={busy} onAdjust={delta => void adjust(v.id, v.stock, delta)} />)}</div>;
 }
 
 function VariantStockRow({ label, stock, busy, onAdjust }: { label: string; stock: number; busy: boolean; onAdjust: (delta: number) => void }) {

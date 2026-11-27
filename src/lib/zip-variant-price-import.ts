@@ -1,5 +1,5 @@
 import { strToU8, unzipSync, zipSync } from "fflate";
-import { effectiveVariantPrice, MAX_VARIANT_PRICE, normalizePrice, selectionLabel } from "./variants";
+import { compareVariantStorageThenColor, effectiveVariantPrice, MAX_VARIANT_PRICE, normalizePrice, selectionLabel } from "./variants";
 import { isSafeZipPath, ZIP_IMPORT_LIMITS } from "./zip-product-import";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -307,6 +307,11 @@ export function buildVariantPriceTemplateZip(
   const activeProducts = new Map(products.filter((p) => p.active).map((p) => [p.id, p]));
   const entries = variants
     .filter((v) => v.active && activeProducts.has(v.product_id))
+    .sort((a, b) =>
+      (activeProducts.get(a.product_id)?.name ?? a.product_id).localeCompare(activeProducts.get(b.product_id)?.name ?? b.product_id, "en", { numeric: true }) ||
+      compareVariantStorageThenColor(a, b) ||
+      a.id.localeCompare(b.id)
+    )
     .map((v) => {
       const p = activeProducts.get(v.product_id)!;
       const override = normalizePrice(v.price_override);

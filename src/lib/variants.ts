@@ -4,6 +4,35 @@ import type { Tables } from "@/integrations/supabase/types";
 export type Variant = Tables<"product_variants">;
 export const hasVariants = (p: { color_variants_enabled?: boolean; storage_variants_enabled?: boolean }) => !!(p.color_variants_enabled || p.storage_variants_enabled);
 export const normalizeOption = (s: string | null | undefined) => (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+
+const CAPACITY_RE = /^\s*(\d+(?:\.\d+)?|\.\d+)\s*(GB|TB)(?=$|\s|\()/i;
+const compareOptionLabels = (a: string | null | undefined, b: string | null | undefined) =>
+  normalizeOption(a).localeCompare(normalizeOption(b), "en", { numeric: true }) ||
+  (a ?? "").trim().localeCompare((b ?? "").trim(), "en", { numeric: true });
+
+/** Returns the numeric capacity in GB, or null for unknown/custom labels. */
+export function storageCapacityGb(storage: string | null | undefined): number | null {
+  const match = CAPACITY_RE.exec(storage ?? "");
+  if (!match) return null;
+  const amount = Number(match[1]);
+  if (!Number.isFinite(amount)) return null;
+  return match[2]?.toUpperCase() === "TB" ? amount * 1024 : amount;
+}
+
+/** Sorts numeric capacities first; custom, pending and unknown labels stay last. */
+export function compareStorageCapacity(a: string | null | undefined, b: string | null | undefined): number {
+  const aGb = storageCapacityGb(a);
+  const bGb = storageCapacityGb(b);
+  if (aGb !== null && bGb !== null && aGb !== bGb) return aGb - bGb;
+  if (aGb !== null && bGb === null) return -1;
+  if (aGb === null && bGb !== null) return 1;
+  return compareOptionLabels(a, b);
+}
+
+export function compareVariantStorageThenColor<T extends { storage?: string | null; color_name?: string | null }>(a: T, b: T): number {
+  return compareStorageCapacity(a.storage, b.storage) || compareOptionLabels(a.color_name, b.color_name);
+}
+
 export const selectionLabel = (i: { color_snapshot?: string | null; storage_snapshot?: string | null }) => [i.color_snapshot, i.storage_snapshot].filter(Boolean).join(" / ");
 export const cartIdentity = (i: { id: string; variant_id?: string | null }) => i.variant_id ? `${i.id}:${i.variant_id}` : i.id;
 export const stockLabel = (n: number) => n <= 0 ? "Out of stock" : n <= 2 ? `Only ${n} left` : `${n} units in stock`;

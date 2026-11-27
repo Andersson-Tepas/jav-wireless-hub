@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ColorSwatch } from "@/components/variant-options";
 import { supabase } from "@/integrations/supabase/client";
-import { selectionLabel } from "@/lib/variants";
+import { compareStorageCapacity, compareVariantStorageThenColor, selectionLabel } from "@/lib/variants";
 import {
   buildInitialVariantRpcArgs,
   countVariantsByProduct,
@@ -326,7 +326,7 @@ export function ZipVariantUpdater({
                             <span className="text-[11px] text-muted-foreground">None configured</span>
                           ) : (
                             <div className="space-y-1">
-                              {r.draftVariants.map((v, idx) => (
+                              {[...r.draftVariants].sort(compareVariantStorageThenColor).map((v, idx) => (
                                 <div key={idx} className="flex items-center gap-1.5">
                                   {v.color_name && <ColorSwatch name={v.color_name} hex={v.color_hex} />}
                                   <span className="font-medium">
@@ -357,7 +357,7 @@ export function ZipVariantUpdater({
                               )}
                               {r.entry.suggested_storage.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
-                                  {r.entry.suggested_storage.map((st) => (
+                                  {[...r.entry.suggested_storage].sort(compareStorageCapacity).map((st) => (
                                     <span key={st} className="rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">{st}</span>
                                   ))}
                                 </div>
