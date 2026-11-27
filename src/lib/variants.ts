@@ -33,9 +33,20 @@ export function compareVariantStorageThenColor<T extends { storage?: string | nu
   return compareStorageCapacity(a.storage, b.storage) || compareOptionLabels(a.color_name, b.color_name);
 }
 
-export const selectionLabel = (i: { color_snapshot?: string | null; storage_snapshot?: string | null }) => [i.color_snapshot, i.storage_snapshot].filter(Boolean).join(" / ");
+/** Display-only cleanup; raw variant values remain unchanged for identity and order snapshots. */
+export function displayVariantOption(value: string | null | undefined): string {
+  const cleaned = (value ?? "").replace(/\s*\(label\)\s*$/i, "").trim();
+  return /^(?:(?:color|storage|capacity|size)\s+)?to be confirmed$/i.test(cleaned) ? "Ask store" : cleaned;
+}
+
+export function isUnconfirmedOption(value: string | null | undefined): boolean {
+  return displayVariantOption(value) === "Ask store";
+}
+
+export const selectionLabel = (i: { color_snapshot?: string | null; storage_snapshot?: string | null }) =>
+  [displayVariantOption(i.color_snapshot), displayVariantOption(i.storage_snapshot)].filter(Boolean).join(" / ");
 export const cartIdentity = (i: { id: string; variant_id?: string | null }) => i.variant_id ? `${i.id}:${i.variant_id}` : i.id;
-export const stockLabel = (n: number) => n <= 0 ? "Out of stock" : n <= 2 ? `Only ${n} left` : `${n} units in stock`;
+export const stockLabel = (n: number) => n <= 0 ? "Unavailable — Ask about availability" : n <= 2 ? `Only ${n} left` : `${n} units in stock`;
 
 export const MAX_VARIANT_PRICE = 999_999.99;
 const PRICE_RE = /^\d+(\.\d{1,2})?$/;

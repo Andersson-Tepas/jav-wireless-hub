@@ -6,8 +6,10 @@ import {
   compareStorageCapacity,
   compareVariantStorageThenColor,
   compatibleVariants,
+  displayVariantOption,
   effectiveVariantPrice,
   hasVariants,
+  isUnconfirmedOption,
   parsePriceOverrideInput,
   selectionLabel,
   stockLabel,
@@ -41,9 +43,9 @@ describe("variant rules", () => {
     expect(compatibleVariants(rows, "Black", "256 GB")).toHaveLength(0);
     expect(compatibleVariants(rows, "Black", "128 GB")).toHaveLength(1);
   });
-  it("retains zero-stock combinations but labels them unavailable", () => {
+  it("retains zero-stock combinations but labels them unavailable for inquiry", () => {
     expect(validateAllocation([draft("Black", null, 0)], true, false, 0).valid).toBe(true);
-    expect(stockLabel(0)).toBe("Out of stock"); expect(stockLabel(2)).toBe("Only 2 left"); expect(stockLabel(5)).toBe("5 units in stock");
+    expect(stockLabel(0)).toBe("Unavailable — Ask about availability"); expect(stockLabel(2)).toBe("Only 2 left"); expect(stockLabel(5)).toBe("5 units in stock");
   });
   it("requires exact stock reconciliation without loss or duplication", () => {
     expect(validateAllocation([draft("Black", null, 2)], true, false, 3).valid).toBe(false);
@@ -62,6 +64,15 @@ describe("variant rules", () => {
     expect(orderSchema.safeParse({ ...input, items: [{ ...input.items[0], variant_id: "invalid" }] }).success).toBe(false);
   });
   it("preserves immutable selection display", () => expect(selectionLabel({ color_snapshot: "Black", storage_snapshot: "128 GB" })).toBe("Black / 128 GB"));
+  it("cleans display labels without changing raw snapshots or treating unknown capacities as verified", () => {
+    const snapshot = { color_snapshot: "Color to be confirmed", storage_snapshot: "256 GB (LABEL)" };
+    expect(displayVariantOption(snapshot.storage_snapshot)).toBe("256 GB");
+    expect(selectionLabel(snapshot)).toBe("Ask store / 256 GB");
+    expect(snapshot.storage_snapshot).toBe("256 GB (LABEL)");
+    expect(displayVariantOption("Storage to be confirmed")).toBe("Ask store");
+    expect(isUnconfirmedOption("Storage to be confirmed")).toBe(true);
+    expect(isUnconfirmedOption("256 GB")).toBe(false);
+  });
 });
 
 describe("storage capacity ordering", () => {
@@ -73,9 +84,9 @@ describe("storage capacity ordering", () => {
   });
 
   it("accepts decimals, case and descriptive suffixes without changing labels", () => {
-    const labels = ["2TB", "1.5 TB SSD", "1 TB (Pro)", "512gb", "256 GB SSD"];
+    const labels = ["2TB", "1.5 TB SSD", "1 TB (Pro)", "512gb", "256 GB SSD", "128 GB (label)"];
     expect([...labels].sort(compareStorageCapacity)).toEqual([
-      "256 GB SSD", "512gb", "1 TB (Pro)", "1.5 TB SSD", "2TB",
+      "128 GB (label)", "256 GB SSD", "512gb", "1 TB (Pro)", "1.5 TB SSD", "2TB",
     ]);
   });
 

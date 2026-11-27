@@ -14,7 +14,7 @@ import { money, useCart } from "@/lib/cart";
 
 import { VariantOptions, ColorSwatch } from "@/components/variant-options";
 import { publicVariantPricingQuery, variantsQuery, type VariantPricingRow } from "@/lib/variant-queries";
-import { compatibleVariants, effectiveVariantPrice, hasVariants, selectionLabel, stockLabel, summarizeProductPricing, type Variant } from "@/lib/variants";
+import { compatibleVariants, displayVariantOption, effectiveVariantPrice, hasVariants, isUnconfirmedOption, selectionLabel, stockLabel, summarizeProductPricing, type Variant } from "@/lib/variants";
 import { productImage, socialLinks } from "@/lib/site-data";
 
 
@@ -160,7 +160,7 @@ export function ProductCard({
 }
 
 
-function ProductDialog({
+export function ProductDialog({
   product,
   onClose,
 }: {
@@ -178,6 +178,8 @@ function ProductDialog({
   const chosenLabel = selectionLabel({ color_snapshot: selected?.color_name ?? color, storage_snapshot: selected?.storage ?? storage });
   const summary = product ? summarizeProductPricing(product, variants) : null;
   const selectedPrice = product && selected ? effectiveVariantPrice(product.price, selected) : null;
+  const unconfirmedSelection = !!selected && (isUnconfirmedOption(selected.color_name) || isUnconfirmedOption(selected.storage));
+  const needsAvailabilityInquiry = !!selected && (selected.stock <= 0 || unconfirmedSelection);
   const displayPriceText = !product || !summary
     ? ""
     : selectedPrice !== null
@@ -185,6 +187,9 @@ function ProductDialog({
       : summary.hasRange
         ? `From ${money(summary.minPrice)}`
         : money(summary.displayPrice);
+  const inquiryMessage = product
+    ? `Hello JAV Wireless, I’m interested in ${product.name}${chosenLabel ? ` — ${chosenLabel}` : ""} (${displayPriceText}).${unconfirmedSelection ? " Please confirm the exact option and availability." : selected?.stock === 0 ? " Please confirm availability." : ""}`
+    : "";
   const showDialogOldPrice = !!(
     product?.old_price &&
     (selected
@@ -253,7 +258,7 @@ function ProductDialog({
               </div>
 
               <div className="mt-1">
-                {enabled ? <p className="text-sm font-semibold" aria-live="polite">{isError ? "Could not load options. Please try again." : isPending ? "Loading options..." : selected ? stockLabel(selected.stock) : product.stock <= 0 ? "Out of stock" : "Select a color / storage combination"}</p> : <Availability stock={product.stock} />}
+                {enabled ? <p className="text-sm font-semibold" aria-live="polite">{isError ? "Could not load options. Please try again." : isPending ? "Loading options..." : selected ? unconfirmedSelection && selected.stock > 0 ? "Confirm the exact option and availability with the store" : stockLabel(selected.stock) : product.stock <= 0 ? "Out of stock" : "Select a color / storage combination"}</p> : <Availability stock={product.stock} />}
                 {enabled && <VariantOptions variants={variants} colorEnabled={product.color_variants_enabled} storageEnabled={product.storage_variants_enabled} color={color} storage={storage} onColor={setColor} onStorage={setStorage} />}
                 {!enabled && !/herramient|tool|perfume|fragran/i.test(product.category_id) && product.colors.length === 1 && /^(black|white|blue|red|pink|green|gray|grey|silver|gold|orange|purple|tan|yellow gold|rose gold|graphite)$/i.test(product.colors[0] ?? "") && <p className="mt-3 flex items-center gap-2 text-sm"><ColorSwatch name={product.colors[0] ?? ""} />{product.colors[0]}</p>}
               </div>
@@ -269,7 +274,7 @@ function ProductDialog({
                     Colors
                   </dt>
                   <dd className="font-semibold">
-                    {enabled && product.color_variants_enabled ? color || "Select above" : product.colors.join(", ") || "—"}
+                    {enabled && product.color_variants_enabled ? displayVariantOption(color) || "Select above" : product.colors.map(displayVariantOption).join(", ") || "—"}
                   </dd>
                 </div>
 
@@ -278,7 +283,7 @@ function ProductDialog({
                     Capacity / Size
                   </dt>
                   <dd className="font-semibold">
-                    {enabled && product.storage_variants_enabled ? storage || "Select above" : product.capacity || "—"}
+                    {enabled && product.storage_variants_enabled ? displayVariantOption(storage) || "Select above" : displayVariantOption(product.capacity) || "—"}
                   </dd>
                 </div>
 
@@ -371,13 +376,11 @@ function ProductDialog({
 
                 <a
                   className="inline-flex h-11 items-center justify-center rounded-md border border-input px-5 text-sm font-semibold hover:border-primary hover:text-primary"
-                  href={`${socialLinks.whatsapp}?text=${encodeURIComponent(
-                    `Hello JAV Wireless, I’m interested in ${product.name}${chosenLabel ? ` — ${chosenLabel}` : ""} (${displayPriceText})`
-                  )}`}
+                  href={`${socialLinks.whatsapp.replace(/\?.*$/, "")}?text=${encodeURIComponent(inquiryMessage)}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Ask about this item
+                  {needsAvailabilityInquiry ? "Ask about availability" : "Ask about this item"}
                 </a>
 
               </div>
