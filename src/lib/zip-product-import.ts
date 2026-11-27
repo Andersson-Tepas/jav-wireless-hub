@@ -43,6 +43,45 @@ export type ImportRow = {
 };
 
 export type ExistingProductRef = { name: string; category_id: string };
+export type ExistingProductForImageUpdate = {
+  id: string;
+  name: string;
+  category_id: string;
+  image: string;
+  active?: boolean;
+};
+
+export type ImageUpdateRowStatus =
+  | "ready"
+  | "missing"
+  | "ambiguous"
+  | "duplicate_zip"
+  | "invalid"
+  | "updating"
+  | "updated"
+  | "skipped"
+  | "failed";
+
+export type ParsedImageUpdateEntry = {
+  image_file: string;
+  name: string;
+  category_id: string;
+  note: string;
+  product_id: string | null;
+};
+
+export type ImageUpdateRow = {
+  index: number;
+  key: string;
+  entry: ParsedImageUpdateEntry;
+  matchedProduct: ExistingProductForImageUpdate | null;
+  imageBytes: Uint8Array | null;
+  imageMime: AllowedImageMime | null;
+  status: ImageUpdateRowStatus;
+  errors: string[];
+  selected: boolean;
+  updateError?: string;
+};
 
 export function normalizeProductName(name: string): string {
   return name.normalize("NFC").trim().replace(/\s+/g, " ").toLowerCase();
@@ -113,11 +152,9 @@ function readSpecs(obj: Record<string, unknown>, errors: string[]): ProductSpec[
   return out;
 }
 
-export function parseProductZip(
+function extractValidatedZipManifest(
   zipBytes: Uint8Array,
-  validCategoryIds: ReadonlySet<string>,
-  existingProducts: readonly ExistingProductRef[],
-): { rows: ImportRow[] } | { error: string } {
+): { entries: Record<string, Uint8Array>; rawProducts: unknown[] } | { error: string } {
   if (zipBytes.byteLength === 0) return { error: "The ZIP file is empty." };
   if (zipBytes.byteLength > ZIP_IMPORT_LIMITS.maxZipBytes) return { error: "The ZIP file exceeds the 100 MB limit." };
 
@@ -164,6 +201,54 @@ export function parseProductZip(
   const rawProducts = parsed["products"];
   if (rawProducts.length === 0) return { error: "Manifest contains no products." };
   if (rawProducts.length > ZIP_IMPORT_LIMITS.maxProducts) return { error: `Manifest exceeds the ${ZIP_IMPORT_LIMITS.maxProducts}-product limit.` };
+  return { entries, rawProducts };
+}
+
+function validateZipImage(
+  rawImageFile: string,
+  entries: Record<string, Uint8Array>,
+  errors: string[],
+): { imageBytes: Uint8Array | null; imageMime: AllowedImageMime | null } {
+  if (!rawImageFile) {
+    errors.push("image_file is required");
+    return { imageBytes: null, imageMime: null };
+  }
+  if (!isSafeZipPath(rawImageFile)) {
+    errors.push("image_file has an invalid or unsafe path");
+    return { imageBytes: null, imageMime: null };
+  }
+  if (!/\.(jpe?g|png|webp)$/i.test(rawImageFile)) {
+    errors.push("image_file must be PNG, JPG, JPEG, or WebP");
+  }
+  const found = Object.prototype.hasOwnProperty.call(entries, rawImageFile) ? entries[rawImageFile] : undefined;
+  if (!found) {
+    errors.push(`Image not found in ZIP: ${rawImageFile}`);
+    return { imageBytes: null, imageMime: null };
+  }
+  if (found.byteLength === 0) {
+    errors.push("Image file is empty");
+    return { imageBytes: null, imageMime: null };
+  }
+  if (found.byteLength > ZIP_IMPORT_LIMITS.maxImageBytes) {
+    errors.push("Image exceeds 5 MB limit");
+    return { imageBytes: null, imageMime: null };
+  }
+  const mime = detectImageMime(found);
+  if (!mime) {
+    errors.push("Image content is not a valid PNG, JPG, or WebP");
+    return { imageBytes: null, imageMime: null };
+  }
+  return { imageBytes: found, imageMime: mime };
+}
+
+export function parseProductZip(
+  zipBytes: Uint8Array,
+  validCategoryIds: ReadonlySet<string>,
+  existingProducts: readonly ExistingProductRef[],
+): { rows: ImportRow[] } | { error: string } {
+  const extracted = extractValidatedZipManifest(zipBytes);
+  if ("error" in extracted) return extracted;
+  const { entries, rawProducts } = extracted;
 
   const existingKeys = new Set(existingProducts.map((p) => productMatchKey(p.name, p.category_id)));
   const seenInZip = new Set<string>();
@@ -174,9 +259,7 @@ export function parseProductZip(
     if (!isRecord(raw)) errors.push("Product entry must be an object");
 
     const rawImageFile = typeof obj["image_file"] === "string" ? obj["image_file"] : "";
-    if (!rawImageFile) errors.push("image_file is required");
-    else if (!isSafeZipPath(rawImageFile)) errors.push("image_file has an invalid or unsafe path");
-    else if (!/\.(jpe?g|png|webp)$/i.test(rawImageFile)) errors.push("image_file must be PNG, JPG, JPEG, or WebP");
+    const { imageBytes, imageMime } = validateZipImage(rawImageFile, entries, errors);
 
     const name = readStr(obj, "name", 200, true, errors);
     const brand = readStr(obj, "brand", 120, false, errors);
@@ -207,23 +290,6 @@ export function parseProductZip(
       else financing = finRaw.trim() || null;
     }
 
-    let imageBytes: Uint8Array | null = null;
-    let imageMime: AllowedImageMime | null = null;
-    if (rawImageFile && isSafeZipPath(rawImageFile)) {
-      const found = Object.prototype.hasOwnProperty.call(entries, rawImageFile) ? entries[rawImageFile] : undefined;
-      if (!found) {
-        errors.push(`Image not found in ZIP: ${rawImageFile}`);
-      } else if (found.byteLength === 0) {
-        errors.push("Image file is empty");
-      } else if (found.byteLength > ZIP_IMPORT_LIMITS.maxImageBytes) {
-        errors.push("Image exceeds 5 MB limit");
-      } else {
-        const mime = detectImageMime(found);
-        if (!mime) errors.push("Image content is not a valid PNG, JPG, or WebP");
-        else { imageBytes = found; imageMime = mime; }
-      }
-    }
-
     const key = productMatchKey(name, category_id);
     let status: RowStatus = "ready";
     if (errors.length > 0) status = "invalid";
@@ -244,6 +310,116 @@ export function parseProductZip(
   });
 
   return { rows };
+}
+
+export function resolveUniqueTargetProduct(
+  entry: Pick<ParsedImageUpdateEntry, "name" | "category_id" | "product_id">,
+  existingProducts: readonly ExistingProductForImageUpdate[],
+):
+  | { ok: true; product: ExistingProductForImageUpdate }
+  | { ok: false; status: "missing" | "ambiguous" | "invalid"; reason: string } {
+  const key = productMatchKey(entry.name, entry.category_id);
+  const matchesByKey = existingProducts.filter((p) => productMatchKey(p.name, p.category_id) === key);
+
+  if (entry.product_id) {
+    const byId = existingProducts.find((p) => p.id === entry.product_id);
+    if (!byId) return { ok: false, status: "missing", reason: `Product ID "${entry.product_id}" not found in catalog` };
+    if (productMatchKey(byId.name, byId.category_id) !== key) {
+      return { ok: false, status: "invalid", reason: "product_id does not match name and category_id" };
+    }
+    return { ok: true, product: byId };
+  }
+
+  if (matchesByKey.length === 0) {
+    return { ok: false, status: "missing", reason: "No matching product found in catalog" };
+  }
+  if (matchesByKey.length > 1) {
+    return { ok: false, status: "ambiguous", reason: `Multiple catalog products (${matchesByKey.length}) match this name and category` };
+  }
+  return { ok: true, product: matchesByKey[0]! };
+}
+
+export function parseImageUpdateZip(
+  zipBytes: Uint8Array,
+  validCategoryIds: ReadonlySet<string>,
+  existingProducts: readonly ExistingProductForImageUpdate[],
+): { rows: ImageUpdateRow[] } | { error: string } {
+  const extracted = extractValidatedZipManifest(zipBytes);
+  if ("error" in extracted) return extracted;
+  const { entries, rawProducts } = extracted;
+
+  const seenKeys = new Set<string>();
+  const seenTargetIds = new Set<string>();
+
+  const rows: ImageUpdateRow[] = rawProducts.map((raw, index) => {
+    const errors: string[] = [];
+    const obj = isRecord(raw) ? raw : {};
+    if (!isRecord(raw)) errors.push("Product entry must be an object");
+
+    const rawImageFile = typeof obj["image_file"] === "string" ? obj["image_file"] : "";
+    const { imageBytes, imageMime } = validateZipImage(rawImageFile, entries, errors);
+
+    const name = readStr(obj, "name", 200, true, errors);
+    const category_id = readStr(obj, "category_id", 80, true, errors);
+    if (category_id && !validCategoryIds.has(category_id)) errors.push(`Unknown category "${category_id}"`);
+
+    const note = obj["note"] === undefined || obj["note"] === null ? "" : readStr(obj, "note", 500, false, errors);
+
+    let product_id: string | null = null;
+    const rawProductId = obj["product_id"];
+    if (rawProductId !== undefined && rawProductId !== null) {
+      if (typeof rawProductId !== "string" || !rawProductId.trim()) errors.push("product_id must be a non-empty string when provided");
+      else if (rawProductId.trim().length > 100) errors.push("product_id exceeds 100 characters");
+      else product_id = rawProductId.trim();
+    }
+
+    const entry: ParsedImageUpdateEntry = { image_file: rawImageFile, name, category_id, note, product_id };
+    const key = productMatchKey(name, category_id);
+
+    let matchedProduct: ExistingProductForImageUpdate | null = null;
+    let status: ImageUpdateRowStatus = "ready";
+
+    if (errors.length > 0) {
+      status = "invalid";
+    } else if (seenKeys.has(key)) {
+      status = "duplicate_zip";
+      errors.push("Duplicate product entry in ZIP");
+    } else {
+      const resolved = resolveUniqueTargetProduct(entry, existingProducts);
+      if (!resolved.ok) {
+        status = resolved.status;
+        errors.push(resolved.reason);
+      } else if (seenTargetIds.has(resolved.product.id)) {
+        status = "duplicate_zip";
+        errors.push("Duplicate target product in ZIP");
+      } else {
+        matchedProduct = resolved.product;
+        seenKeys.add(key);
+        seenTargetIds.add(resolved.product.id);
+      }
+    }
+
+    return {
+      index,
+      key,
+      entry,
+      matchedProduct,
+      imageBytes,
+      imageMime,
+      status,
+      errors,
+      selected: status === "ready",
+    };
+  });
+
+  return { rows };
+}
+
+export function buildImageUpdatePayload(storageImageUrl: string): { image: string } {
+  if (!storageImageUrl || /^data:/i.test(storageImageUrl.trim())) {
+    throw new Error("A valid storage image URL is required.");
+  }
+  return { image: storageImageUrl.trim() };
 }
 
 export function bytesToBase64(bytes: Uint8Array): string {

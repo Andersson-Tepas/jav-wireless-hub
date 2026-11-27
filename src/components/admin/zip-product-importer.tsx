@@ -14,6 +14,9 @@ import {
   productMatchKey,
   type ImportRow,
 } from "@/lib/zip-product-import";
+import { ZipImageUpdater } from "./zip-image-updater";
+
+type ImporterMode = "new" | "update_images";
 
 type CategoryOption = { id: string; name: string };
 
@@ -49,12 +52,23 @@ export function ZipProductImporter({
   onImported: () => void;
 }) {
   const upload = useServerFn(uploadProductImage);
+  const [mode, setMode] = useState<ImporterMode>("new");
+  const [imageUpdaterBusy, setImageUpdaterBusy] = useState(false);
   const [zipName, setZipName] = useState("");
   const [parseError, setParseError] = useState("");
   const [reading, setReading] = useState(false);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const busy = reading || importing || imageUpdaterBusy;
+
+  function switchMode(next: ImporterMode) {
+    if (busy || next === mode) return;
+    setMode(next);
+    setZipName("");
+    setParseError("");
+    setRows([]);
+  }
 
   const catNames = new Map(cats.map((c) => [c.id, c.name]));
   const selectable = (r: ImportRow) => r.status === "ready" || r.status === "failed";
@@ -152,10 +166,21 @@ export function ZipProductImporter({
   }
 
   return (
-    <Dialog open onOpenChange={(o) => !o && !importing && onClose()}>
+    <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
         <DialogHeader><DialogTitle>Import products (ZIP)</DialogTitle></DialogHeader>
-        <div className="space-y-4">
+        <div className="flex flex-wrap gap-2 border-b border-border pb-3" role="tablist" aria-label="ZIP importer mode">
+          <Button type="button" size="sm" role="tab" aria-selected={mode === "new"} variant={mode === "new" ? "default" : "outline"} disabled={busy} onClick={() => switchMode("new")}>
+            Import new products
+          </Button>
+          <Button type="button" size="sm" role="tab" aria-selected={mode === "update_images"} variant={mode === "update_images" ? "default" : "outline"} disabled={busy} onClick={() => switchMode("update_images")}>
+            Update existing images
+          </Button>
+        </div>
+        {mode === "update_images" ? (
+          <ZipImageUpdater cats={cats} onBusyChange={setImageUpdaterBusy} onClose={onClose} onUpdated={onImported} />
+        ) : (
+          <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3 text-sm">
             <div className="space-y-0.5">
               <p className="font-semibold">Select a ZIP archive with <code className="text-xs">products.json</code> (v1) and product images</p>
@@ -234,7 +259,8 @@ export function ZipProductImporter({
               {importing ? `Importing (${progress.done}/${progress.total})...` : failedCount > 0 && selectedRows.every((r) => r.status === "failed") ? `Retry failed (${selectedRows.length})` : `Import selected (${selectedRows.length})`}
             </Button>
           </div>
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

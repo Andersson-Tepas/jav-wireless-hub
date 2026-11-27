@@ -1,9 +1,12 @@
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import {
+  buildImageUpdatePayload,
   buildProductInsertPayload,
+  parseImageUpdateZip,
   parseProductZip,
   productMatchKey,
+  resolveUniqueTargetProduct,
   ZIP_IMPORT_LIMITS,
 } from "@/lib/zip-product-import";
 
@@ -186,5 +189,103 @@ describe("parseProductZip", () => {
     expect("source" in payload).toBe(false);
 
     expect(() => buildProductInsertPayload(res.rows[0]!.product, "data:image/jpeg;base64,/9j/")).toThrow(/storage image URL/i);
+  });
+});
+
+describe("parseImageUpdateZip", () => {
+  const EXISTING_CATALOG = [
+    { id: "p-sunglasses", name: "Assorted Sunglasses Collection", category_id: "accesorios", image: "https://storage.example.com/old/sunglasses.jpg", active: false },
+    { id: "p-dup-1", name: "USB-C Cable", category_id: "accesorios", image: "https://storage.example.com/old/c1.jpg", active: true },
+    { id: "p-dup-2", name: "usb-c   cable", category_id: "accesorios", image: "https://storage.example.com/old/c2.jpg", active: true },
+    { id: "p-ring", name: "Gold Ring", category_id: "joyeria", image: "https://storage.example.com/old/ring.jpg", active: true },
+  ];
+
+  it("accepts the minimal image-update manifest (name, category_id, image_file, note) and matches uniquely", () => {
+    const zip = makeZip(
+      {
+        version: 1,
+        products: [
+          {
+            name: "Assorted Sunglasses Collection",
+            category_id: "accesorios",
+            image_file: "Accessories/lentes-de-sol-coleccion.png",
+            note: "AI-recreated clean studio photo; verify before publishing",
+          },
+        ],
+      },
+      { "Accessories/lentes-de-sol-coleccion.png": VALID_PNG },
+    );
+
+    const res = parseImageUpdateZip(zip, CATEGORIES, EXISTING_CATALOG);
+    expect("rows" in res).toBe(true);
+    if (!("rows" in res)) return;
+    expect(res.rows).toHaveLength(1);
+    expect(res.rows[0]?.status).toBe("ready");
+    expect(res.rows[0]?.selected).toBe(true);
+    expect(res.rows[0]?.matchedProduct?.id).toBe("p-sunglasses");
+    expect(res.rows[0]?.entry.note).toBe("AI-recreated clean studio photo; verify before publishing");
+    expect(res.rows[0]?.imageMime).toBe("image/png");
+  });
+
+  it("skips missing, ambiguous, duplicate-in-ZIP, and inconsistent product_id entries while allowing consistent product_id", () => {
+    const zip = makeZip(
+      {
+        version: 1,
+        products: [
+          { name: "Nonexistent Product", category_id: "accesorios", image_file: "Accessories/a.png", note: "" },
+          { name: "USB-C Cable", category_id: "accesorios", image_file: "Accessories/b.png", note: "Ambiguous without id" },
+          { name: "Assorted Sunglasses Collection", category_id: "accesorios", image_file: "Accessories/a.png", note: "First ok" },
+          { name: "  assorted   sunglasses collection ", category_id: "accesorios", image_file: "Accessories/b.png", note: "Duplicate in ZIP" },
+          { name: "Gold Ring", category_id: "joyeria", product_id: "p-sunglasses", image_file: "Accessories/a.png", note: "Wrong id" },
+          { name: "USB-C Cable", category_id: "accesorios", product_id: "p-dup-2", image_file: "Accessories/b.png", note: "Disambiguated by id" },
+        ],
+      },
+      { "Accessories/a.png": VALID_PNG, "Accessories/b.png": VALID_PNG },
+    );
+
+    const res = parseImageUpdateZip(zip, CATEGORIES, EXISTING_CATALOG);
+    expect("rows" in res).toBe(true);
+    if (!("rows" in res)) return;
+    expect(res.rows.map((r) => [r.status, r.selected, r.matchedProduct?.id ?? null])).toEqual([
+      ["missing", false, null],
+      ["ambiguous", false, null],
+      ["ready", true, "p-sunglasses"],
+      ["duplicate_zip", false, null],
+      ["invalid", false, null],
+      ["ready", true, "p-dup-2"],
+    ]);
+  });
+
+  it("reuses safe path, magic-byte image validation, and category validation in image-update mode", () => {
+    const zip = makeZip(
+      {
+        version: 1,
+        products: [
+          { name: "Assorted Sunglasses Collection", category_id: "accesorios", image_file: "../evil.png", note: "" },
+          { name: "Assorted Sunglasses Collection", category_id: "accesorios", image_file: "Accessories/fake.png", note: "" },
+          { name: "Assorted Sunglasses Collection", category_id: "unknown_cat", image_file: "Accessories/ok.png", note: "" },
+        ],
+      },
+      { "Accessories/fake.png": strToU8("not a png"), "Accessories/ok.png": VALID_PNG },
+    );
+
+    const res = parseImageUpdateZip(zip, CATEGORIES, EXISTING_CATALOG);
+    expect("rows" in res).toBe(true);
+    if (!("rows" in res)) return;
+    expect(res.rows.every((r) => r.status === "invalid" && !r.selected)).toBe(true);
+  });
+
+  it("builds an image-only update payload and rejects data URLs, and rechecks unique identity", () => {
+    const payload = buildImageUpdatePayload("https://storage.example.com/signed/new.png");
+    expect(Object.keys(payload)).toEqual(["image"]);
+    expect(payload.image).toBe("https://storage.example.com/signed/new.png");
+    expect(() => buildImageUpdatePayload("data:image/png;base64,iVBOR")).toThrow(/storage image URL/i);
+
+    const missingCheck = resolveUniqueTargetProduct(
+      { name: "Assorted Sunglasses Collection", category_id: "accesorios", product_id: null },
+      EXISTING_CATALOG.filter((p) => p.id !== "p-sunglasses"),
+    );
+    expect(missingCheck.ok).toBe(false);
+    if (!missingCheck.ok) expect(missingCheck.status).toBe("missing");
   });
 });
