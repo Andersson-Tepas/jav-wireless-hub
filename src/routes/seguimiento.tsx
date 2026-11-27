@@ -401,7 +401,7 @@ function TrackingPage() {
                               alt=""
                               width={48}
                               height={48}
-                              className="size-12 rounded bg-surface object-cover"
+                              className="size-12 rounded bg-surface object-contain object-center p-1"
                             />
                           )}
 

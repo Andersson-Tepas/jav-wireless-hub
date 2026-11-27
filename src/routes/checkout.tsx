@@ -97,7 +97,7 @@ function CheckoutPage() {
         </div>
         <aside className="card-soft h-fit p-6 lg:sticky lg:top-28">
           <h2 className="font-display text-xl font-bold text-primary">Your order</h2>
-          <ul className="mt-4 space-y-3">{items.map((i) => <li key={i.id} className="flex items-center gap-3 text-sm"><img src={productImage(i.image)} alt="" width={48} height={48} className="size-12 rounded bg-surface object-cover" /><span className="flex-1">{i.quantity} × {i.name}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
+          <ul className="mt-4 space-y-3">{items.map((i) => <li key={i.id} className="flex items-center gap-3 text-sm"><img src={productImage(i.image)} alt="" width={48} height={48} className="size-12 rounded bg-surface object-contain object-center p-1" /><span className="flex-1">{i.quantity} × {i.name}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
           <div className="mt-4 flex justify-between border-t border-border pt-4"><span className="font-bold">Total</span><span className="text-xl font-bold text-primary">{money(total)}</span></div>
           {error && <p className="mt-4 text-sm font-semibold text-destructive">{error}</p>}
           <Button type="submit" variant="accent" className="mt-6 w-full" disabled={sending}>{sending ? "Processing..." : "Confirm and pay"}</Button>

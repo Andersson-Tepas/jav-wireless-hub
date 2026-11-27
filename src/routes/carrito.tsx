@@ -23,7 +23,7 @@ function CartPage() {
             <ul className="divide-y divide-border rounded-xl border border-border">
               {items.map((i) => (
                 <li key={i.id} className="flex gap-4 p-4">
-                  <img src={productImage(i.image)} alt={i.name} width={96} height={96} className="size-20 rounded-lg bg-surface object-cover sm:size-24" />
+                  <img src={productImage(i.image)} alt={i.name} width={96} height={96} className="size-20 rounded-lg bg-surface object-contain object-center p-1.5 sm:size-24" />
                   <div className="flex flex-1 flex-col">
                     <div className="flex justify-between gap-3"><h3 className="font-bold">{i.name}</h3><span className="font-bold text-primary">{money(i.price * i.quantity)}</span></div>
                     <p className="text-sm text-muted-foreground">{money(i.price)} each</p>

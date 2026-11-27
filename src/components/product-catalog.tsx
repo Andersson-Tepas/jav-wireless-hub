@@ -76,7 +76,7 @@ export function ProductCard({
           loading="lazy"
           width={1024}
           height={1024}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="h-full w-full object-contain object-center p-3"
         />
 
         <div className="absolute left-3 top-3 flex flex-col gap-1">
@@ -178,13 +178,13 @@ function ProductDialog({
             className="fixed left-1/2 top-1/2 z-50 grid max-h-[92vh] w-[calc(100%-1.5rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-background shadow-lift md:grid-cols-2"
           >
 
-            <div className="bg-surface">
+            <div className="flex min-w-0 items-center justify-center bg-surface p-4 sm:p-6">
               <img
                 src={productImage(product.image)}
                 alt={product.name}
                 width={1024}
                 height={1024}
-                className="h-full w-full object-cover"
+                className="max-h-[45vh] w-full object-contain object-center sm:max-h-[65vh]"
               />
             </div>
 
