@@ -64,6 +64,13 @@
       "when": 1795815833697,
       "tag": "0008_variant_configuration_and_notification_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1795816725889,
+      "tag": "0009_guard_initial_variant_bulk_config",
+      "breakpoints": true
     }
   ]
 }

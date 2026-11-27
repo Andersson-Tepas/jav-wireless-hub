@@ -36,6 +36,7 @@ describe.skipIf(!url)("actual PostgreSQL variant transactions (isolated fixtures
     await db.unsafe(await readFile("drizzle/migrations/0006_opt_in_product_variants.sql", "utf8"));
     await db.unsafe(await readFile("drizzle/migrations/0007_variant_inventory_write_guards.sql", "utf8"));
     await db.unsafe(await readFile("drizzle/migrations/0008_variant_configuration_and_notification_guards.sql", "utf8"));
+    await db.unsafe(await readFile("drizzle/migrations/0009_guard_initial_variant_bulk_config.sql", "utf8"));
     await db`insert into user_roles(user_id,role) values(${adminId}::uuid,'admin')`;
     await db.unsafe("GRANT USAGE ON SCHEMA public,auth TO anon,authenticated,service_role; GRANT SELECT ON products TO anon,authenticated; ALTER TABLE products ENABLE ROW LEVEL SECURITY; CREATE POLICY fixture_products ON products FOR SELECT TO anon,authenticated USING(active OR public.has_role((select auth.uid()),'admin'));");
   });
@@ -152,5 +153,34 @@ describe.skipIf(!url)("actual PostgreSQL variant transactions (isolated fixtures
     const hidden = await db.begin(async sql => { await sql.unsafe("set local role anon"); return sql`select id from product_variants where product_id=${id}::uuid`; }); expect(hidden).toHaveLength(0);
     await expect(db.begin(async sql => { await sql.unsafe("set local role anon"); await sql`select create_order_atomic(${sql.json(input([{ id, quantity: 1 }]))})`; })).rejects.toThrow("permission denied");
     await expect(db.begin(async sql => { await sql.unsafe("set local role authenticated"); await sql`select configure_product_variants(${id}::uuid,false,false,'[]'::jsonb,1)`; })).rejects.toThrow("Forbidden");
+  });
+  it("configure_initial_product_variants atomically rejects preexisting variants/flags, inactive products, images, and non-admins", async () => {
+    const configureInitial = (id: string, color: boolean, storage: boolean, variants: { color_name: string | null; color_hex: string | null; storage: string | null; stock: number; image: string | null; active: boolean }[], expected: number) =>
+      db.begin(async sql => {
+        await sql`select set_config('request.jwt.claim.sub',${adminId},true)`;
+        await sql`select configure_initial_product_variants(${id}::uuid,${color},${storage},${sql.json(variants)},${expected})`;
+      });
+
+    const cleanId = await product(2);
+    await expect(configureInitial(cleanId, true, false, [{ color_name: "Pink", color_hex: "#E6A5BF", storage: null, stock: 2, image: "https://example.com/p.jpg", active: true }], 2)).rejects.toThrow("images are not allowed");
+    await expect(db.begin(async sql => { await sql.unsafe("set local role authenticated"); await sql`select configure_initial_product_variants(${cleanId}::uuid,true,false,${sql.json([combination("Pink", null, 2)])},2)`; })).rejects.toThrow("Forbidden");
+
+    await configureInitial(cleanId, true, true, [{ color_name: "Pink", color_hex: "#E6A5BF", storage: "128 GB", stock: 2, image: null, active: true }], 2);
+    expect(await stock(cleanId)).toBe(2);
+
+    // Rejects a second initial-variant call on the same product
+    await expect(configureInitial(cleanId, true, true, [{ color_name: "Pink", color_hex: "#E6A5BF", storage: "128 GB", stock: 2, image: null, active: true }], 2)).rejects.toThrow("already has existing variants");
+
+    // Even after disabling variants, historical inactive variant rows still block initial bulk configuration
+    await configure(cleanId, false, false, [], 2);
+    await expect(configureInitial(cleanId, true, false, [{ color_name: "Black", color_hex: "#171717", storage: null, stock: 2, image: null, active: true }], 2)).rejects.toThrow("already has existing variants");
+
+    // Rejects inactive product and stock mismatch
+    const inactiveId = await product(1);
+    await db`update products set active=false where id=${inactiveId}::uuid`;
+    await expect(configureInitial(inactiveId, true, false, [combination("Blue", null, 1)], 1)).rejects.toThrow("inactive");
+
+    const mismatchId = await product(3);
+    await expect(configureInitial(mismatchId, true, false, [combination("Blue", null, 1)], 1)).rejects.toThrow("Stock changed");
   });
 });

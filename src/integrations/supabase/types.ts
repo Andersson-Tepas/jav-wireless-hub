@@ -679,6 +679,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      configure_initial_product_variants: {
+        Args: {
+          _color: boolean
+          _expected_stock: number
+          _product_id: string
+          _storage: boolean
+          _variants: Json
+        }
+        Returns: undefined
+      }
       configure_product_variants: {
         Args: {
           _color: boolean

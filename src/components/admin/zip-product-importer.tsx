@@ -15,8 +15,9 @@ import {
   type ImportRow,
 } from "@/lib/zip-product-import";
 import { ZipImageUpdater } from "./zip-image-updater";
+import { ZipVariantUpdater } from "./zip-variant-updater";
 
-type ImporterMode = "new" | "update_images";
+type ImporterMode = "new" | "update_images" | "update_variants";
 
 type CategoryOption = { id: string; name: string };
 
@@ -54,13 +55,14 @@ export function ZipProductImporter({
   const upload = useServerFn(uploadProductImage);
   const [mode, setMode] = useState<ImporterMode>("new");
   const [imageUpdaterBusy, setImageUpdaterBusy] = useState(false);
+  const [variantUpdaterBusy, setVariantUpdaterBusy] = useState(false);
   const [zipName, setZipName] = useState("");
   const [parseError, setParseError] = useState("");
   const [reading, setReading] = useState(false);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
-  const busy = reading || importing || imageUpdaterBusy;
+  const busy = reading || importing || imageUpdaterBusy || variantUpdaterBusy;
 
   function switchMode(next: ImporterMode) {
     if (busy || next === mode) return;
@@ -176,9 +178,14 @@ export function ZipProductImporter({
           <Button type="button" size="sm" role="tab" aria-selected={mode === "update_images"} variant={mode === "update_images" ? "default" : "outline"} disabled={busy} onClick={() => switchMode("update_images")}>
             Update existing images
           </Button>
+          <Button type="button" size="sm" role="tab" aria-selected={mode === "update_variants"} variant={mode === "update_variants" ? "default" : "outline"} disabled={busy} onClick={() => switchMode("update_variants")}>
+            Update existing variants
+          </Button>
         </div>
         {mode === "update_images" ? (
           <ZipImageUpdater cats={cats} onBusyChange={setImageUpdaterBusy} onClose={onClose} onUpdated={onImported} />
+        ) : mode === "update_variants" ? (
+          <ZipVariantUpdater cats={cats} onBusyChange={setVariantUpdaterBusy} onClose={onClose} onUpdated={onImported} />
         ) : (
           <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3 text-sm">
