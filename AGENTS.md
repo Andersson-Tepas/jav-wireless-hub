@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 # Project rules
-- The home-page brand carousel owns its illustrative name list and uses a measured duplicated track with requestAnimationFrame instead of step autoplay, keeping seamless motion independent of catalog data and existing carousels.
+- The home-page brand carousel derives deduplicated active brands from HomePage's existing `useProducts()` data via `src/lib/brand-catalog.ts` (excluding placeholders and inactive-only rows, pairing exact matches with locally bundled `simple-icons` SVGs) and animates a measured duplicated track with `requestAnimationFrame`.
 - Products, categories, orders, service requests and status history live in the database; the catalog reads them publicly via the browser client so admin edits show up immediately.
 - Orders, service requests and tracking lookups go through server functions in src/lib/commerce.functions.ts using the admin client, so customers never get direct table access.
 - Order status changes trigger DB-side history + notification queue rows, so every status-change path is logged identically.

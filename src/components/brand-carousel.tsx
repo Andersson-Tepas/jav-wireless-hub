@@ -1,16 +1,40 @@
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  deriveCatalogBrands,
+  type BrandProductInput,
+  type HomeBrand,
+} from "@/lib/brand-catalog";
 
-export type HomeBrand = { name: string; logoPath?: string };
+export type { HomeBrand } from "@/lib/brand-catalog";
 
-// Add real brands here; logoPath is optional and can point to a bundled image.
-export const homeBrands: HomeBrand[] = [];
+type BrandCarouselProps = {
+  products?: readonly BrandProductInput[];
+  brands?: readonly HomeBrand[];
+};
 
-export function BrandCarousel() {
+function brandNameClass(name: string): string {
+  if (name.length >= 14) return "font-display text-base font-bold leading-snug tracking-tight sm:text-lg";
+  if (name.length >= 9) return "font-display text-lg font-bold leading-tight tracking-tight sm:text-xl";
+  return "font-display text-xl font-bold leading-tight tracking-tight sm:text-2xl";
+}
+
+export function BrandCarousel({ products, brands }: BrandCarouselProps) {
+  const activeBrands = useMemo(
+    () => (brands ? [...brands] : products ? deriveCatalogBrands(products) : []),
+    [brands, products],
+  );
+  const brandListKey = useMemo(
+    () => activeBrands.map((brand) => brand.name).join("\0"),
+    [activeBrands],
+  );
   // A full loop must exceed the viewport even with only one or two brands.
-  const repeatCount = homeBrands.length > 0 ? Math.max(1, Math.ceil(6 / homeBrands.length)) : 0;
-  const loopBrands = Array.from({ length: repeatCount }, () => homeBrands).flat();
+  const repeatCount = activeBrands.length > 0 ? Math.max(1, Math.ceil(6 / activeBrands.length)) : 0;
+  const loopBrands = useMemo(
+    () => Array.from({ length: repeatCount }, () => activeBrands).flat(),
+    [activeBrands, repeatCount],
+  );
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -35,7 +59,7 @@ export function BrandCarousel() {
   }
 
   useEffect(() => {
-    if (homeBrands.length === 0) return;
+    if (activeBrands.length === 0) return;
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => {
       if (preference.matches) manualMove.current = null;
@@ -44,9 +68,16 @@ export function BrandCarousel() {
     update();
     preference.addEventListener("change", update);
     return () => preference.removeEventListener("change", update);
-  }, [homeBrands.length]);
+  }, [activeBrands.length > 0]);
 
   useEffect(() => {
+    if (activeBrands.length === 0) {
+      loopWidth.current = 0;
+      cardStep.current = 0;
+      offset.current = 0;
+      manualMove.current = null;
+      return;
+    }
     const viewport = viewportRef.current;
     const track = trackRef.current;
     const section = sectionRef.current;
@@ -79,10 +110,10 @@ export function BrandCarousel() {
       intersection.disconnect();
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, [loopBrands.length]);
+  }, [brandListKey, loopBrands.length]);
 
   useEffect(() => {
-    if (homeBrands.length === 0 || !onScreen || !pageVisible || interacting) return;
+    if (activeBrands.length === 0 || !onScreen || !pageVisible || interacting) return;
     const auto = !hovered && !focused && !reducedMotion;
     if (!auto && !manualMove.current) return;
     let frame = 0;
@@ -104,7 +135,7 @@ export function BrandCarousel() {
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [hovered, focused, reducedMotion, interacting, onScreen, pageVisible, motionVersion, homeBrands.length]);
+  }, [hovered, focused, reducedMotion, interacting, onScreen, pageVisible, motionVersion, brandListKey]);
 
   function move(direction: number) {
     const distance = direction * cardStep.current;
@@ -127,7 +158,7 @@ export function BrandCarousel() {
   }
 
   // Keep every hook above this guard, including when brands are added later.
-  if (homeBrands.length === 0) return null;
+  if (activeBrands.length === 0) return null;
 
   return (
     <section
@@ -200,16 +231,34 @@ export function BrandCarousel() {
               {[...loopBrands, ...loopBrands].map((brand, index) => (
                 <div
                   key={`${brand.name}-${index}`}
-                  className="flex h-28 min-w-0 shrink-0 grow-0 basis-[78%] items-center justify-center rounded-lg bg-surface px-4 text-foreground sm:basis-[38%] lg:basis-[21%]"
+                  className="flex h-28 min-w-0 shrink-0 grow-0 basis-[78%] items-center justify-center rounded-lg bg-surface px-4 text-primary sm:basis-[38%] lg:basis-[21%]"
                   role="group"
                   aria-roledescription="slide"
-                  aria-hidden={index >= homeBrands.length ? true : undefined}
-                  aria-label={index < homeBrands.length ? `${brand.name}, ${index + 1} of ${homeBrands.length}` : undefined}
+                  aria-hidden={index >= activeBrands.length ? true : undefined}
+                  aria-label={index < activeBrands.length ? `${brand.name}, ${index + 1} of ${activeBrands.length}` : undefined}
                 >
                   {brand.logoPath ? (
                     <img src={brand.logoPath} alt={brand.name} draggable={false} className="max-h-16 max-w-full object-contain" />
+                  ) : brand.logo ? (
+                    brand.logo.layout === "mark-with-name" ? (
+                      <span className="inline-flex max-w-full items-center justify-center gap-2.5">
+                        <svg viewBox="0 0 24 24" className="size-7 shrink-0 fill-current sm:size-8" aria-hidden="true">
+                          <path d={brand.logo.path} />
+                        </svg>
+                        <span className={brandNameClass(brand.name)}>{brand.name}</span>
+                      </span>
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        role="img"
+                        aria-label={brand.name}
+                        className={brand.logo.layout === "wordmark" ? "size-20 max-w-full fill-current sm:size-24" : "size-10 fill-current sm:size-12"}
+                      >
+                        <path d={brand.logo.path} />
+                      </svg>
+                    )
                   ) : (
-                    <span className="max-w-full break-words text-center text-2xl font-bold sm:text-3xl">{brand.name}</span>
+                    <span className={`max-w-full break-words text-center ${brandNameClass(brand.name)}`}>{brand.name}</span>
                   )}
                 </div>
               ))}

@@ -167,7 +167,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <BrandCarousel />
+      <BrandCarousel products={products} />
 
       <section className="section-pad">
         <div className="container-page">
