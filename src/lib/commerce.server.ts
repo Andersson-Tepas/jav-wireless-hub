@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { selectionLabel } from "./variants";
+import { effectiveVariantPrice, hasVariants, selectionLabel } from "./variants";
 const atomicOrderResult = z.object({
   order: z.object({ id: z.string(), order_number: z.string(), email: z.string(), total: z.coerce.number(), status: z.string(), payment_status: z.string() }),
   items: z.array(z.object({ product_id: z.string(), variant_id: z.string().nullable(), name: z.string(), price: z.coerce.number(), quantity: z.number(), image: z.string().nullable(), color_snapshot: z.string().nullable(), storage_snapshot: z.string().nullable() })),
@@ -131,6 +131,63 @@ export async function createOrderCore(data: OrderInput) {
     status: order.status,
     items: parsed.items,
   };
+}
+
+export async function revalidateCartItemsCore(items: { id: string; variant_id?: string | null | undefined }[]) {
+  if (!items.length) return [];
+  const productIds = [...new Set(items.map((i) => i.id))];
+  const variantIds = [...new Set(items.map((i) => i.variant_id).filter((v): v is string => !!v))];
+  const [{ data: products, error: pErr }, variantsRes] = await Promise.all([
+    supabaseAdmin
+      .from("products")
+      .select("id,name,price,stock,image,active,color_variants_enabled,storage_variants_enabled")
+      .in("id", productIds),
+    variantIds.length
+      ? supabaseAdmin
+          .from("product_variants")
+          .select("id,product_id,color_name,storage,stock,image,active,price_override")
+          .in("id", variantIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (pErr || variantsRes.error) throw new Error("Could not verify current cart prices");
+  const pMap = new Map((products ?? []).map((p) => [p.id, p]));
+  const vMap = new Map((variantsRes.data ?? []).map((v) => [v.id, v]));
+
+  return items.map((item) => {
+    const p = pMap.get(item.id);
+    if (!p || !p.active) {
+      return { id: item.id, variant_id: item.variant_id ?? null, available: false, price: null as number | null, stock: 0, image: null as string | null, color_snapshot: null as string | null, storage_snapshot: null as string | null };
+    }
+    if (hasVariants(p)) {
+      const v = item.variant_id ? vMap.get(item.variant_id) : undefined;
+      if (!v || v.product_id !== p.id || !v.active) {
+        return { id: item.id, variant_id: item.variant_id ?? null, available: false, price: null as number | null, stock: 0, image: p.image, color_snapshot: null as string | null, storage_snapshot: null as string | null };
+      }
+      return {
+        id: p.id,
+        variant_id: v.id,
+        available: v.stock > 0,
+        price: effectiveVariantPrice(p.price, v),
+        stock: v.stock,
+        image: v.image || p.image,
+        color_snapshot: v.color_name,
+        storage_snapshot: v.storage,
+      };
+    }
+    if (item.variant_id) {
+      return { id: p.id, variant_id: item.variant_id, available: false, price: null as number | null, stock: 0, image: p.image, color_snapshot: null as string | null, storage_snapshot: null as string | null };
+    }
+    return {
+      id: p.id,
+      variant_id: null,
+      available: p.stock > 0,
+      price: Number(p.price),
+      stock: p.stock,
+      image: p.image,
+      color_snapshot: null,
+      storage_snapshot: null,
+    };
+  });
 }
 
 export async function lookupOrderCore(orderNumber: string, contact: string) {

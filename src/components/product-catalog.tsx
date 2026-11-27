@@ -13,8 +13,8 @@ import { categoriesQuery, productsQuery, specsOf, type Product } from "@/lib/cat
 import { money, useCart } from "@/lib/cart";
 
 import { VariantOptions, ColorSwatch } from "@/components/variant-options";
-import { variantsQuery } from "@/lib/variant-queries";
-import { compatibleVariants, hasVariants, selectionLabel, stockLabel, type Variant } from "@/lib/variants";
+import { publicVariantPricingQuery, variantsQuery, type VariantPricingRow } from "@/lib/variant-queries";
+import { compatibleVariants, effectiveVariantPrice, hasVariants, selectionLabel, stockLabel, summarizeProductPricing, type Variant } from "@/lib/variants";
 import { productImage, socialLinks } from "@/lib/site-data";
 
 
@@ -25,7 +25,7 @@ function useAddToCart() {
     add({
       id: p.id,
       name: p.name,
-      price: Number(p.price),
+      price: effectiveVariantPrice(p.price, variant),
       image: variant?.image || p.image,
       stock: variant?.stock ?? p.stock,
       variant_id: variant?.id ?? null,
@@ -61,11 +61,14 @@ function Availability({ stock }: { stock: number }) {
 export function ProductCard({
   product,
   onOpen,
+  variants,
 }: {
   product: Product;
   onOpen: () => void;
+  variants?: readonly VariantPricingRow[] | undefined;
 }) {
   const addToCart = useAddToCart();
+  const pricing = summarizeProductPricing(product, variants);
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition hover:shadow-lift">
@@ -113,10 +116,10 @@ export function ProductCard({
         <div className="mt-2 flex items-baseline gap-2">
 
           <span className="text-xl font-extrabold text-primary">
-            {money(Number(product.price))}
+            {pricing.hasRange ? `From ${money(pricing.minPrice)}` : money(pricing.displayPrice)}
           </span>
 
-          {product.old_price && (
+          {pricing.showOldPrice && product.old_price && (
             <span className="text-sm text-muted-foreground line-through">
               {money(Number(product.old_price))}
             </span>
@@ -173,6 +176,21 @@ function ProductDialog({
   const selected = enabled && (!product?.color_variants_enabled || !!color) && (!product?.storage_variants_enabled || !!storage) && matches.length === 1 ? matches[0] : null;
   const canAdd = !!product && (enabled ? !!selected && selected.stock > 0 && !isError : product.stock > 0);
   const chosenLabel = selectionLabel({ color_snapshot: selected?.color_name ?? color, storage_snapshot: selected?.storage ?? storage });
+  const summary = product ? summarizeProductPricing(product, variants) : null;
+  const selectedPrice = product && selected ? effectiveVariantPrice(product.price, selected) : null;
+  const displayPriceText = !product || !summary
+    ? ""
+    : selectedPrice !== null
+      ? money(selectedPrice)
+      : summary.hasRange
+        ? `From ${money(summary.minPrice)}`
+        : money(summary.displayPrice);
+  const showDialogOldPrice = !!(
+    product?.old_price &&
+    (selected
+      ? selected.price_override === null && Number(product.old_price) > Number(product.price)
+      : summary?.showOldPrice)
+  );
 
 
   return (
@@ -223,10 +241,10 @@ function ProductDialog({
               <div className="mt-3 flex items-baseline gap-3">
 
                 <span className="text-3xl font-extrabold text-primary">
-                  {money(Number(product.price))}
+                  {displayPriceText}
                 </span>
 
-                {product.old_price && (
+                {showDialogOldPrice && product.old_price && (
                   <span className="text-muted-foreground line-through">
                     {money(Number(product.old_price))}
                   </span>
@@ -354,7 +372,7 @@ function ProductDialog({
                 <a
                   className="inline-flex h-11 items-center justify-center rounded-md border border-input px-5 text-sm font-semibold hover:border-primary hover:text-primary"
                   href={`${socialLinks.whatsapp}?text=${encodeURIComponent(
-                    `Hello JAV Wireless, I’m interested in ${product.name}${chosenLabel ? ` — ${chosenLabel}` : ""}`
+                    `Hello JAV Wireless, I’m interested in ${product.name}${chosenLabel ? ` — ${chosenLabel}` : ""} (${displayPriceText})`
                   )}`}
                   target="_blank"
                   rel="noreferrer"
@@ -383,6 +401,7 @@ export function ProductGrid({
   columns?: string;
 }) {
   const [selected, setSelected] = useState<Product | null>(null);
+  const { data: variantPricing = {} } = useQuery(publicVariantPricingQuery);
 
   if (!products.length)
     return (
@@ -400,6 +419,7 @@ export function ProductGrid({
           <ProductCard
             key={p.id}
             product={p}
+            variants={variantPricing[p.id]}
             onOpen={() => setSelected(p)}
           />
         ))}
@@ -426,6 +446,7 @@ export function ProductBrowser({
   initialCategory?: string;
 }) {
   const { data: products = [], isLoading } = useProducts();
+  const { data: variantPricing = {} } = useQuery(publicVariantPricingQuery);
 
   const { data: categories = [] } = useQuery(categoriesQuery);
 
@@ -458,6 +479,7 @@ export function ProductBrowser({
   const list = useMemo(() => {
 
     const term = q.trim().toLowerCase();
+    const effectiveStartPrice = (p: Product) => summarizeProductPricing(p, variantPricing[p.id]).minPrice;
 
     const r = products.filter(
       (p) =>
@@ -467,7 +489,7 @@ export function ProductBrowser({
             .toLowerCase()
             .includes(term)) &&
         (!brand || p.brand === brand) &&
-        (!maxPrice || Number(p.price) <= Number(maxPrice)) &&
+        (!maxPrice || effectiveStartPrice(p) <= Number(maxPrice)) &&
         (!onlyAvailable || p.stock > 0)
     );
 
@@ -476,13 +498,13 @@ export function ProductBrowser({
     if (sort === "price-asc")
       s.sort(
         (a, b) =>
-          Number(a.price) - Number(b.price)
+          effectiveStartPrice(a) - effectiveStartPrice(b)
       );
 
     if (sort === "price-desc")
       s.sort(
         (a, b) =>
-          Number(b.price) - Number(a.price)
+          effectiveStartPrice(b) - effectiveStartPrice(a)
       );
 
     if (sort === "new")
@@ -504,6 +526,7 @@ export function ProductBrowser({
 
   }, [
     products,
+    variantPricing,
     category,
     q,
     brand,

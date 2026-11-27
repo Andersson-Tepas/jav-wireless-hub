@@ -10,6 +10,7 @@ type CartCtx = {
   add: (item: Omit<CartItem, "quantity">, qty?: number) => void;
   setQty: (id: string, qty: number) => void;
   remove: (id: string) => void;
+  syncItems: (updater: (prev: CartItem[]) => CartItem[]) => void;
   clear: () => void;
 };
 
@@ -40,6 +41,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     },
     setQty: (id, qty) => setItems((prev) => prev.map((i) => cartIdentity(i) === id ? { ...i, quantity: Math.max(1, Math.min(i.stock, qty)) } : i)),
     remove: (id) => setItems((prev) => prev.filter((i) => cartIdentity(i) !== id)),
+    syncItems: (updater) => setItems((prev) => updater(prev)),
     clear: () => setItems([]),
   }), [items]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

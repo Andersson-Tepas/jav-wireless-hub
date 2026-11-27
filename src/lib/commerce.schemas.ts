@@ -11,6 +11,7 @@ export const orderSchema = z
   .object({
     ...contact,
     checkout_key: z.string().uuid().optional(),
+    expected_total: z.number().min(0).max(10_000_000).optional(),
     address: z.string().trim().max(300).optional(),
     delivery_method: z.enum(["pickup", "shipping"]),
     payment_method: z.enum(["card", "paypal", "zelle"]),

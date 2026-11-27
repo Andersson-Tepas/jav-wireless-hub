@@ -71,6 +71,13 @@
       "when": 1795816725889,
       "tag": "0009_guard_initial_variant_bulk_config",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795817816301,
+      "tag": "0010_variant_price_overrides",
+      "breakpoints": true
     }
   ]
 }

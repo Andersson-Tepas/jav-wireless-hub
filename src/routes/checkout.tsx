@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, MapPin, Truck } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PageIntro } from "@/components/site-shell";
 import { PaymentPicker } from "@/components/payment-picker";
-import { createOrder } from "@/lib/commerce.functions";
+import { createOrder, revalidateCartItems } from "@/lib/commerce.functions";
 import { cartIdentity, selectionLabel } from "@/lib/variants";
 import { money, useCart, type CartItem } from "@/lib/cart";
 import { deliveryLabels, paymentLabels, productImage, statusLabels } from "@/lib/site-data";
@@ -18,35 +18,97 @@ export const Route = createFileRoute("/checkout")({
 type Done = { order_number: string; items: CartItem[]; total: number; payment: string; delivery: string; status: string; email: string };
 
 function CheckoutPage() {
-  const { items, total, clear } = useCart();
+  const { items, total, clear, syncItems } = useCart();
   const submit = useServerFn(createOrder);
+  const checkPrices = useServerFn(revalidateCartItems);
   const [form, setForm] = useState({ customer_name: "", email: "", phone: "", address: "", notes: "" });
   const [delivery, setDelivery] = useState<"pickup" | "shipping">("pickup");
   const [payment, setPayment] = useState("card");
   const [reference, setReference] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [priceNotice, setPriceNotice] = useState("");
   const attempt = useRef<{ fingerprint: string; key: string } | null>(null);
   const [done, setDone] = useState<Done | null>(null);
 
+  async function refreshCartPricing(): Promise<{ changed: boolean; unavailable: boolean; freshTotal: number }> {
+    const fresh = await checkPrices({
+      data: { items: items.map((i) => ({ id: i.id, variant_id: i.variant_id ?? null })) },
+    });
+    const byKey = new Map(fresh.map((f) => [cartIdentity(f), f]));
+    let changed = false;
+    let unavailable = false;
+    let freshTotal = 0;
+    const nextItems = items.map((item) => {
+      const latest = byKey.get(cartIdentity(item));
+      if (!latest || !latest.available || latest.price === null || latest.stock < item.quantity) {
+        unavailable = true;
+        if (latest && latest.price !== null) {
+          if (latest.price !== item.price || latest.stock !== item.stock) changed = true;
+          freshTotal += latest.price * item.quantity;
+          return { ...item, price: latest.price, stock: latest.stock };
+        }
+        freshTotal += item.price * item.quantity;
+        return item;
+      }
+      if (latest.price !== item.price || latest.stock !== item.stock) changed = true;
+      freshTotal += latest.price * item.quantity;
+      return { ...item, price: latest.price, stock: latest.stock };
+    });
+    if (changed) {
+      syncItems(() => nextItems);
+    }
+    return { changed, unavailable, freshTotal: Math.round(freshTotal * 100) / 100 };
+  }
+
+  useEffect(() => {
+    if (!items.length || done) return;
+    let cancelled = false;
+    void refreshCartPricing()
+      .then(({ changed }) => {
+        if (!cancelled && changed) {
+          setPriceNotice("One or more item prices were updated to reflect current store pricing. Please review your total before confirming.");
+        }
+      })
+      .catch(() => { /* validated again on submit */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault(); setError(""); setSending(true);
+    e.preventDefault(); setError(""); setPriceNotice(""); setSending(true);
     try {
-      const fingerprint = JSON.stringify({ form, delivery, payment, reference, items: items.map(i => ({ id: i.id, variant_id: i.variant_id, quantity: i.quantity })) });
+      const check = await refreshCartPricing();
+      if (check.unavailable) {
+        setError("One or more items in your cart are no longer available in the requested quantity. Please return to your cart to review.");
+        return;
+      }
+      if (check.changed) {
+        setPriceNotice("Prices changed for one or more items in your cart. Your total has been updated — please review and click Confirm and pay again.");
+        return;
+      }
+      const expectedTotal = Math.round(total * 100) / 100;
+      const fingerprint = JSON.stringify({ form, delivery, payment, reference, expectedTotal, items: items.map(i => ({ id: i.id, variant_id: i.variant_id, quantity: i.quantity })) });
       try {
         const saved: unknown = JSON.parse(sessionStorage.getItem("jav-checkout-attempt") ?? "null");
         if (saved && typeof saved === "object" && "fingerprint" in saved && "key" in saved && saved.fingerprint === fingerprint && typeof saved.key === "string" && /^[0-9a-f-]{36}$/i.test(saved.key)) attempt.current = { fingerprint, key: saved.key };
       } catch { /* A storage failure does not prevent checkout. */ }
       if (attempt.current?.fingerprint !== fingerprint) attempt.current = { fingerprint, key: crypto.randomUUID() };
       try { sessionStorage.setItem("jav-checkout-attempt", JSON.stringify(attempt.current)); } catch { /* optional persistence */ }
-      const r = await submit({ data: { ...form, checkout_key: attempt.current.key, address: delivery === "shipping" ? form.address : undefined, notes: form.notes || undefined, delivery_method: delivery, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin, items: items.map((i) => ({ id: i.id, variant_id: i.variant_id ?? null, quantity: i.quantity })) } });
+      const r = await submit({ data: { ...form, checkout_key: attempt.current.key, expected_total: expectedTotal, address: delivery === "shipping" ? form.address : undefined, notes: form.notes || undefined, delivery_method: delivery, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin, items: items.map((i) => ({ id: i.id, variant_id: i.variant_id ?? null, quantity: i.quantity })) } });
       try { sessionStorage.removeItem("jav-checkout-attempt"); } catch { /* optional persistence */ }
       attempt.current = null;
       if (r.checkout_url) { clear(); window.location.assign(r.checkout_url); return; }
       setDone({ order_number: r.order_number, items: r.items.map(i => ({ id: i.product_id, variant_id: i.variant_id, name: i.name, price: i.price, image: i.image ?? "", stock: i.quantity, quantity: i.quantity, color_snapshot: i.color_snapshot, storage_snapshot: i.storage_snapshot })), total: r.total, payment, delivery, status: r.status, email: r.email });
       clear();
     } catch (err) {
-      setError(err instanceof Error && err.message.length < 120 ? err.message : "We could not process your order. Please review your information.");
+      const msg = err instanceof Error ? err.message : "";
+      if (/Prices have changed/i.test(msg)) {
+        void refreshCartPricing().catch(() => { /* ignore */ });
+        setPriceNotice(msg);
+      } else {
+        setError(msg && msg.length < 120 ? msg : "We could not process your order. Please review your information.");
+      }
     } finally { setSending(false); }
   }
 
@@ -110,6 +172,7 @@ function CheckoutPage() {
           <h2 className="font-display text-xl font-bold text-primary">Your order</h2>
           <ul className="mt-4 space-y-3">{items.map((i) => <li key={cartIdentity(i)} className="flex items-center gap-3 text-sm"><img src={productImage(i.image)} alt="" width={48} height={48} className="size-12 rounded bg-surface object-contain object-center p-1" /><span className="flex-1">{i.quantity} × {i.name}{selectionLabel(i) && <span className="block text-xs text-muted-foreground">{selectionLabel(i)}</span>}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
           <div className="mt-4 flex justify-between border-t border-border pt-4"><span className="font-bold">Total</span><span className="text-xl font-bold text-primary">{money(total)}</span></div>
+          {priceNotice && <p role="status" className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm font-medium text-primary">{priceNotice}</p>}
           {error && <p className="mt-4 text-sm font-semibold text-destructive">{error}</p>}
           <Button type="submit" variant="accent" className="mt-6 w-full" disabled={sending}>{sending ? "Processing..." : "Confirm and pay"}</Button>
         </aside>

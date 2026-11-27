@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { PageIntro } from "@/components/site-shell";
+import { revalidateCartItems } from "@/lib/commerce.functions";
 import { cartIdentity, selectionLabel } from "@/lib/variants";
 import { money, useCart } from "@/lib/cart";
 import { productImage } from "@/lib/site-data";
@@ -12,11 +15,47 @@ export const Route = createFileRoute("/carrito")({
 });
 
 function CartPage() {
-  const { items, total, setQty, remove } = useCart();
+  const { items, total, setQty, remove, syncItems } = useCart();
+  const checkPrices = useServerFn(revalidateCartItems);
+  const [priceNotice, setPriceNotice] = useState("");
+  const itemKey = items.map((i) => `${cartIdentity(i)}:${i.price}`).join("|");
+
+  useEffect(() => {
+    if (!items.length) return;
+    let cancelled = false;
+    void checkPrices({ data: { items: items.map((i) => ({ id: i.id, variant_id: i.variant_id ?? null })) } })
+      .then((fresh) => {
+        if (cancelled) return;
+        const byKey = new Map(fresh.map((f) => [cartIdentity(f), f]));
+        let changed = false;
+        syncItems((prev) =>
+          prev.map((item) => {
+            const latest = byKey.get(cartIdentity(item));
+            if (!latest || latest.price === null) return item;
+            if (latest.price !== item.price || latest.stock !== item.stock) {
+              changed = true;
+              return {
+                ...item,
+                price: latest.price,
+                stock: latest.stock,
+                quantity: latest.stock > 0 ? Math.min(item.quantity, latest.stock) : item.quantity,
+              };
+            }
+            return item;
+          }),
+        );
+        if (changed) setPriceNotice("One or more item prices or stock quantities were updated to reflect current store pricing.");
+      })
+      .catch(() => { /* keep existing cart display if check fails */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemKey]);
+
   return (
     <>
       <PageIntro eyebrow="Cart" title="Your cart" description="Update quantities or remove products before checkout." />
       <section className="section-pad"><div className="container-page">
+        {priceNotice && <p role="status" className="mb-4 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm font-medium text-primary">{priceNotice}</p>}
         {!items.length ? (
           <div className="mx-auto max-w-md text-center"><ShoppingCart className="mx-auto size-12 text-muted-foreground" /><p className="mt-4 text-lg font-semibold">Your cart is empty</p><Link to="/productos" className={`${buttonVariants()} mt-6`}>Browse products</Link></div>
         ) : (

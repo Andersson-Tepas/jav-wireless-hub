@@ -16,8 +16,9 @@ import {
 } from "@/lib/zip-product-import";
 import { ZipImageUpdater } from "./zip-image-updater";
 import { ZipVariantUpdater } from "./zip-variant-updater";
+import { ZipVariantPriceUpdater } from "./zip-variant-price-updater";
 
-type ImporterMode = "new" | "update_images" | "update_variants";
+type ImporterMode = "new" | "update_images" | "update_variants" | "update_variant_prices";
 
 type CategoryOption = { id: string; name: string };
 
@@ -56,13 +57,14 @@ export function ZipProductImporter({
   const [mode, setMode] = useState<ImporterMode>("new");
   const [imageUpdaterBusy, setImageUpdaterBusy] = useState(false);
   const [variantUpdaterBusy, setVariantUpdaterBusy] = useState(false);
+  const [priceUpdaterBusy, setPriceUpdaterBusy] = useState(false);
   const [zipName, setZipName] = useState("");
   const [parseError, setParseError] = useState("");
   const [reading, setReading] = useState(false);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
-  const busy = reading || importing || imageUpdaterBusy || variantUpdaterBusy;
+  const busy = reading || importing || imageUpdaterBusy || variantUpdaterBusy || priceUpdaterBusy;
 
   function switchMode(next: ImporterMode) {
     if (busy || next === mode) return;
@@ -181,11 +183,16 @@ export function ZipProductImporter({
           <Button type="button" size="sm" role="tab" aria-selected={mode === "update_variants"} variant={mode === "update_variants" ? "default" : "outline"} disabled={busy} onClick={() => switchMode("update_variants")}>
             Update existing variants
           </Button>
+          <Button type="button" size="sm" role="tab" aria-selected={mode === "update_variant_prices"} variant={mode === "update_variant_prices" ? "default" : "outline"} disabled={busy} onClick={() => switchMode("update_variant_prices")}>
+            Update variant prices
+          </Button>
         </div>
         {mode === "update_images" ? (
           <ZipImageUpdater cats={cats} onBusyChange={setImageUpdaterBusy} onClose={onClose} onUpdated={onImported} />
         ) : mode === "update_variants" ? (
           <ZipVariantUpdater cats={cats} onBusyChange={setVariantUpdaterBusy} onClose={onClose} onUpdated={onImported} />
+        ) : mode === "update_variant_prices" ? (
+          <ZipVariantPriceUpdater onBusyChange={setPriceUpdaterBusy} onClose={onClose} onUpdated={onImported} />
         ) : (
           <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface p-3 text-sm">

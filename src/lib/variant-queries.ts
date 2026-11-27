@@ -9,3 +9,29 @@ export const variantsQuery = (productId: string) => queryOptions({
     return data;
   },
 });
+
+export type VariantPricingRow = {
+  product_id: string;
+  active: boolean;
+  stock: number;
+  price_override: number | null;
+};
+
+export const publicVariantPricingQuery = queryOptions({
+  queryKey: ["product-variants", "pricing-summary"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("product_variants")
+      .select("product_id, active, stock, price_override")
+      .eq("active", true)
+      .limit(2000);
+    if (error) throw error;
+    const byProduct: Record<string, VariantPricingRow[]> = {};
+    for (const row of data ?? []) {
+      const list = byProduct[row.product_id] ?? [];
+      list.push(row);
+      byProduct[row.product_id] = list;
+    }
+    return byProduct;
+  },
+});

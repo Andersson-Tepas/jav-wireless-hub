@@ -342,6 +342,7 @@ export type Database = {
           created_at: string
           id: string
           image: string | null
+          price_override: number | null
           product_id: string
           stock: number
           storage: string | null
@@ -353,6 +354,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          price_override?: number | null
           product_id: string
           stock?: number
           storage?: string | null
@@ -364,6 +366,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          price_override?: number | null
           product_id?: string
           stock?: number
           storage?: string | null
@@ -707,7 +710,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      parse_variant_price_override: { Args: { _val: Json }; Returns: number }
       status_label: { Args: { s: string }; Returns: string }
+      update_product_variant_prices: {
+        Args: {
+          _expected_base_price: number
+          _product_id: string
+          _updates: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

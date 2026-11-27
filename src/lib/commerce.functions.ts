@@ -6,6 +6,23 @@ export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => orderSchema.parse(d))
   .handler(async ({ data }) => (await import("./commerce.server")).createOrderCore(data));
 
+export const revalidateCartItems = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        items: z
+          .array(
+            z.object({
+              id: z.string().uuid(),
+              variant_id: z.string().uuid().nullable().optional(),
+            }),
+          )
+          .max(50),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }) => (await import("./commerce.server")).revalidateCartItemsCore(data.items));
+
 export const lookupOrder = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => lookupSchema.parse(d))
   .handler(async ({ data }) => (await import("./commerce.server")).lookupOrderCore(data.order_number, data.contact));

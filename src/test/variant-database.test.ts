@@ -37,6 +37,7 @@ describe.skipIf(!url)("actual PostgreSQL variant transactions (isolated fixtures
     await db.unsafe(await readFile("drizzle/migrations/0007_variant_inventory_write_guards.sql", "utf8"));
     await db.unsafe(await readFile("drizzle/migrations/0008_variant_configuration_and_notification_guards.sql", "utf8"));
     await db.unsafe(await readFile("drizzle/migrations/0009_guard_initial_variant_bulk_config.sql", "utf8"));
+    await db.unsafe(await readFile("drizzle/migrations/0010_variant_price_overrides.sql", "utf8"));
     await db`insert into user_roles(user_id,role) values(${adminId}::uuid,'admin')`;
     await db.unsafe("GRANT USAGE ON SCHEMA public,auth TO anon,authenticated,service_role; GRANT SELECT ON products TO anon,authenticated; ALTER TABLE products ENABLE ROW LEVEL SECURITY; CREATE POLICY fixture_products ON products FOR SELECT TO anon,authenticated USING(active OR public.has_role((select auth.uid()),'admin'));");
   });
@@ -182,5 +183,74 @@ describe.skipIf(!url)("actual PostgreSQL variant transactions (isolated fixtures
 
     const mismatchId = await product(3);
     await expect(configureInitial(mismatchId, true, false, [combination("Blue", null, 1)], 1)).rejects.toThrow("Stock changed");
+  });
+  it("supports nullable variant price overrides, bulk storage pricing, stale/auth guards, legacy configure preservation, and authoritative order totals", async () => {
+    const updatePrices = (id: string, expectedBase: number, updates: { variant_id: string; expected_price_override: number | null; price_override: number | null }[]) =>
+      db.begin(async sql => {
+        await sql`select set_config('request.jwt.claim.sub',${adminId},true)`;
+        await sql`select update_product_variant_prices(${id}::uuid,${expectedBase},${sql.json(updates)})`;
+      });
+
+    const id = await product(6); // base price = 25.00
+    await configure(id, true, true, [
+      combination("Black", "128 GB", 2),
+      combination("White", "256 GB", 2),
+      combination("Blue", "256 GB", 2),
+    ], 6);
+
+    const rows = await db`select id, color_name, storage, price_override from product_variants where product_id=${id}::uuid order by color_name`;
+    const black128 = String(rows.find(r => r["color_name"] === "Black")?.["id"]);
+    const blue256 = String(rows.find(r => r["color_name"] === "Blue")?.["id"]);
+    const white256 = String(rows.find(r => r["color_name"] === "White")?.["id"]);
+    expect(rows.every(r => r["price_override"] === null)).toBe(true);
+
+    // Bulk set price for all colors of 256 GB to 39.95 (exact cents)
+    await updatePrices(id, 25, [
+      { variant_id: blue256, expected_price_override: null, price_override: 39.95 },
+      { variant_id: white256, expected_price_override: null, price_override: 39.95 },
+    ]);
+
+    // Unauthorized caller rejected
+    await expect(db.begin(async sql => {
+      await sql.unsafe("set local role authenticated");
+      await sql`select update_product_variant_prices(${id}::uuid,25,${sql.json([{ variant_id: black128, expected_price_override: null, price_override: 30 }])})`;
+    })).rejects.toThrow("Forbidden");
+
+    // Stale expected_base_price and stale expected_price_override rejected atomically
+    await expect(updatePrices(id, 20, [{ variant_id: black128, expected_price_override: null, price_override: 30 }])).rejects.toThrow("base price changed");
+    await expect(updatePrices(id, 25, [{ variant_id: blue256, expected_price_override: null, price_override: 45 }])).rejects.toThrow("Variant price changed");
+
+    // Invalid precision (>2 decimals) and negative price rejected
+    await expect(updatePrices(id, 25, [{ variant_id: black128, expected_price_override: null, price_override: 29.999 }])).rejects.toThrow("at most 2 decimal");
+    await expect(updatePrices(id, 25, [{ variant_id: black128, expected_price_override: null, price_override: -1 }])).rejects.toThrow("at most 2 decimal");
+
+    // Legacy configure_product_variants without price_override preserves existing overrides
+    await configure(id, true, true, [
+      combination("Black", "128 GB", 2),
+      combination("White", "256 GB", 2),
+      combination("Blue", "256 GB", 2),
+    ], 6);
+    const afterLegacy = await db`select id, price_override from product_variants where product_id=${id}::uuid`;
+    expect(Number(afterLegacy.find(r => String(r["id"]) === blue256)?.["price_override"])).toBe(39.95);
+    expect(afterLegacy.find(r => String(r["id"]) === black128)?.["price_override"]).toBeNull();
+
+    // Initial bulk variant RPC rejects price_override
+    const freshId = await product(1);
+    await expect(db.begin(async sql => {
+      await sql`select set_config('request.jwt.claim.sub',${adminId},true)`;
+      await sql`select configure_initial_product_variants(${freshId}::uuid,true,false,${sql.json([{ color_name: "Black", color_hex: null, storage: null, stock: 1, image: null, active: true, price_override: 30 }])},1)`;
+    })).rejects.toThrow("prices are not allowed");
+
+    // Authoritative order total uses variant override (39.95) + base fallback (25.00) = 64.95
+    // Stale expected_total (50.00) is rejected before stock deduction
+    await expect(order({ ...input([{ id, variant_id: black128, quantity: 1 }, { id, variant_id: blue256, quantity: 1 }]), expected_total: 50 } as never)).rejects.toThrow("Prices have changed");
+    expect(await stock(id)).toBe(6);
+
+    // Matching expected_total succeeds and persists exact unit prices on order_items
+    const ord = await order({ ...input([{ id, variant_id: black128, quantity: 1 }, { id, variant_id: blue256, quantity: 1 }]), expected_total: 64.95 } as never);
+    expect(Number(ord.order.total)).toBe(64.95);
+    expect(Number(ord.items.find(i => i.color_snapshot === "Black")?.price)).toBe(25);
+    expect(Number(ord.items.find(i => i.color_snapshot === "Blue")?.price)).toBe(39.95);
+    expect(await stock(id)).toBe(4);
   });
 });
