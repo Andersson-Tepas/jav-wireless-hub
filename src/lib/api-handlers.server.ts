@@ -10,13 +10,13 @@ const must = <T>(r: { data: T; error: { message: string } | null }) => { if (r.e
 // ---------- Public ----------
 export const listProducts = handle(async ({ request }: Ctx) => {
   const u = new URL(request.url);
-  let q = publicClient().from("products").select("*").eq("active", true).order("created_at", { ascending: false });
+  let q = publicClient().from("products").select("*, product_variants(*)").eq("active", true).order("created_at", { ascending: false });
   const cat = u.searchParams.get("category"); if (cat) q = q.eq("category_id", cat);
   const search = u.searchParams.get("q"); if (search) q = q.ilike("name", `%${search.replace(/[%_,()]/g, "")}%`);
   return ok(must(await q));
 });
 export const getProduct = handle(async ({ params }: Ctx) => {
-  const p = must(await publicClient().from("products").select("*").eq("id", params["id"]!).eq("active", true).maybeSingle());
+  const p = must(await publicClient().from("products").select("*, product_variants(*)").eq("id", params["id"]!).eq("active", true).maybeSingle());
   if (!p) throw new ApiError(404, "Product not found");
   return ok(p);
 });
@@ -35,7 +35,7 @@ export const postServiceRequest = handle(async ({ request }: Ctx) => ok(await cr
 // ---------- Admin (every handler verifies token + admin role) ----------
 export const adminListProducts = handle(async ({ request }: Ctx) => {
   const { supabase } = await requireAdmin(request);
-  return ok(must(await supabase.from("products").select("*").order("created_at", { ascending: false })));
+  return ok(must(await supabase.from("products").select("*, product_variants(*)").order("created_at", { ascending: false })));
 });
 export const adminCreateProduct = handle(async ({ request }: Ctx) => {
   const { supabase } = await requireAdmin(request);

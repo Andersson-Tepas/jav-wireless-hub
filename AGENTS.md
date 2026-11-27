@@ -24,3 +24,9 @@
 - Product images upload to a private bucket via an admin-checked server function that returns a long-lived signed URL (public buckets are blocked).
 - Customer profiles (customer_profiles) are created by the auth.users signup trigger alongside the role row; admins never also get the user role, and Panel → Clientes lists profiles of non-admin accounts, matching orders/requests by email.
 - Bulk ZIP product imports and image-only updates parse and validate `products.json` (v1) + images client-side in `src/lib/zip-product-import.ts` (`fflate`), upload images via `uploadProductImage`, and run through existing admin-only RLS under explicit modes (`Import new products` inserts inactive drafts; `Update existing images` updates only `image` by unique matched `id` without deleting old storage files).
+
+- Variant configuration is opt-in and goes through configure_product_variants with exact current-stock reconciliation; retained variant IDs preserve audit/order history, and inventory adjustments use adjust_product_inventory to prevent stale writes.
+- All storefront/API order creation uses service-role-only create_order_atomic: deterministic parent/variant row locks, server prices, immutable selection snapshots and a payload-bound checkout key prevent oversell and retry deductions; payment callbacks never deduct stock.
+- Variant prices inherit product price (no overrides); variant queries are scoped per product and cart identity is product UUID plus variant UUID, keeping legacy stored carts compatible.
+- Variant transaction tests run against a fresh localhost PostgreSQL instance with src/test/run-variant-database-tests.sh; never run fixture SQL or create test products in the managed catalog.
+- Pending checkout orders reserve stock once; provider retries reuse the payload-bound checkout key, payment callbacks never deduct again, and cancellation retains the existing manual inventory-adjustment behavior rather than guessing restocks.

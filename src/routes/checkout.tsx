@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, MapPin, Truck } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { PageIntro } from "@/components/site-shell";
 import { PaymentPicker } from "@/components/payment-picker";
 import { createOrder } from "@/lib/commerce.functions";
+import { cartIdentity, selectionLabel } from "@/lib/variants";
 import { money, useCart, type CartItem } from "@/lib/cart";
 import { deliveryLabels, paymentLabels, productImage, statusLabels } from "@/lib/site-data";
 
@@ -25,14 +26,24 @@ function CheckoutPage() {
   const [reference, setReference] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const attempt = useRef<{ fingerprint: string; key: string } | null>(null);
   const [done, setDone] = useState<Done | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault(); setError(""); setSending(true);
     try {
-      const r = await submit({ data: { ...form, address: delivery === "shipping" ? form.address : undefined, notes: form.notes || undefined, delivery_method: delivery, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin, items: items.map((i) => ({ id: i.id, quantity: i.quantity })) } });
+      const fingerprint = JSON.stringify({ form, delivery, payment, reference, items: items.map(i => ({ id: i.id, variant_id: i.variant_id, quantity: i.quantity })) });
+      try {
+        const saved: unknown = JSON.parse(sessionStorage.getItem("jav-checkout-attempt") ?? "null");
+        if (saved && typeof saved === "object" && "fingerprint" in saved && "key" in saved && saved.fingerprint === fingerprint && typeof saved.key === "string" && /^[0-9a-f-]{36}$/i.test(saved.key)) attempt.current = { fingerprint, key: saved.key };
+      } catch { /* A storage failure does not prevent checkout. */ }
+      if (attempt.current?.fingerprint !== fingerprint) attempt.current = { fingerprint, key: crypto.randomUUID() };
+      try { sessionStorage.setItem("jav-checkout-attempt", JSON.stringify(attempt.current)); } catch { /* optional persistence */ }
+      const r = await submit({ data: { ...form, checkout_key: attempt.current.key, address: delivery === "shipping" ? form.address : undefined, notes: form.notes || undefined, delivery_method: delivery, payment_method: payment as "card", payment_reference: reference || undefined, return_origin: window.location.origin, items: items.map((i) => ({ id: i.id, variant_id: i.variant_id ?? null, quantity: i.quantity })) } });
+      try { sessionStorage.removeItem("jav-checkout-attempt"); } catch { /* optional persistence */ }
+      attempt.current = null;
       if (r.checkout_url) { clear(); window.location.assign(r.checkout_url); return; }
-      setDone({ order_number: r.order_number, items, total, payment, delivery, status: payment === "zelle" ? "payment_pending" : "payment_confirmed", email: r.email });
+      setDone({ order_number: r.order_number, items: r.items.map(i => ({ id: i.product_id, variant_id: i.variant_id, name: i.name, price: i.price, image: i.image ?? "", stock: i.quantity, quantity: i.quantity, color_snapshot: i.color_snapshot, storage_snapshot: i.storage_snapshot })), total: r.total, payment, delivery, status: r.status, email: r.email });
       clear();
     } catch (err) {
       setError(err instanceof Error && err.message.length < 120 ? err.message : "We could not process your order. Please review your information.");
@@ -48,7 +59,7 @@ function CheckoutPage() {
         <p className="font-display text-4xl font-bold text-accent">{done.order_number}</p>
       </div>
       <div className="card-soft mt-6 p-6">
-        <ul className="divide-y divide-border">{done.items.map((i) => <li key={i.id} className="flex justify-between py-2 text-sm"><span>{i.quantity} × {i.name}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
+        <ul className="divide-y divide-border">{done.items.map((i) => <li key={cartIdentity(i)} className="flex justify-between py-2 text-sm"><span>{i.quantity} × {i.name}{selectionLabel(i) && <span className="block text-xs text-muted-foreground">{selectionLabel(i)}</span>}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
         <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
           <div className="flex justify-between"><dt className="text-muted-foreground">Total</dt><dd className="text-lg font-bold text-primary">{money(done.total)}</dd></div>
           <div className="flex justify-between"><dt className="text-muted-foreground">Payment method</dt><dd className="font-semibold">{paymentLabels[done.payment]}</dd></div>
@@ -97,7 +108,7 @@ function CheckoutPage() {
         </div>
         <aside className="card-soft h-fit p-6 lg:sticky lg:top-28">
           <h2 className="font-display text-xl font-bold text-primary">Your order</h2>
-          <ul className="mt-4 space-y-3">{items.map((i) => <li key={i.id} className="flex items-center gap-3 text-sm"><img src={productImage(i.image)} alt="" width={48} height={48} className="size-12 rounded bg-surface object-contain object-center p-1" /><span className="flex-1">{i.quantity} × {i.name}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
+          <ul className="mt-4 space-y-3">{items.map((i) => <li key={cartIdentity(i)} className="flex items-center gap-3 text-sm"><img src={productImage(i.image)} alt="" width={48} height={48} className="size-12 rounded bg-surface object-contain object-center p-1" /><span className="flex-1">{i.quantity} × {i.name}{selectionLabel(i) && <span className="block text-xs text-muted-foreground">{selectionLabel(i)}</span>}</span><span className="font-semibold">{money(i.price * i.quantity)}</span></li>)}</ul>
           <div className="mt-4 flex justify-between border-t border-border pt-4"><span className="font-bold">Total</span><span className="text-xl font-bold text-primary">{money(total)}</span></div>
           {error && <p className="mt-4 text-sm font-semibold text-destructive">{error}</p>}
           <Button type="submit" variant="accent" className="mt-6 w-full" disabled={sending}>{sending ? "Processing..." : "Confirm and pay"}</Button>

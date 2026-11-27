@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { PageIntro } from "@/components/site-shell";
 import { lookupOrder, lookupServiceRequest } from "@/lib/commerce.functions";
+import { selectionLabel } from "@/lib/variants";
 import { money } from "@/lib/cart";
 import {
   deliveryLabels,
@@ -407,6 +408,7 @@ function TrackingPage() {
 
                           <span className="flex-1">
                             {i.quantity} × {i.name}
+                            {selectionLabel(i) && <span className="block text-xs text-muted-foreground">{selectionLabel(i)}</span>}
                           </span>
 
                           <span className="font-semibold">

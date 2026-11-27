@@ -10,6 +10,7 @@ const contact = {
 export const orderSchema = z
   .object({
     ...contact,
+    checkout_key: z.string().uuid().optional(),
     address: z.string().trim().max(300).optional(),
     delivery_method: z.enum(["pickup", "shipping"]),
     payment_method: z.enum(["card", "paypal", "zelle"]),
@@ -19,6 +20,7 @@ export const orderSchema = z
       .array(
         z.object({
           id: z.string().uuid(),
+          variant_id: z.string().uuid().nullable().optional(),
           quantity: z.number().int().min(1).max(50),
         }),
       )

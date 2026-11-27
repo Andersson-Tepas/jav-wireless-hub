@@ -48,6 +48,8 @@ import { Route as ApiAdminServicesIdRouteImport } from './routes/api/admin/servi
 import { Route as ApiPublicProductsIdRouteImport } from './routes/api/public/products.$id'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiAdminOrdersIdStatusRouteImport } from './routes/api/admin/orders.$id.status'
+import { Route as ApiAdminProductsIdInventoryRouteImport } from './routes/api/admin/products.$id.inventory'
+import { Route as ApiAdminProductsIdVariantsRouteImport } from './routes/api/admin/products.$id.variants'
 import { Route as ApiPublicOrdersTrackCodeRouteImport } from './routes/api/public/orders.track.$code'
 
 const IndexRoute = IndexRouteImport.update({
@@ -248,6 +250,18 @@ const ApiAdminOrdersIdStatusRoute = ApiAdminOrdersIdStatusRouteImport.update({
   path: '/$id/status',
   getParentRoute: () => ApiAdminOrdersRoute,
 } as any)
+const ApiAdminProductsIdInventoryRoute =
+  ApiAdminProductsIdInventoryRouteImport.update({
+    id: '/inventory',
+    path: '/inventory',
+    getParentRoute: () => ApiAdminProductsIdRoute,
+  } as any)
+const ApiAdminProductsIdVariantsRoute =
+  ApiAdminProductsIdVariantsRouteImport.update({
+    id: '/variants',
+    path: '/variants',
+    getParentRoute: () => ApiAdminProductsIdRoute,
+  } as any)
 const ApiPublicOrdersTrackCodeRoute =
   ApiPublicOrdersTrackCodeRouteImport.update({
     id: '/track/$code',
@@ -289,11 +303,13 @@ export interface FileRoutesByFullPath {
   '/api/public/whatsapp-meta-webhook': typeof ApiPublicWhatsappMetaWebhookRoute
   '/panel/': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
-  '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
+  '/api/admin/products/$id': typeof ApiAdminProductsIdRouteWithChildren
   '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
   '/api/public/products/$id': typeof ApiPublicProductsIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
+  '/api/admin/products/$id/inventory': typeof ApiAdminProductsIdInventoryRoute
+  '/api/admin/products/$id/variants': typeof ApiAdminProductsIdVariantsRoute
   '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
 export interface FileRoutesByTo {
@@ -329,11 +345,13 @@ export interface FileRoutesByTo {
   '/api/public/whatsapp-meta-webhook': typeof ApiPublicWhatsappMetaWebhookRoute
   '/panel': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
-  '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
+  '/api/admin/products/$id': typeof ApiAdminProductsIdRouteWithChildren
   '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
   '/api/public/products/$id': typeof ApiPublicProductsIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
+  '/api/admin/products/$id/inventory': typeof ApiAdminProductsIdInventoryRoute
+  '/api/admin/products/$id/variants': typeof ApiAdminProductsIdVariantsRoute
   '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
 export interface FileRoutesById {
@@ -372,11 +390,13 @@ export interface FileRoutesById {
   '/api/public/whatsapp-meta-webhook': typeof ApiPublicWhatsappMetaWebhookRoute
   '/_authenticated/panel/': typeof AuthenticatedPanelIndexRoute
   '/api/admin/categories/$id': typeof ApiAdminCategoriesIdRoute
-  '/api/admin/products/$id': typeof ApiAdminProductsIdRoute
+  '/api/admin/products/$id': typeof ApiAdminProductsIdRouteWithChildren
   '/api/admin/services/$id': typeof ApiAdminServicesIdRoute
   '/api/public/products/$id': typeof ApiPublicProductsIdRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
   '/api/admin/orders/$id/status': typeof ApiAdminOrdersIdStatusRoute
+  '/api/admin/products/$id/inventory': typeof ApiAdminProductsIdInventoryRoute
+  '/api/admin/products/$id/variants': typeof ApiAdminProductsIdVariantsRoute
   '/api/public/orders/track/$code': typeof ApiPublicOrdersTrackCodeRoute
 }
 export interface FileRouteTypes {
@@ -420,6 +440,8 @@ export interface FileRouteTypes {
     | '/api/public/products/$id'
     | '/lovable/email/transactional/preview'
     | '/api/admin/orders/$id/status'
+    | '/api/admin/products/$id/inventory'
+    | '/api/admin/products/$id/variants'
     | '/api/public/orders/track/$code'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -460,6 +482,8 @@ export interface FileRouteTypes {
     | '/api/public/products/$id'
     | '/lovable/email/transactional/preview'
     | '/api/admin/orders/$id/status'
+    | '/api/admin/products/$id/inventory'
+    | '/api/admin/products/$id/variants'
     | '/api/public/orders/track/$code'
   id:
     | '__root__'
@@ -502,6 +526,8 @@ export interface FileRouteTypes {
     | '/api/public/products/$id'
     | '/lovable/email/transactional/preview'
     | '/api/admin/orders/$id/status'
+    | '/api/admin/products/$id/inventory'
+    | '/api/admin/products/$id/variants'
     | '/api/public/orders/track/$code'
   fileRoutesById: FileRoutesById
 }
@@ -812,6 +838,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminOrdersIdStatusRouteImport
       parentRoute: typeof ApiAdminOrdersRoute
     }
+    '/api/admin/products/$id/inventory': {
+      id: '/api/admin/products/$id/inventory'
+      path: '/inventory'
+      fullPath: '/api/admin/products/$id/inventory'
+      preLoaderRoute: typeof ApiAdminProductsIdInventoryRouteImport
+      parentRoute: typeof ApiAdminProductsIdRoute
+    }
+    '/api/admin/products/$id/variants': {
+      id: '/api/admin/products/$id/variants'
+      path: '/variants'
+      fullPath: '/api/admin/products/$id/variants'
+      preLoaderRoute: typeof ApiAdminProductsIdVariantsRouteImport
+      parentRoute: typeof ApiAdminProductsIdRoute
+    }
     '/api/public/orders/track/$code': {
       id: '/api/public/orders/track/$code'
       path: '/track/$code'
@@ -873,12 +913,25 @@ const ApiAdminOrdersRouteWithChildren = ApiAdminOrdersRoute._addFileChildren(
   ApiAdminOrdersRouteChildren,
 )
 
+interface ApiAdminProductsIdRouteChildren {
+  ApiAdminProductsIdInventoryRoute: typeof ApiAdminProductsIdInventoryRoute
+  ApiAdminProductsIdVariantsRoute: typeof ApiAdminProductsIdVariantsRoute
+}
+
+const ApiAdminProductsIdRouteChildren: ApiAdminProductsIdRouteChildren = {
+  ApiAdminProductsIdInventoryRoute: ApiAdminProductsIdInventoryRoute,
+  ApiAdminProductsIdVariantsRoute: ApiAdminProductsIdVariantsRoute,
+}
+
+const ApiAdminProductsIdRouteWithChildren =
+  ApiAdminProductsIdRoute._addFileChildren(ApiAdminProductsIdRouteChildren)
+
 interface ApiAdminProductsRouteChildren {
-  ApiAdminProductsIdRoute: typeof ApiAdminProductsIdRoute
+  ApiAdminProductsIdRoute: typeof ApiAdminProductsIdRouteWithChildren
 }
 
 const ApiAdminProductsRouteChildren: ApiAdminProductsRouteChildren = {
-  ApiAdminProductsIdRoute: ApiAdminProductsIdRoute,
+  ApiAdminProductsIdRoute: ApiAdminProductsIdRouteWithChildren,
 }
 
 const ApiAdminProductsRouteWithChildren =

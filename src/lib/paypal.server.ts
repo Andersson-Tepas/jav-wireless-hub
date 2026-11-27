@@ -78,6 +78,7 @@ export async function createPaypalOrder(opts: {
   id: string;
   reference: string;
   total: number;
+  lines?: { name: string; amount: number; quantity: number }[];
   returnUrl: string;
   cancelUrl: string;
 }) {
@@ -99,7 +100,9 @@ export async function createPaypalOrder(opts: {
           amount: {
             currency_code: "USD",
             value: opts.total.toFixed(2),
+            ...(opts.lines ? { breakdown: { item_total: { currency_code: "USD", value: opts.total.toFixed(2) } } } : {}),
           },
+          ...(opts.lines ? { items: opts.lines.map(line => ({ name: line.name.slice(0, 127), quantity: String(line.quantity), unit_amount: { currency_code: "USD", value: line.amount.toFixed(2) } })) } : {}),
         },
       ],
       payment_source: {

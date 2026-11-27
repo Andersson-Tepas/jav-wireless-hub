@@ -79,6 +79,8 @@ export type Database = {
           quantity: number
           reason: string
           stock_after: number
+          variant_id: string | null
+          variant_label: string | null
         }
         Insert: {
           created_at?: string
@@ -90,6 +92,8 @@ export type Database = {
           quantity: number
           reason?: string
           stock_after: number
+          variant_id?: string | null
+          variant_label?: string | null
         }
         Update: {
           created_at?: string
@@ -101,6 +105,8 @@ export type Database = {
           quantity?: number
           reason?: string
           stock_after?: number
+          variant_id?: string | null
+          variant_label?: string | null
         }
         Relationships: [
           {
@@ -108,6 +114,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -152,6 +165,7 @@ export type Database = {
       }
       order_items: {
         Row: {
+          color_snapshot: string | null
           id: string
           image: string | null
           name: string
@@ -159,8 +173,11 @@ export type Database = {
           price: number
           product_id: string | null
           quantity: number
+          storage_snapshot: string | null
+          variant_id: string | null
         }
         Insert: {
+          color_snapshot?: string | null
           id?: string
           image?: string | null
           name: string
@@ -168,8 +185,11 @@ export type Database = {
           price: number
           product_id?: string | null
           quantity: number
+          storage_snapshot?: string | null
+          variant_id?: string | null
         }
         Update: {
+          color_snapshot?: string | null
           id?: string
           image?: string | null
           name?: string
@@ -177,6 +197,8 @@ export type Database = {
           price?: number
           product_id?: string | null
           quantity?: number
+          storage_snapshot?: string | null
+          variant_id?: string | null
         }
         Relationships: [
           {
@@ -191,6 +213,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "product_variants"
             referencedColumns: ["id"]
           },
         ]
@@ -238,6 +267,8 @@ export type Database = {
           address: string | null
           archived: boolean
           carrier: string | null
+          checkout_fingerprint: string | null
+          checkout_key: string | null
           created_at: string
           customer_name: string
           delivery_method: string
@@ -259,6 +290,8 @@ export type Database = {
           address?: string | null
           archived?: boolean
           carrier?: string | null
+          checkout_fingerprint?: string | null
+          checkout_key?: string | null
           created_at?: string
           customer_name: string
           delivery_method: string
@@ -280,6 +313,8 @@ export type Database = {
           address?: string | null
           archived?: boolean
           carrier?: string | null
+          checkout_fingerprint?: string | null
+          checkout_key?: string | null
           created_at?: string
           customer_name?: string
           delivery_method?: string
@@ -299,12 +334,57 @@ export type Database = {
         }
         Relationships: []
       }
+      product_variants: {
+        Row: {
+          active: boolean
+          color_hex: string | null
+          color_name: string | null
+          created_at: string
+          id: string
+          image: string | null
+          product_id: string
+          stock: number
+          storage: string | null
+        }
+        Insert: {
+          active?: boolean
+          color_hex?: string | null
+          color_name?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          product_id: string
+          stock?: number
+          storage?: string | null
+        }
+        Update: {
+          active?: boolean
+          color_hex?: string | null
+          color_name?: string | null
+          created_at?: string
+          id?: string
+          image?: string | null
+          product_id?: string
+          stock?: number
+          storage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           active: boolean
           brand: string
           capacity: string
           category_id: string
+          color_variants_enabled: boolean
           colors: string[]
           created_at: string
           description: string
@@ -322,12 +402,14 @@ export type Database = {
           price: number
           specs: Json
           stock: number
+          storage_variants_enabled: boolean
         }
         Insert: {
           active?: boolean
           brand?: string
           capacity?: string
           category_id: string
+          color_variants_enabled?: boolean
           colors?: string[]
           created_at?: string
           description?: string
@@ -345,12 +427,14 @@ export type Database = {
           price?: number
           specs?: Json
           stock?: number
+          storage_variants_enabled?: boolean
         }
         Update: {
           active?: boolean
           brand?: string
           capacity?: string
           category_id?: string
+          color_variants_enabled?: boolean
           colors?: string[]
           created_at?: string
           description?: string
@@ -368,6 +452,7 @@ export type Database = {
           price?: number
           specs?: Json
           stock?: number
+          storage_variants_enabled?: boolean
         }
         Relationships: [
           {
@@ -585,6 +670,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_product_inventory: {
+        Args: {
+          _delta?: number
+          _expected_stock?: number
+          _product_id: string
+          _variant_id?: string
+        }
+        Returns: undefined
+      }
+      configure_product_variants: {
+        Args: {
+          _color: boolean
+          _expected_stock: number
+          _product_id: string
+          _storage: boolean
+          _variants: Json
+        }
+        Returns: undefined
+      }
+      create_order_atomic: { Args: { _input: Json }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

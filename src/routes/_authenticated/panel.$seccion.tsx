@@ -22,7 +22,7 @@ sections["requests"] = sections["solicitudes"]!;
 
 export const Route = createFileRoute("/_authenticated/panel/$seccion")({
   beforeLoad: ({ params }) => { if (!sections[params.seccion]) throw notFound(); },
-  head: ({ params }) => ({ meta: [{ title: `${sections[params.seccion]?.title ?? "Panel"} — JAV Wireless Admin` }, { name: "robots", content: "noindex" }] }),
+  head: ({ params }) => ({ meta: [{ title: `${sections[params.seccion]?.title ?? "Panel"} — JAV Wireless Admin` }, { name: "description", content: `Manage ${sections[params.seccion]?.title.toLowerCase() ?? "your store"} at JAV Wireless.` }, { property: "og:title", content: `${sections[params.seccion]?.title ?? "Panel"} — JAV Wireless Admin` }, { property: "og:description", content: `JAV Wireless ${sections[params.seccion]?.title.toLowerCase() ?? "store"} administration.` }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   notFoundComponent: () => <p className="text-muted-foreground">Section not found.</p>,
   component: Section,
 });

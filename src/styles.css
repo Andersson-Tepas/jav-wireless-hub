@@ -53,6 +53,19 @@
 }
 
 :root {
+  --swatch-black: #202124;
+  --swatch-white: #ffffff;
+  --swatch-blue: #2466b4;
+  --swatch-red: #c62828;
+  --swatch-pink: #e7a1bd;
+  --swatch-green: #347754;
+  --swatch-gray: #80858b;
+  --swatch-silver: #c4c8ce;
+  --swatch-gold: #c6a548;
+  --swatch-orange: #e28430;
+  --swatch-purple: #80569e;
+  --swatch-tan: #c5ac8e;
+  --swatch-rose-gold: #c9978c;
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.22 0.04 260);
@@ -100,6 +113,20 @@
   html { scroll-behavior: smooth; }
   body { @apply bg-background text-foreground font-sans antialiased; }
 }
+
+.variant-swatch[data-color="black"], .variant-swatch[data-color="graphite"] { background-color: var(--swatch-black); }
+.variant-swatch[data-color="white"] { background-color: var(--swatch-white); }
+.variant-swatch[data-color="blue"] { background-color: var(--swatch-blue); }
+.variant-swatch[data-color="red"] { background-color: var(--swatch-red); }
+.variant-swatch[data-color="pink"] { background-color: var(--swatch-pink); }
+.variant-swatch[data-color="green"] { background-color: var(--swatch-green); }
+.variant-swatch[data-color="gray"], .variant-swatch[data-color="grey"] { background-color: var(--swatch-gray); }
+.variant-swatch[data-color="silver"] { background-color: var(--swatch-silver); }
+.variant-swatch[data-color="gold"], .variant-swatch[data-color="yellow gold"] { background-color: var(--swatch-gold); }
+.variant-swatch[data-color="orange"] { background-color: var(--swatch-orange); }
+.variant-swatch[data-color="purple"] { background-color: var(--swatch-purple); }
+.variant-swatch[data-color="tan"] { background-color: var(--swatch-tan); }
+.variant-swatch[data-color="rose gold"] { background-color: var(--swatch-rose-gold); }
 
 @utility container-page { @apply mx-auto w-full max-w-7xl px-4 lg:px-6; }
 @utility section-pad { @apply py-14 lg:py-20; }

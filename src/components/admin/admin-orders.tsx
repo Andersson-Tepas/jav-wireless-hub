@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { selectionLabel } from "@/lib/variants";
 import { money } from "@/lib/cart";
 import { allStatusesFor, deliveryLabels, paymentLabels, statusLabels } from "@/lib/site-data";
 import { fmt, paymentStatusLabels, useAdminOrders, useAdminRequests, useInvalidate } from "./shared";
@@ -42,7 +43,7 @@ export function Orders() {
             <div>
               <p className="font-display text-xl font-bold text-primary">#{o.order_number}</p>
               <p className="text-sm">{o.customer_name} · {o.phone}</p><p className="text-xs text-muted-foreground">{o.email} · {fmt(o.created_at)}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{o.order_items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{o.order_items.map((i) => `${i.quantity}× ${i.name}${selectionLabel(i) ? ` — ${selectionLabel(i)}` : ""}`).join(", ")}</p>
               {o.address && <p className="mt-1 text-xs text-muted-foreground">Ship to: {o.address}</p>}
               {o.notes && <p className="mt-1 text-xs text-muted-foreground">Note: {o.notes}</p>}
             </div>

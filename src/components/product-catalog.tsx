@@ -12,19 +12,25 @@ import { categoriesQuery, productsQuery, specsOf, type Product } from "@/lib/cat
 
 import { money, useCart } from "@/lib/cart";
 
+import { VariantOptions, ColorSwatch } from "@/components/variant-options";
+import { variantsQuery } from "@/lib/variant-queries";
+import { compatibleVariants, hasVariants, selectionLabel, stockLabel, type Variant } from "@/lib/variants";
 import { productImage, socialLinks } from "@/lib/site-data";
 
 
 function useAddToCart() {
   const { add } = useCart();
 
-  return (p: Product) =>
+  return (p: Product, variant?: Variant | null) =>
     add({
       id: p.id,
       name: p.name,
       price: Number(p.price),
-      image: p.image,
-      stock: p.stock,
+      image: variant?.image || p.image,
+      stock: variant?.stock ?? p.stock,
+      variant_id: variant?.id ?? null,
+      color_snapshot: variant?.color_name ?? null,
+      storage_snapshot: variant?.storage ?? null,
     });
 }
 
@@ -136,7 +142,7 @@ export function ProductCard({
           <Button
             size="sm"
             disabled={product.stock <= 0}
-            onClick={() => addToCart(product)}
+            onClick={() => hasVariants(product) ? onOpen() : addToCart(product)}
           >
             <ShoppingCart />
             Add
@@ -159,6 +165,15 @@ function ProductDialog({
   onClose: () => void;
 }) {
   const addToCart = useAddToCart();
+  const enabled = !!product && hasVariants(product);
+  const { data: variants = [], isPending, isError } = useQuery({ ...variantsQuery(product?.id ?? ""), enabled });
+  const [color, setColor] = useState<string | null>(null);
+  const [storage, setStorage] = useState<string | null>(null);
+  const matches = compatibleVariants(variants, color, storage);
+  const selected = enabled && (!product?.color_variants_enabled || !!color) && (!product?.storage_variants_enabled || !!storage) && matches.length === 1 ? matches[0] : null;
+  const canAdd = !!product && (enabled ? !!selected && selected.stock > 0 && !isError : product.stock > 0);
+  const chosenLabel = selectionLabel({ color_snapshot: selected?.color_name ?? color, storage_snapshot: selected?.storage ?? storage });
+
 
   return (
     <Dialog.Root
@@ -180,7 +195,7 @@ function ProductDialog({
 
             <div className="flex min-w-0 items-center justify-center bg-surface p-4 sm:p-6">
               <img
-                src={productImage(product.image)}
+                src={productImage(selected?.image || product.image)}
                 alt={product.name}
                 width={1024}
                 height={1024}
@@ -220,7 +235,9 @@ function ProductDialog({
               </div>
 
               <div className="mt-1">
-                <Availability stock={product.stock} />
+                {enabled ? <p className="text-sm font-semibold" aria-live="polite">{isError ? "Could not load options. Please try again." : isPending ? "Loading options..." : selected ? stockLabel(selected.stock) : product.stock <= 0 ? "Out of stock" : "Select a color / storage combination"}</p> : <Availability stock={product.stock} />}
+                {enabled && <VariantOptions variants={variants} colorEnabled={product.color_variants_enabled} storageEnabled={product.storage_variants_enabled} color={color} storage={storage} onColor={setColor} onStorage={setStorage} />}
+                {!enabled && !/herramient|tool|perfume|fragran/i.test(product.category_id) && product.colors.length === 1 && /^(black|white|blue|red|pink|green|gray|grey|silver|gold|orange|purple|tan|yellow gold|rose gold|graphite)$/i.test(product.colors[0] ?? "") && <p className="mt-3 flex items-center gap-2 text-sm"><ColorSwatch name={product.colors[0] ?? ""} />{product.colors[0]}</p>}
               </div>
 
               <p className="mt-4 leading-7 text-muted-foreground">
@@ -234,7 +251,7 @@ function ProductDialog({
                     Colors
                   </dt>
                   <dd className="font-semibold">
-                    {product.colors.join(", ") || "—"}
+                    {enabled && product.color_variants_enabled ? color || "Select above" : product.colors.join(", ") || "—"}
                   </dd>
                 </div>
 
@@ -243,7 +260,7 @@ function ProductDialog({
                     Capacity / Size
                   </dt>
                   <dd className="font-semibold">
-                    {product.capacity || "—"}
+                    {enabled && product.storage_variants_enabled ? storage || "Select above" : product.capacity || "—"}
                   </dd>
                 </div>
 
@@ -252,7 +269,7 @@ function ProductDialog({
                     Stock
                   </dt>
                   <dd className="font-semibold">
-                    {product.stock} units
+                    {selected ? selected.stock : product.stock} units
                   </dd>
                 </div>
 
@@ -324,9 +341,9 @@ function ProductDialog({
               <div className="mt-6 grid gap-2 sm:grid-cols-2">
 
                 <Button
-                  disabled={product.stock <= 0}
+                  disabled={!canAdd}
                   onClick={() => {
-                    addToCart(product);
+                    addToCart(product, selected);
                     onClose();
                   }}
                 >
@@ -337,7 +354,7 @@ function ProductDialog({
                 <a
                   className="inline-flex h-11 items-center justify-center rounded-md border border-input px-5 text-sm font-semibold hover:border-primary hover:text-primary"
                   href={`${socialLinks.whatsapp}?text=${encodeURIComponent(
-                    `Hello JAV Wireless, I’m interested in ${product.name}`
+                    `Hello JAV Wireless, I’m interested in ${product.name}${chosenLabel ? ` — ${chosenLabel}` : ""}`
                   )}`}
                   target="_blank"
                   rel="noreferrer"
@@ -389,6 +406,7 @@ export function ProductGrid({
       </div>
 
       <ProductDialog
+        key={selected?.id ?? "closed"}
         product={selected}
         onClose={() => setSelected(null)}
       />

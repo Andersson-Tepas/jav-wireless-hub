@@ -1,3 +1,10 @@
+import { z } from "zod";
+import { selectionLabel } from "./variants";
+const atomicOrderResult = z.object({
+  order: z.object({ id: z.string(), order_number: z.string(), email: z.string(), total: z.coerce.number(), status: z.string(), payment_status: z.string() }),
+  items: z.array(z.object({ product_id: z.string(), variant_id: z.string().nullable(), name: z.string(), price: z.coerce.number(), quantity: z.number(), image: z.string().nullable(), color_snapshot: z.string().nullable(), storage_snapshot: z.string().nullable() })),
+  reused: z.boolean(),
+});
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   billCarrierFees,
@@ -32,75 +39,17 @@ const matchesContact = (email: string, phone: string, contact: string) => {
 };
 
 export async function createOrderCore(data: OrderInput) {
-  const ids = data.items.map((i) => i.id);
-
-  const { data: products, error } = await supabaseAdmin
-    .from("products")
-    .select("id,name,price,stock,image,active")
-    .in("id", ids);
-
-  if (error) throw new Error("Could not process the order");
-
-  const lines = data.items.map((i) => {
-    const p = products.find((x) => x.id === i.id);
-    if (!p || !p.active) throw new Error("An item is no longer available");
-    if (p.stock < i.quantity) {
-      throw new Error(`Insufficient stock for ${p.name}`);
-    }
-    return { p, quantity: i.quantity };
-  });
-
-  const subtotal = lines.reduce(
-    (n, l) => n + Number(l.p.price) * l.quantity,
-    0,
-  );
-
+  const { data: result, error } = await supabaseAdmin.rpc("create_order_atomic", { _input: data });
+  if (error || !result) throw new Error(error?.message ?? "Could not create the order");
+  const parsed = atomicOrderResult.parse(result);
+  const order = parsed.order;
+  const lines = parsed.items.map(i => ({ p: { ...i, name: [i.name, selectionLabel(i)].filter(Boolean).join(" — ") }, quantity: i.quantity }));
+  const subtotal = Number(order.total);
   const isZelle = data.payment_method === "zelle";
   const isCard = data.payment_method === "card";
   const isPaypal = data.payment_method === "paypal";
 
-  const { data: order, error: oErr } = await supabaseAdmin
-    .from("orders")
-    .insert({
-      customer_name: data.customer_name,
-      email: data.email,
-      phone: data.phone,
-      address:
-        data.delivery_method === "shipping" ? (data.address ?? null) : null,
-      delivery_method: data.delivery_method,
-      payment_method: data.payment_method,
-      // Card (Stripe webhook) and PayPal (server-side capture) are confirmed only after verification.
-      payment_reference: isZelle ? (data.payment_reference ?? null) : null,
-      payment_status: "pending",
-      notes: data.notes ?? null,
-      subtotal,
-      total: subtotal,
-      status: "payment_pending",
-    })
-    .select()
-    .single();
-
-  if (oErr || !order) throw new Error("Could not create the order");
-
-  await supabaseAdmin.from("order_items").insert(
-    lines.map((l) => ({
-      order_id: order.id,
-      product_id: l.p.id,
-      name: l.p.name,
-      price: l.p.price,
-      quantity: l.quantity,
-      image: l.p.image,
-    })),
-  );
-
-  for (const l of lines) {
-    await supabaseAdmin
-      .from("products")
-      .update({ stock: l.p.stock - l.quantity })
-      .eq("id", l.p.id);
-  }
-
-  await notifyStaff("Checkout order", order.order_number, [
+  if (!parsed.reused) await notifyStaff("Checkout order", order.order_number, [
     { label: "Name", value: data.customer_name },
     { label: "Email", value: data.email },
     { label: "Phone", value: data.phone },
@@ -125,7 +74,7 @@ export async function createOrderCore(data: OrderInput) {
 
   let checkout_url: string | null = null;
 
-  if (isCard) {
+  if (isCard && order.payment_status !== "confirmed" && order.status !== "cancelled") {
     const { createCheckoutSession, safeOrigin } = await import("./stripe.server");
     const origin = safeOrigin(data.return_origin ?? "");
     const track = `${origin}/seguimiento?orden=${encodeURIComponent(
@@ -149,7 +98,7 @@ export async function createOrderCore(data: OrderInput) {
     checkout_url = session.url;
   }
 
-  if (isPaypal) {
+  if (isPaypal && order.payment_status !== "confirmed" && order.status !== "cancelled") {
     const { safeOrigin } = await import("./stripe.server");
     const { createPaypalOrder } = await import("./paypal.server");
     const origin = safeOrigin(data.return_origin ?? "");
@@ -159,6 +108,7 @@ export async function createOrderCore(data: OrderInput) {
       id: order.id,
       reference: order.order_number,
       total: subtotal,
+      lines: lines.map(l => ({ name: l.p.name, amount: Number(l.p.price), quantity: l.quantity })),
       returnUrl: `${origin}/api/public/paypal-return?kind=order&id=${order.id}`,
       cancelUrl: `${origin}/seguimiento?orden=${encodeURIComponent(
         order.order_number,
@@ -177,6 +127,9 @@ export async function createOrderCore(data: OrderInput) {
     order_number: order.order_number,
     email: order.email,
     checkout_url,
+    total: subtotal,
+    status: order.status,
+    items: parsed.items,
   };
 }
 
@@ -196,7 +149,7 @@ export async function lookupOrderCore(orderNumber: string, contact: string) {
   const [{ data: items }, { data: history }] = await Promise.all([
     supabaseAdmin
       .from("order_items")
-      .select("name,price,quantity,image")
+      .select("name,price,quantity,image,variant_id,color_snapshot,storage_snapshot")
       .eq("order_id", order.id),
     supabaseAdmin
       .from("order_status_history")

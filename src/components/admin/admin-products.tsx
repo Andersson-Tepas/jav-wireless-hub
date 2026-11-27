@@ -11,6 +11,8 @@ import { uploadProductImage } from "@/lib/admin.functions";
 import { money } from "@/lib/cart";
 import { productImage } from "@/lib/site-data";
 import { Field, fmt, lowStockFrom, useAdminCategories, useAdminProducts, useInvalidate, useLowStock } from "./shared";
+import { ProductVariants, VariantInventory } from "./product-variants";
+import { hasVariants } from "@/lib/variants";
 import { ZipProductImporter } from "./zip-product-importer";
 
 type Draft = {
@@ -131,7 +133,8 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
       if (d.specs === initial.specs) body.specs = fromDraft({ ...d, specs: original.specs }).specs;
       if (d.financing === initial.financing) body.financing = original.financing.trim() || null;
     }
-    const { error } = product ? await supabase.from("products").update(body).eq("id", product.id) : await supabase.from("products").insert(body);
+    const { stock: _stock, ...withoutStock } = body;
+    const { error } = product ? await supabase.from("products").update(hasVariants(product) ? withoutStock : body).eq("id", product.id) : await supabase.from("products").insert(body);
     setBusy(false);
     if (error) { toast.error("Could not save the product"); return; }
     toast.success(product ? "Product updated" : "Product created"); onSaved();
@@ -149,7 +152,7 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
           <Field label="Capacity / size"><input className="field" value={d.capacity} onChange={(e) => set("capacity", e.target.value)} /></Field>
           <Field label="Price (USD)"><input required type="number" min={0} step="0.01" className="field" value={d.price} onChange={(e) => set("price", e.target.value)} /></Field>
           <Field label="Previous price (for sales)"><input type="number" min={0} step="0.01" className="field" value={d.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
-          <Field label="Stock"><input required type="number" min={0} className="field" value={d.stock} onChange={(e) => set("stock", e.target.value)} /></Field>
+          <Field label="Stock"><input disabled={!!product && hasVariants(product)} required type="number" min={0} className="field" value={d.stock} onChange={(e) => set("stock", e.target.value)} /></Field>
           <Field label="Colors (comma-separated)"><input className="field" value={d.colors} onChange={(e) => set("colors", e.target.value)} /></Field>
           <Field label="Description" className="sm:col-span-2"><textarea className="field h-24 py-2" value={d.description} onChange={(e) => set("description", e.target.value)} /></Field>
           <Field label="Features (one per line)"><textarea className="field h-28 py-2" value={d.features} onChange={(e) => set("features", e.target.value)} /></Field>
@@ -175,6 +178,7 @@ function ProductEditor({ product, cats, onClose, onSaved }: { product?: Product 
           <div className="flex flex-wrap gap-4 text-sm font-semibold sm:col-span-2">
             {([["is_featured", "Featured"], ["is_bestseller", "Best seller"], ["is_new", "New"], ["is_offer", "Sale"], ["active", "Active (visible)"]] as const).map(([k, l]) => <label key={k} className="flex items-center gap-2"><input type="checkbox" className="size-4 accent-primary" checked={d[k]} onChange={(e) => set(k, e.target.checked)} />{l}</label>)}
           </div>
+          <div className="sm:col-span-2">{product ? <ProductVariants product={product} onSaved={onSaved} /> : <p className="text-xs text-muted-foreground">Save the product first to configure confirmed variants.</p>}</div>
           <div className="flex justify-end gap-2 sm:col-span-2"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? "Saving..." : "Save"}</Button></div>
         </form>
       </DialogContent>
@@ -195,7 +199,7 @@ export function Inventory() {
     if (!delta) return;
     const next = p.stock + delta;
     if (next < 0) { toast.error("Stock cannot be negative"); return; }
-    const { error } = await supabase.from("products").update({ stock: next }).eq("id", p.id);
+    const { error } = await supabase.rpc("adjust_product_inventory", { _product_id: p.id, _delta: delta, _expected_stock: p.stock });
     if (error) { toast.error("Could not update"); return; }
     toast.success(delta > 0 ? "Stock received" : "Stock removed"); invalidate("admin-products", "admin-inventory", "products");
   }
@@ -214,7 +218,7 @@ export function Inventory() {
       <div>
         <h2 className="mb-2 font-bold text-primary">Recent inventory activity</h2>
         <ul className="divide-y divide-border rounded-xl border border-border text-sm">
-          {moves.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 p-3"><span><strong className={m.kind === "out" ? "text-accent" : "text-success"}>{m.kind === "out" ? "−" : "+"}{m.quantity}</strong> {(m.products as { name: string } | null)?.name ?? "Product"} · {m.reason}</span><span className="text-muted-foreground">Remaining: {m.stock_after} · {m.created_by_email ?? "system"} · {fmt(m.created_at)}</span></li>)}
+          {moves.map((m) => <li key={m.id} className="flex flex-wrap justify-between gap-2 p-3"><span><strong className={m.kind === "out" ? "text-accent" : "text-success"}>{m.kind === "out" ? "−" : "+"}{m.quantity}</strong> {(m.products as { name: string } | null)?.name ?? "Product"} · {m.variant_label ? `${m.variant_label} · ` : ""}{m.reason}</span><span className="text-muted-foreground">Remaining: {m.stock_after} · {m.created_by_email ?? "system"} · {fmt(m.created_at)}</span></li>)}
           {!moves.length && <li className="p-3 text-muted-foreground">No inventory activity.</li>}
         </ul>
       </div>
@@ -229,7 +233,7 @@ function InventoryRow({ p, low, onAdjust }: { p: Product; low: number; onAdjust:
     <tr>
       <td className="p-3 font-semibold">{localizeProduct(p).name}</td>
       <td><span className={`rounded-full px-2 py-0.5 text-xs font-bold ${p.stock === 0 ? "bg-accent/10 text-accent" : p.stock <= low ? "bg-surface text-foreground" : "text-success"}`}>{p.stock === 0 ? "Out of stock" : p.stock}</span></td>
-      <td className="flex gap-2 py-2"><input type="number" min={1} className="field h-9 w-20" value={qty} onChange={(e) => setQty(e.target.value)} /><Button size="sm" variant="outline" onClick={() => onAdjust(p, n)}>+ Stock in</Button><Button size="sm" variant="outline" onClick={() => onAdjust(p, -n)}>− Stock out</Button></td>
+      <td className="py-2">{hasVariants(p) ? <VariantInventory product={p} /> : <div className="flex gap-2"><input type="number" min={1} className="field h-9 w-20" value={qty} onChange={(e) => setQty(e.target.value)} /><Button size="sm" variant="outline" onClick={() => onAdjust(p, n)}>+ Stock in</Button><Button size="sm" variant="outline" onClick={() => onAdjust(p, -n)}>− Stock out</Button></div>}</td>
     </tr>
   );
 }

@@ -22,7 +22,7 @@ export function Kpi({ label, value, tone = "primary" }: { label: string; value: 
 export const paymentStatusLabels: Record<string, string> = { pending: "Pending", confirmed: "Confirmed", rejected: "Rejected" };
 
 export function useAdminOrders() {
-  return useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(name,quantity,price), order_status_history(status,previous_status,changed_by_email,created_at)").order("created_at", { ascending: false })).data ?? [] });
+  return useQuery({ queryKey: ["admin-orders"], queryFn: async () => (await supabase.from("orders").select("*, order_items(name,quantity,price,variant_id,color_snapshot,storage_snapshot), order_status_history(status,previous_status,changed_by_email,created_at)").order("created_at", { ascending: false })).data ?? [] });
 }
 export function useAdminProducts() {
   return useQuery({ queryKey: ["admin-products"], queryFn: async () => (await supabase.from("products").select("*").order("created_at", { ascending: false })).data ?? [] });

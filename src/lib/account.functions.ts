@@ -10,7 +10,7 @@ export const getMyOrders = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
       .from("orders")
-      .select("order_number, status, total, delivery_method, created_at")
+      .select("order_number, status, total, delivery_method, created_at, order_items(name,quantity,color_snapshot,storage_snapshot)")
       .ilike("email", email)
       .order("created_at", { ascending: false })
       .limit(50);

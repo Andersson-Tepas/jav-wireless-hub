@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { PageIntro } from "@/components/site-shell";
+import { cartIdentity, selectionLabel } from "@/lib/variants";
 import { money, useCart } from "@/lib/cart";
 import { productImage } from "@/lib/site-data";
 
@@ -22,18 +23,18 @@ function CartPage() {
           <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
             <ul className="divide-y divide-border rounded-xl border border-border">
               {items.map((i) => (
-                <li key={i.id} className="flex gap-4 p-4">
+                <li key={cartIdentity(i)} className="flex gap-4 p-4">
                   <img src={productImage(i.image)} alt={i.name} width={96} height={96} className="size-20 rounded-lg bg-surface object-contain object-center p-1.5 sm:size-24" />
                   <div className="flex flex-1 flex-col">
                     <div className="flex justify-between gap-3"><h3 className="font-bold">{i.name}</h3><span className="font-bold text-primary">{money(i.price * i.quantity)}</span></div>
-                    <p className="text-sm text-muted-foreground">{money(i.price)} each</p>
+                    <p className="text-sm text-muted-foreground">{selectionLabel(i)}</p><p className="text-sm text-muted-foreground">{money(i.price)} each</p>
                     <div className="mt-auto flex items-center justify-between pt-3">
                       <div className="flex items-center rounded-md border border-border">
-                        <button type="button" className="grid size-9 place-items-center hover:text-primary" onClick={() => setQty(i.id, i.quantity - 1)} aria-label="Decrease"><Minus className="size-4" /></button>
+                        <button type="button" className="grid size-9 place-items-center hover:text-primary" onClick={() => setQty(cartIdentity(i), i.quantity - 1)} aria-label="Decrease"><Minus className="size-4" /></button>
                         <span className="w-8 text-center text-sm font-bold">{i.quantity}</span>
-                        <button type="button" className="grid size-9 place-items-center hover:text-primary" onClick={() => setQty(i.id, i.quantity + 1)} aria-label="Increase"><Plus className="size-4" /></button>
+                        <button type="button" className="grid size-9 place-items-center hover:text-primary" onClick={() => setQty(cartIdentity(i), i.quantity + 1)} aria-label="Increase"><Plus className="size-4" /></button>
                       </div>
-                      <button type="button" onClick={() => remove(i.id)} className="flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /> Delete</button>
+                      <button type="button" onClick={() => remove(cartIdentity(i))} className="flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /> Delete</button>
                     </div>
                   </div>
                 </li>
